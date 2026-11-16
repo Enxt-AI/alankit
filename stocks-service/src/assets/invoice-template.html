@@ -1,0 +1,454 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Bill of Supply — SMC Investech Private Limited</title>
+  <style>
+
+    /* ─────────────────────────────────────────────────────
+       PRINT / PAGE SETUP
+    ───────────────────────────────────────────────────── */
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      margin: 0;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 11px;
+      color: #000;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 20mm;
+      margin: 0 auto;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       HEADER
+    ───────────────────────────────────────────────────── */
+    .header {
+      text-align: center;
+      line-height: 1.55;
+      margin-bottom: 10px;
+    }
+
+    .header .company-name {
+      font-size: 16px;
+      font-weight: bold;
+      text-decoration: underline;
+      letter-spacing: 0.4px;
+    }
+
+    .header .formerly {
+      font-style: italic;
+      font-size: 11.5px;
+    }
+
+    .header .address,
+    .header .cin,
+    .header .gst {
+      font-size: 11px;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       BILL OF SUPPLY TITLE
+    ───────────────────────────────────────────────────── */
+    .bill-title {
+      text-align: center;
+      font-size: 13px;
+      font-weight: bold;
+      text-decoration: underline;
+      margin-bottom: 8px;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       SHARED TABLE RULES
+    ───────────────────────────────────────────────────── */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      table-layout: fixed;
+    }
+
+    td,
+    th {
+      border: 1px solid #000;
+      padding: 3px 5px;
+      vertical-align: top;
+      word-wrap: break-word;
+      overflow-wrap: break-word;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       CUSTOMER INFO TABLE
+    ───────────────────────────────────────────────────── */
+    .customer-table {
+      margin-bottom: 8px;
+    }
+
+    .customer-table td {
+      vertical-align: middle;
+    }
+
+    .customer-table .billing-label {
+      font-weight: bold;
+    }
+
+    .customer-table .billing-value {
+      min-height: 26px;
+      vertical-align: top;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       ITEMS TABLE  (thead + tbody + tfoot)
+       tfoot holds "Amount in word" — shares outer border
+       seamlessly with no margin tricks needed.
+    ───────────────────────────────────────────────────── */
+    .items-table {
+      margin-bottom: 8px;
+    }
+
+    .items-table thead th {
+      background-color: #c0c0c0;
+      text-align: center;
+      font-weight: bold;
+      padding: 4px 5px;
+      vertical-align: middle;
+    }
+
+    .items-table tbody td {
+      text-align: center;
+      vertical-align: middle;
+      min-height: 28px;
+    }
+
+    /* left-align amount column */
+    .items-table tbody td:last-child {
+      text-align: right;
+    }
+
+    /* Unified Official Stamp & QR Seal Badge */
+    .stamp-seal-box {
+      margin: 6px auto 4px auto;
+      padding: 6px 10px;
+      border: 1.5px dashed #047857;
+      background-color: #f0fdf4;
+      border-radius: 6px;
+      text-align: center;
+      display: inline-block;
+      width: 150px;
+    }
+
+    .stamp-header {
+      font-size: 8.5px;
+      font-weight: bold;
+      color: #047857;
+      letter-spacing: 0.3px;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+
+    .stamp-subtitle {
+      font-size: 7.5px;
+      color: #065f46;
+      font-weight: bold;
+      margin-bottom: 2px;
+    }
+
+    .stamp-qr-frame {
+      background: #ffffff;
+      padding: 4px;
+      border: 1px solid #a7f3d0;
+      border-radius: 4px;
+      display: inline-block;
+      margin: 3px 0;
+    }
+
+    .stamp-qr-img {
+      width: 84px;
+      height: 84px;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+
+    .stamp-footer {
+      font-size: 7.5px;
+      color: #047857;
+      font-weight: bold;
+      margin-top: 2px;
+      line-height: 1.1;
+    }
+
+    .total-row td {
+      font-weight: bold;
+      vertical-align: middle;
+    }
+
+    /* Amount in word rows live in tfoot */
+    .items-table tfoot td {
+      vertical-align: top;
+    }
+
+    .tfoot-label td {
+      font-weight: bold;
+      padding: 3px 5px;
+    }
+
+    .tfoot-value td {
+      min-height: 24px;
+      padding: 3px 5px;
+    }
+
+    /* ─────────────────────────────────────────────────────
+       FOOTER TABLE
+    ───────────────────────────────────────────────────── */
+    .footer-table td {
+      vertical-align: top;
+      padding: 7px 9px;
+    }
+
+    .footer-table .bank-col {
+      width: 55%;
+    }
+
+    .footer-table .sign-col {
+      width: 45%;
+      text-align: center;
+    }
+
+    /* paragraph spacing inside footer cells */
+    .footer-table p {
+      line-height: 1.45;
+      margin-bottom: 3px;
+    }
+
+    .bank-section-title {
+      text-align: center;
+      font-weight: bold;
+      margin-bottom: 6px;
+    }
+
+    .sign-company {
+      font-weight: bold;
+      margin-bottom: 1px;
+    }
+
+    /* vertical space for physical signature */
+    .sign-gap {
+      height: 44px;
+    }
+
+    .sign-authorised {
+      font-style: italic;
+      margin-bottom: 6px;
+    }
+
+    .sub-address {
+      text-align: left;
+      font-size: 10px;
+      line-height: 1.42;
+      margin-top: 6px;
+    }
+
+    .sub-address p {
+      margin-bottom: 5px;
+    }
+
+    /* utility helpers */
+    .fw-bold      { font-weight: bold; }
+    .text-uline   { text-decoration: underline; }
+
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ══════════════════════════════════════════
+       COMPANY HEADER
+  ══════════════════════════════════════════ -->
+  <div class="header">
+    <div class="company-name">SMC INVESTECH PRIVATE LIMITED</div>
+    <div class="formerly">(Formerly SMC Real Estate Advisors Pvt. Ltd.)</div>
+    <div class="address">3rd Floor, C-98, SECTOR 2, NOIDA,</div>
+    <div class="address">Gautambuddha Nagar, Uttar Pradesh, 201301</div>
+    <div class="cin">CIN No. U74120UP2013PTC054923</div>
+    <div class="gst">GST No.: 09AASCS6448K1ZF &nbsp;&nbsp; Pan: - AASCS6448K</div>
+  </div>
+
+  <!-- ══════════════════════════════════════════
+       DOCUMENT TITLE
+  ══════════════════════════════════════════ -->
+  <div class="bill-title">Bill of Supply</div>
+
+  <!-- ══════════════════════════════════════════
+       CUSTOMER INFORMATION TABLE
+  ══════════════════════════════════════════ -->
+  <table class="customer-table">
+    <colgroup>
+      <col style="width: 17%;">
+      <col style="width: 33%;">
+      <col style="width: 17%;">
+      <col style="width: 33%;">
+    </colgroup>
+    <tbody>
+      <tr>
+        <td>Customer Name:-</td>
+        <td>{customer_name}</td>
+        <td>Invoice No</td>
+        <td>{invoice_no}</td>
+      </tr>
+      <tr>
+        <td>Customer GST No:-</td>
+        <td>{customer_gst}</td>
+        <td>Date</td>
+        <td>{invoice_date}</td>
+      </tr>
+      <tr>
+        <td>Customer PAN:-</td>
+        <td>{customer_pan}</td>
+        <td>Place of Supply</td>
+        <td>{place_of_supply}</td>
+      </tr>
+      <tr>
+        <td colspan="4" class="billing-label">Billing Address</td>
+      </tr>
+      <tr>
+        <td colspan="4" class="billing-value">{billing_address}</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <!-- ══════════════════════════════════════════
+       ITEMS TABLE
+       tbody  → dynamic rows injected via backend
+       tfoot  → "Amount in word" (same outer border,
+                 no margin tricks needed)
+  ══════════════════════════════════════════ -->
+  <table class="items-table">
+    <colgroup>
+      <col style="width: 6%;">
+      <col style="width: 15%;">
+      <col style="width: 29%;">
+      <col style="width: 15%;">
+      <col style="width: 15%;">
+      <col style="width: 20%;">
+    </colgroup>
+
+    <thead>
+      <tr>
+        <th>Sr No</th>
+        <th>ISIN No</th>
+        <th>Share Name</th>
+        <th>No of Share</th>
+        <th>Rate</th>
+        <th>Amount</th>
+      </tr>
+    </thead>
+
+    <tbody>
+      {table_rows}
+      <tr class="total-row">
+        <td colspan="5" style="text-align: center; font-weight: bold;">Total</td>
+        <td style="text-align: right; font-weight: bold;">{total_amount}</td>
+      </tr>
+    </tbody>
+
+    <tfoot>
+      <tr class="tfoot-label">
+        <td colspan="6">Amount in word</td>
+      </tr>
+      <tr class="tfoot-value">
+        <td colspan="6">{amount_in_words}</td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <!-- ══════════════════════════════════════════
+       FOOTER — BANK DETAILS + SIGNATORY
+  ══════════════════════════════════════════ -->
+  <table class="footer-table">
+    <tbody>
+      <tr>
+
+        <!-- LEFT: Bank Details -->
+        <td class="bank-col">
+          <p class="bank-section-title">Bank Details for Payment</p>
+
+          <p>Account Name:&nbsp;
+            <span class="fw-bold text-uline">SMC Investech Private Limited</span>
+          </p>
+          <p><span class="fw-bold">Bank Name:</span> HDFC Bank Ltd</p>
+          <p><span class="fw-bold">Account No.:</span> 57500001892772</p>
+          <p><span class="fw-bold">IFSC Code:</span> HDFC0000003</p>
+
+          <br>
+
+          <p>
+            <span class="fw-bold">Note:</span> This is to inform you that the Company is
+            registered under MSME Act as a Small Enterprise under Service Sector.
+            Company's UAM no. is DL01E0006487. In case you required the certificate
+            and/or any query kindly contact at billing.realty@smcrealty.com or call
+            at +91-11-40815200
+          </p>
+
+          <br>
+
+          <p>
+            <span class="fw-bold text-uline">Declaration:</span> Certified that the
+            particulars given above are true and correct
+          </p>
+        </td>
+
+        <!-- RIGHT: Signatory + Addresses -->
+        <td class="sign-col">
+          <p class="sign-company">For SMC Investech Private Limited</p>
+          <p>(Formerly SMC Real Estate Advisors Pvt. Ltd.)</p>
+
+          <!-- Official Digital Signature Stamp & QR Seal -->
+          <div class="stamp-seal-box">
+            <div class="stamp-header">&#x2714; DIGITALLY SIGNED</div>
+            <div class="stamp-subtitle">SMC Investech Pvt. Ltd.</div>
+            <div class="stamp-qr-frame">
+              <img src="{qr_code_url}" class="stamp-qr-img" alt="Digital Stamp QR Code" />
+            </div>
+            <div class="stamp-footer">Scan to Verify &bull; {signed_date}</div>
+          </div>
+
+          <p class="sign-authorised">(Authorised Signatory)</p>
+
+          <div class="sub-address">
+            <p>
+              <span class="fw-bold">Registered Address&nbsp;:</span>
+              C-98, Third Floor Sector-&nbsp;2 Noida Gautam Buddha Nagar UP 201301 IN,
+              Telephone No 0120-4560429, 0120-4240414&nbsp;|&nbsp;
+              Email:&nbsp;info@smcrealty.com
+            </p>
+            <p>
+              <span class="fw-bold">Corporate Address&nbsp;:</span>
+              11/5B 3rd Floor Pusa Road, New Delhi-110045,
+              Telephone No 011-400815200, website:-&nbsp;smcrealty.com
+            </p>
+          </div>
+        </td>
+
+      </tr>
+    </tbody>
+  </table>
+
+</div>
+</body>
+</html>

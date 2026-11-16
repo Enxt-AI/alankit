@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Payment Receipt Advice</title>
+  <style>
+
+    /* ================================================
+       PAGE / PRINT SETUP
+    ================================================ */
+    @page {
+      size: A4;
+      margin: 0;
+    }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+    }
+
+    body {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+      margin: 0;
+      font-family: "Times New Roman", Times, serif;
+      font-size: 11pt;
+      color: #000000;
+      background: #ffffff;
+    }
+
+    .page {
+      width: 210mm;
+      min-height: 297mm;
+      padding: 12mm 20mm;
+      margin: 0 auto;
+      box-sizing: border-box;
+      page-break-inside: avoid;
+    }
+
+    /* ================================================
+       COMPANY HEADER  (centered)
+    ================================================ */
+    .company-header {
+      text-align: center;
+      line-height: 1.55;
+      margin-bottom: 6pt;
+    }
+
+    .company-name {
+      display: block;
+      font-size: 11pt;
+      font-weight: bold;
+      letter-spacing: 0.02em;
+    }
+
+    .company-formerly {
+      display: block;
+      font-size: 11pt;
+      font-style: italic;
+    }
+
+    .company-detail {
+      display: block;
+      font-size: 11pt;
+    }
+
+    /* ================================================
+       HORIZONTAL RULES
+    ================================================ */
+    .rule {
+      border: none;
+      border-top: 1.5pt solid #000000;
+      margin: 5pt 0;
+    }
+
+    /* ================================================
+       DOCUMENT TITLE — PAYMENT RECEIPT ADVICE
+    ================================================ */
+    .doc-title {
+      text-align: center;
+      font-size: 19pt;
+      font-weight: bold;
+      color: #0F4761;
+      margin: 8pt 0 6pt 0;
+      line-height: 1.2;
+      letter-spacing: 0.02em;
+    }
+
+    /* ================================================
+       RECEIPT META  (Receipt No / Date / Order ID)
+    ================================================ */
+    .receipt-meta {
+      margin: 6pt 0 4pt 0;
+    }
+
+    .meta-row {
+      margin-bottom: 2.5pt;
+      font-size: 11pt;
+      line-height: 1.4;
+    }
+
+    .meta-row .field-label {
+      font-weight: bold;
+    }
+
+    /* ================================================
+       SECTION HEADINGS
+    ================================================ */
+    .section-heading {
+      font-size: 13pt;
+      font-weight: bold;
+      color: #0F4761;
+      margin: 11pt 0 5pt 0;
+      padding-bottom: 2pt;
+      border-bottom: 1pt solid #0F4761;
+      line-height: 1.3;
+    }
+
+    /* ================================================
+       FIELD ROWS  (label + value)
+    ================================================ */
+    .field-row {
+      font-size: 11pt;
+      line-height: 1.5;
+      margin-bottom: 2.5pt;
+    }
+
+    .field-row .field-label {
+      font-weight: bold;
+    }
+
+    /* Address sits on its own lines after the label */
+    .field-row.address-row .field-label {
+      display: inline;
+    }
+
+    .field-row.address-row .address-value {
+      display: block;
+      margin-left: 0;
+      line-height: 1.5;
+    }
+
+    /* ================================================
+       MODE OF PAYMENT
+    ================================================ */
+    .mode-heading {
+      font-size: 11pt;
+      font-weight: bold;
+      margin: 7pt 0 4pt 0;
+    }
+
+    .payment-options {
+      margin: 0;
+      padding: 0;
+      list-style: none;
+    }
+
+    .payment-options li {
+      display: flex;
+      align-items: baseline;
+      gap: 6pt;
+      margin-bottom: 3.5pt;
+      font-size: 11pt;
+      line-height: 1.4;
+    }
+
+    /* Styled HTML checkbox — renders reliably in Puppeteer */
+    .payment-options li input[type="checkbox"] {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 10pt;
+      height: 10pt;
+      min-width: 10pt;
+      min-height: 10pt;
+      border: 1.2pt solid #000000;
+      background: #ffffff;
+      margin: 0;
+      padding: 0;
+      position: relative;
+      top: 1.5pt;
+      flex-shrink: 0;
+      cursor: default;
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+
+    .payment-options li input[type="checkbox"]:checked {
+      background: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .payment-options li input[type="checkbox"]:checked::after {
+      content: "\2713"; /* ✓ */
+      display: block;
+      font-size: 8pt;
+      font-family: "Times New Roman", Times, serif;
+      font-weight: bold;
+      text-align: center;
+      line-height: 1;
+      color: #000000;
+    }
+
+    /* Underlined inline field placeholder */
+    .inline-blank {
+      display: inline-block;
+      border-bottom: 1pt solid #000000;
+      min-width: 55pt;
+      vertical-align: bottom;
+      line-height: 1.2;
+      padding: 0 2pt;
+    }
+
+    .inline-blank.short  { min-width: 45pt; }
+    .inline-blank.medium { min-width: 80pt; }
+    .inline-blank.long   { min-width: 120pt; }
+
+    /* ================================================
+       RECEIPT ADVICE PARAGRAPH
+    ================================================ */
+    .receipt-advice-body {
+      margin: 4pt 0;
+    }
+
+    .receipt-advice-body p {
+      margin: 0 0 5pt 0;
+      font-size: 11pt;
+      line-height: 1.55;
+      text-align: justify;
+    }
+
+    /* ================================================
+       FOOTER / SIGNATURE BLOCK
+    ================================================ */
+    .footer {
+      margin-top: 5pt;
+    }
+
+    .footer-for {
+      font-size: 11pt;
+      font-weight: bold;
+      margin-bottom: 2pt;
+    }
+
+    .footer-formerly {
+      font-size: 11pt;
+      font-style: italic;
+      margin-bottom: 0;
+    }
+
+    /* Unified Official Stamp & QR Seal Badge for Receipt */
+    .stamp-seal-box {
+      margin: 6pt auto 4pt auto;
+      padding: 5pt 8pt;
+      border: 1.5pt dashed #0F4761;
+      background-color: #f0f9ff;
+      border-radius: 6px;
+      text-align: center;
+      display: inline-block;
+      width: 145pt;
+    }
+
+    .stamp-header {
+      font-size: 8.5pt;
+      font-weight: bold;
+      color: #0F4761;
+      letter-spacing: 0.3pt;
+      text-transform: uppercase;
+      line-height: 1.1;
+    }
+
+    .stamp-subtitle {
+      font-size: 7.5pt;
+      color: #0369a1;
+      font-weight: bold;
+      margin-bottom: 2pt;
+    }
+
+    .stamp-qr-frame {
+      background: #ffffff;
+      padding: 4px;
+      border: 1pt solid #bae6fd;
+      border-radius: 4pt;
+      display: inline-block;
+      margin: 3px 0;
+    }
+
+    .stamp-qr-img {
+      width: 82px;
+      height: 82px;
+      display: block;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+    }
+
+    .stamp-footer {
+      font-size: 7.5pt;
+      color: #0F4761;
+      font-weight: bold;
+      margin-top: 2pt;
+      line-height: 1.1;
+    }
+
+    .footer-signatory {
+      font-size: 11pt;
+      font-weight: bold;
+      margin-bottom: 3pt;
+      border-top: 1pt solid #000000;
+      padding-top: 3pt;
+      display: inline-block;
+    }
+
+    .footer-date {
+      font-size: 11pt;
+      margin-top: 5pt;
+    }
+
+  </style>
+</head>
+<body>
+<div class="page">
+
+  <!-- ==============================
+       COMPANY HEADER
+  ============================== -->
+  <div class="company-header">
+    <span class="company-name">SMC INVESTECH PRIVATE LIMITED</span>
+    <span class="company-formerly">(Formerly SMC Real Estate Advisors Pvt. Ltd.)</span>
+    <span class="company-detail">
+      3rd Floor, C-98, Sector-2, Noida, Gautam Buddha Nagar, Uttar Pradesh - 201301
+    </span>
+    <span class="company-detail">CIN: U74120UP2013PTC054923</span>
+    <span class="company-detail">GSTIN: 09AASCS6448K1ZF&nbsp;&nbsp;&nbsp;|&nbsp;&nbsp;&nbsp;PAN: AASCS6448K</span>
+  </div>
+
+  <hr class="rule" />
+
+  <!-- ==============================
+       DOCUMENT TITLE
+  ============================== -->
+  <div class="doc-title">PAYMENT RECEIPT ADVICE</div>
+
+  <hr class="rule" />
+
+  <!-- ==============================
+       RECEIPT META
+  ============================== -->
+  <div class="receipt-meta">
+    <div class="meta-row">
+      <span class="field-label">Receipt No.:</span> {receipt_no}
+    </div>
+    <div class="meta-row">
+      <span class="field-label">Receipt Date:</span> {receipt_date}
+    </div>
+    <div class="meta-row">
+      <span class="field-label">Order ID No.:</span> {order_id}
+    </div>
+  </div>
+
+  <!-- ==============================
+       CUSTOMER DETAILS
+  ============================== -->
+  <div class="section-heading">Customer Details</div>
+
+  <div class="field-row">
+    <span class="field-label">Customer Name:</span> {customer_name}
+  </div>
+  <div class="field-row">
+    <span class="field-label">Customer PAN:</span> {customer_pan}
+  </div>
+  <div class="field-row">
+    <span class="field-label">Demat A/c No.:</span> {demat_account_no}
+  </div>
+  <div class="field-row address-row">
+    <span class="field-label">Address:</span>
+    <span class="address-value">{customer_address}</span>
+  </div>
+
+  <!-- ==============================
+       PAYMENT DETAILS
+  ============================== -->
+  <div class="section-heading">Payment Details</div>
+
+  <div class="field-row">
+    <span class="field-label">Amount Received:</span> {amount_received}
+  </div>
+  <div class="field-row">
+    <span class="field-label">Amount in Words:</span> {amount_in_words}
+  </div>
+
+  <div class="mode-heading">Mode of Payment:</div>
+
+  <ul class="payment-options">
+    <li>
+      <input type="checkbox" id="pay_cash" name="payment_mode" value="cash" {cash_checked} />
+      <label for="pay_cash">Cash</label>
+    </li>
+    <li>
+      <input type="checkbox" id="pay_cheque" name="payment_mode" value="cheque" {cheque_checked} />
+      <label for="pay_cheque">
+        Cheque No.&nbsp;<span class="inline-blank short">{cheque_no}</span>
+        &nbsp;&nbsp;Date&nbsp;<span class="inline-blank short">{cheque_date}</span>
+      </label>
+    </li>
+    <li>
+      <input type="checkbox" id="pay_neft" name="payment_mode" value="neft" {neft_checked} />
+      <label for="pay_neft">
+        NEFT/RTGS UTR No.&nbsp;<span class="inline-blank long">{neft_utr_no}</span>
+      </label>
+    </li>
+    <li>
+      <input type="checkbox" id="pay_fund" name="payment_mode" value="fund_transfer" {fund_checked} />
+      <label for="pay_fund">
+        Fund Transfer Ref. No.&nbsp;<span class="inline-blank medium">{fund_transfer_ref}</span>
+      </label>
+    </li>
+    <li>
+      <input type="checkbox" id="pay_upi" name="payment_mode" value="upi" {upi_checked} />
+      <label for="pay_upi">
+        UPI Transaction ID&nbsp;<span class="inline-blank long">{upi_transaction_id}</span>
+      </label>
+    </li>
+    <li>
+      <input type="checkbox" id="pay_other" name="payment_mode" value="other" {other_checked} />
+      <label for="pay_other">
+        Other&nbsp;<span class="inline-blank long">{other_payment_mode}</span>
+      </label>
+    </li>
+  </ul>
+
+  <!-- ==============================
+       RECEIPT ADVICE
+  ============================== -->
+  <div class="section-heading">Receipt Advice</div>
+
+  <div class="receipt-advice-body">
+    <p>
+      Received with thanks from <strong>{customer_name}</strong> a sum of
+      <strong>{amount_received} ({amount_in_words})</strong> against
+      <strong>Order ID No. {order_id}</strong>.
+    </p>
+    <p>This receipt is issued as an acknowledgement of the payment received.</p>
+    <p>We sincerely thank you for your payment and value your continued association with us.</p>
+  </div>
+
+  <!-- ==============================
+       FOOTER / SIGNATURE BLOCK
+  ============================== -->
+  <div class="footer">
+    <div class="footer-for">For SMC Investech Private Limited</div>
+    <div class="footer-formerly">(Formerly SMC Real Estate Advisors Pvt. Ltd.)</div>
+
+    <!-- Official Digital Signature Stamp & QR Seal -->
+    <div class="stamp-seal-box">
+      <div class="stamp-header">&#x2714; DIGITALLY SIGNED</div>
+      <div class="stamp-subtitle">SMC Investech Pvt. Ltd.</div>
+      <div class="stamp-qr-frame">
+        <img src="{qr_code_url}" class="stamp-qr-img" alt="Digital Stamp QR Code" />
+      </div>
+      <div class="stamp-footer">Scan to Verify &bull; {signed_date}</div>
+    </div>
+
+    <div>
+      <span class="footer-signatory">Authorised Signatory</span>
+    </div>
+    <!-- <div class="footer-date">Date: {signatory_date}</div> -->
+  </div>
+
+</div>
+</body>
+</html>

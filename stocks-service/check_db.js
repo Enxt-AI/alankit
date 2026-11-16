@@ -1,0 +1,1 @@
+const { PrismaClient } = require('../../packages/db-unlisted-stox/generated/prisma'); const prisma = new PrismaClient(); async function main() { const count = await prisma.stock.count(); const popular = await prisma.stock.count({ where: { isPopular: true } }); console.log('Total Stocks:', count, 'Popular:', popular); } main().finally(() => prisma.$disconnect());

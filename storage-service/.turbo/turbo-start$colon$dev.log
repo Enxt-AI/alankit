@@ -1,0 +1,66 @@
+[?9001h[?1004h[?25l[2J[m[2;1H> storage-service@0.0.1 start:dev C:\Users\anshu\OneDrive\Desktop\smc-unlisted-stox\apps\storage-service
+> nest start --watch[6;1H]0;C:\WINDOWS\system32\cmd.exe[?25h[2J[3J[?25l[H[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K
+[K[H[?25h[?25l[[90m6:17:05 pm[m] Starting compilation in watch mode...[3;1H[?25h[?25l[[90m6:17:12 pm[m] Found 0 errors. Watching for file changes.[5;1H[?25h(node:12724) [DEP0190] DeprecationWarning: Passing args to a child process with shell option true can lead to security vulnerabilities, as the arguments are not escaped, only concatenated.
+(Use `node --trace-deprecation ...` to show where the warning was created)
+[32m[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[NestFactory] [32mStarting Nest application...
+[m[32m[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[MinioService] [32mMinIO Client configured targeting http://localhost:9000
+[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[InstanceLoader] [32mPassportModule dependencies initialized [38;5;3m+2ms[32m
+[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[InstanceLoader] [32mConfigHostModule dependencies initialized [38;5;3m+0ms[32m
+[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[InstanceLoader] [32mConfigModule dependencies initialized [38;5;3m+2ms[32m
+[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[InstanceLoader] [32mConfigModule dependencies initialized [38;5;3m+0ms[32m
+[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[InstanceLoader] [32mAuthModule dependencies initialized [38;5;3m+1ms[32m
+[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[InstanceLoader] [32mJwtModule dependencies initialized [38;5;3m+0ms[32m
+[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[InstanceLoader] [32mAppModule dependencies initialized [38;5;3m+1ms
+[m[32m[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[RoutesResolver] [32mAppController {/}: [38;5;3m+8ms[32m
+[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[RouterExplorer] [32mMapped {/, GET} route [38;5;3m+4ms[32m
+[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[RouterExplorer] [32mMapped {/api/health, GET} route [38;5;3m+1ms[32m
+[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[RoutesResolver] [32mUploadController {/api/upload}: [38;5;3m+0ms[32m
+[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[RouterExplorer] [32mMapped {/api/upload/:bucketName/:pathPrefix, POST} route [38;5;3m+1ms[32m
+[Nest] 37108  - [m13/08/2026, 6:17:16 pm     [32mLOG [38;5;3m[NestApplication] [32mNest application successfully started[38;5;3m +2ms
+[m🚀 Storage Service running on http://localhost:3005
