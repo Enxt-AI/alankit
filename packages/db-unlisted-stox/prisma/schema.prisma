@@ -1,0 +1,1868 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL") // Runtime: PgBouncer (port 6432)
+  // directUrl is provided conditionally via prisma.config.ts (only when
+  // DIRECT_DATABASE_URL is set), so `prisma generate` works in environments
+  // (e.g. Docker builds) where a direct connection isn't available.
+}
+
+// ============================================
+// USER MODEL - Customers (Stock Buyers)
+// ============================================
+model User {
+  id String @id @default(cuid())
+
+  // Authentication
+  email     String? @unique /// @encrypted
+  emailHash String? @unique /// @encryption:hash(email)
+  fullName  String?
+  phone     String? @unique /// @encrypted
+  phoneHash String? @unique /// @encryption:hash(phone)
+  isActive  Boolean @default(true)
+  isDeleted Boolean @default(false)
+
+  // KYC Information
+  kycStatus String @default("PENDING") // PENDING, VERIFIED, REJECTED
+
+  // KYC Progress Tracking (Phase 2 - Mock Mode)
+  // kycData structure:
+  // {
+  //   panDetails: { pan: string, name: string, dob: string, verified: boolean },
+  //   aadhaarDetails: { aadhaar: string, verified: boolean, otpSent: boolean },
+  //   bankDetails: { accountNumber: string, ifsc: string, accountHolder: string, verified: boolean },
+  //   documentsUploaded: { pan: boolean, aadhaar: boolean, bank: boolean },
+  //   lastUpdatedStep: timestamp,
+  //   submittedAt: timestamp (when final submission happens)
+  // }
+  kycData Json? // Stores KYC form progress and sub-step tracking
+
+  // Demat Account Integration (Phase 4 - Mock Mode)
+  // dematData structure:
+  // {
+  //   type: 'link',
+  //   accountNumber: string (16-digit BO ID),
+  //   dpId: string (8-digit),
+  //   clientId: string (optional),
+  //   panNumber: string (pre-filled from KYC),
+  //   name: string,
+  //   mobile: string,
+  //   email: string,
+  //   lastUpdatedAt: timestamp,
+  //   submittedAt: timestamp (when final submission happens)
+  // }
+  dematData Json? // Stores Demat form data (link type)
+
+  // dematDocuments structure:
+  // {
+  //   dematStatement: { data: string (base64), uploadedAt: timestamp, fileName: string, fileSize: number },
+  // }
+  dematDocuments Json? // Stores document uploads as base64 (local storage)
+
+  // Demat Account Status
+  dematStatus String @default("PENDING") // PENDING, VERIFIED
+
+  // Bank Verification Integration
+  // bankData structure:
+  // {
+  //   ifsc: string,
+  //   accNo: string,
+  //   benificiaryName: string,
+  //   lastUpdatedAt: timestamp,
+  //   submittedAt: timestamp
+  // }
+  bankData                    Json? // Stores Bank verification data
+  bankStatus                  String     @default("PENDING") // PENDING, VERIFIED, REJECTED
+  lastBankVerificationAttempt DateTime? // Enforces 1 attempt per 24 hours
+  successfulBankVerifications DateTime[] // Enforces max 3 verified accounts per 12 months
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations - Add these to fix the error
+  orders         Order[]
+  portfolio      Portfolio[]
+  watchlistItems WatchlistItem[]
+  notifications  Notification[]
+  contentLikes   ContentLike[]
+
+  // Relations
+  kycDocuments KycDocument[]
+  loginHistory LoginHistory[]
+  ledger       Ledger?
+
+  // Coupon System Relations
+  assignedCoupons Coupon[] @relation("AssignedCoupons")
+  usedCoupons     Coupon[] @relation("UsedCoupons")
+
+  hashedRefreshToken String?
+
+  stockInterests StockInterest[]
+  sellRequests   SellRequest[]
+  esignAttempts  EsignAttempt[]
+
+  @@index([email])
+  @@index([phone])
+  @@index([kycStatus])
+  @@index([dematStatus])
+  @@index([phone, email]) // Optimize phone-first lookups
+}
+
+// ============================================
+// KYC DOCUMENT MODEL - Individual KYC Documents from DigiLocker
+// ============================================
+// Each document fetched from DigiLocker (Aadhaar XML, PAN PDF, PAN XML,
+// DigiLocker Summary PDF) is stored as a separate row for independent
+// querying, audit, and admin review.
+model KycDocument {
+  id String @id @default(cuid())
+
+  // User relation
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Document identity
+  docType      String // AADHAAR, PANCR, DIGILOCKER_PDF
+  docExtension String // xml, pdf
+  docLink      String @db.Text // S3 pre-signed URL or permanent link
+
+  // Status tracking
+  status String @default("FETCHED") // FETCHED, EXPIRED, FAILED
+
+  // Metadata
+  fetchedAt DateTime  @default(now())
+  expiresAt DateTime? // URL expiry (pre-signed URLs have a TTL)
+  metadata  Json? // Any extra info (file size, hash, etc.)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([docType])
+  @@index([userId, docType])
+  @@index([status])
+}
+
+// ============================================
+// NOTIFICATION MODEL - User Notifications
+// ============================================
+model Notification {
+  id String @id @default(cuid())
+
+  // User relation
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Notification content
+  type    String // ORDER_PLACED, ORDER_COMPLETED, KYC_VERIFIED, BASKET_CREATED, etc.
+  title   String
+  message String @db.Text
+
+  // Metadata (flexible JSON storage)
+  // Structure: { redirectUrl?, orderId?, basketId?, basketSlug?, stockId?, amount?, stockName?, basketName?, ... }
+  metadata Json?
+
+  // Status
+  isRead Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime  @default(now())
+  readAt    DateTime? // When user marked as read
+
+  // Indexes for performance
+  @@index([userId, isRead]) // Fast unread queries
+  @@index([userId, createdAt]) // Fast recent queries
+  @@index([createdAt]) // Fast cleanup queries
+}
+
+// ============================================
+// ADMIN MODEL - Employees (Platform Managers)
+// ============================================
+
+enum AdminRole {
+  ADMIN
+  SUPER_ADMIN
+  CONTENT_MANAGER
+  SUPPORT_AGENT
+  MARKETING_MANAGER
+  ACCOUNTANT
+  OPERATIONS
+  SALES_EMPLOYEE
+}
+
+enum BasketStatus {
+  DRAFT
+  OPEN
+  CLOSED
+  COMING_SOON
+}
+
+enum DocumentType {
+  ANNUAL
+  QUARTERLY
+  RESEARCH
+}
+
+model Admin {
+  id String @id @default(cuid())
+
+  // Authentication
+  email        String  @unique
+  phone        String? @unique // Optional phone number
+  fullName     String
+  passwordHash String  // Bcrypt hashed password
+
+  // Role & Permissions
+  role        AdminRole @default(ADMIN) // ADMIN, SUPER_ADMIN, CONTENT_MANAGER
+  permissions String[] // Array of permission strings
+
+  // Status
+  isActive    Boolean   @default(true)
+  lastLoginAt DateTime?
+
+  availability      String  @default("available")
+  availabilityNote  String?
+  activeTicketCount Int     @default(0)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations - Add these to fix the error
+  stocksCreated         Stock[]         @relation("CreatedBy")
+  stocksUpdated         Stock[]         @relation("UpdatedBy")
+  // Upcoming stocks use separate relations to avoid ambiguity with Stock audit trail.
+  // These power CMS/admin attribution for the Upcoming Stocks tab.
+  upcomingStocksCreated UpcomingStock[] @relation("UpcomingStockCreatedBy")
+  upcomingStocksUpdated UpcomingStock[] @relation("UpcomingStockUpdatedBy")
+  basketsCreated        StockBasket[]   @relation("BasketCreatedBy")
+  basketsUpdated        StockBasket[]   @relation("BasketUpdatedBy")
+  eSignTemplates        ESignTemplate[] @relation("ESignTemplateCreatedBy")
+
+  hashedRefreshToken String?
+  assignedLeads      MarketingLead[] @relation("AssignedLeads")
+  requestedChanges   ChangeRequest[] @relation("RequestedBy")
+  reviewedChanges    ChangeRequest[] @relation("ReviewedBy")
+
+  @@index([email])
+  @@index([isActive])
+  @@index([role])
+}
+
+// ============================================
+// STOCK MODEL - Unlisted Stocks
+// ============================================
+// ==========================================
+// Stock Category Model
+// ==========================================
+model StockCategory {
+  id          String  @id @default(cuid())
+  name        String  @unique
+  description String?
+  isActive    Boolean @default(true)
+
+  // Relations
+  stocks Stock[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Stock {
+  id String @id @default(cuid())
+
+  // Stock Details
+  name                    String
+  price                   Float
+  minimumPurchaseQuantity Int?
+  maximumPurchaseQuantity Int?
+  // Slab-based quantity discount rules.
+  // Shape: [{ minQty: number, pricePerShare: number }, ...]
+  // Slabs are applied by the service layer: the highest `minQty` <= order quantity wins.
+  // If no slab matches, the base `price` is used.
+  discountSlabs           Json?
+  // Lending price floors (per-share). Coupons cannot bring effective price below these.
+  // Internal = SMC's own RMs; External = Distributor RMs
+  internalLendingPrice    Float?
+  externalLendingPrice    Float?
+  logoUrl                 String?
+  tags                    String[] // Array of tags for categorization
+  categoryId              String? // Relation to StockCategory
+  category                StockCategory? @relation(fields: [categoryId], references: [id])
+  isin                    String? // ISIN code (International Securities Identification Number)
+  // SEO
+  slug                    String?        @unique // Custom URL slug (mandatory in app layer)
+  companyOverview         String?        @db.Text // Detailed company information for SEO and UI
+
+  // CIN is the sole business identifier for stocks.
+  // It is mandatory, unique, and treated as immutable by the service layer.
+  cin             String  @unique // CIN (Corporate Identification Number)
+  pan             String? // Company PAN number
+  totalShares     Float? // Total number of shares outstanding
+  // Inventory: updated by accounting purchase (+) and sale (-) vouchers via ISIN match
+  stockQuantity   Int     @default(0)
+  // Backup / buffer quantity set by Operations when physical inventory is 0
+  backupQuantity  Int     @default(0)
+  openingQuantity Int     @default(0)
+  openingRate     Float   @default(0)
+  openingValue    Float   @default(0)
+  isActive        Boolean @default(true)
+  // NEW: Popular stock classification (drives the "Popular" tab on the client)
+  isPopular       Boolean @default(false)
+  // NEW: Market Movers classification (drives future client-side Market Movers filtering)
+  isMarketMover   Boolean @default(false)
+
+  // Audit Trail - Track which admin created/updated
+  createdById String
+  createdBy   Admin   @relation("CreatedBy", fields: [createdById], references: [id])
+  updatedById String?
+  updatedBy   Admin?  @relation("UpdatedBy", fields: [updatedById], references: [id])
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  orders             Order[]
+  basketConstituents BasketConstituent[]
+  watchlistedBy      WatchlistItem[]
+  portfolioItems     Portfolio[]
+  news               News[]
+  articles           Article[]
+  faqs               Faq[]
+
+  // Relations
+  prices StockPrice[]
+
+  // Accounting — 1:1 ledger auto-created on stock creation
+  ledger Ledger?
+
+  // Coupons
+  coupons Coupon[]
+
+  inventoryMovements InventoryMovement[]
+  inventoryShortfalls InventoryShortfall[]
+  inventoryLots      InventoryLot[]
+  interests          StockInterest[]
+  sellRequests       SellRequest[]
+
+  @@index([isActive])
+  // Popular-tab filtering frequently queries this field.
+  @@index([isPopular])
+  // Market Movers filtering follows the same client-side pattern as Popular.
+  @@index([isMarketMover])
+  @@index([createdById])
+  @@index([isin])
+}
+
+// ============================================
+// STOCK PRICE MODEL - Historical Stock Prices
+// ============================================
+model StockPrice {
+  id        String   @id @default(cuid())
+  stockId   String
+  stock     Stock    @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  price     Float
+  date      DateTime
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([stockId, date])
+  @@index([stockId])
+  @@index([date])
+}
+
+// ============================================
+// UPCOMING STOCK MODEL - Upcoming/Pre-listing Stocks
+// NOTE:
+// - These models intentionally mirror the core Stock/StockDocument structure.
+// - They allow us to curate "Upcoming" stocks separately, without mixing with live stocks.
+// - App-level logic should ensure UpcomingStock is surfaced in the Upcoming tab, while Stock
+//   (optionally filtered by isPopular) powers the Popular tab.
+// ============================================
+model UpcomingStock {
+  id String @id @default(cuid())
+
+  // Stock Details (same as Stock model)
+  name        String
+  price       Float
+  logoUrl     String?
+  tags        String[]
+  isin        String?
+  // CIN is the sole business identifier for upcoming stocks as well.
+  // Using the same invariant here keeps conversion logic deterministic.
+  cin         String   @unique // CIN (Corporate Identification Number)
+  totalShares Float?
+  isActive    Boolean  @default(true)
+  // For conversion purposes (defaults to false; typically not exposed in CMS)
+  isPopular   Boolean  @default(false)
+
+  // Audit Trail
+  createdById String
+  createdBy   Admin   @relation("UpcomingStockCreatedBy", fields: [createdById], references: [id])
+  updatedById String?
+  updatedBy   Admin?  @relation("UpcomingStockUpdatedBy", fields: [updatedById], references: [id])
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  watchlistedBy WatchlistItem[]
+
+  @@index([isActive])
+  @@index([createdById])
+  @@index([isin])
+}
+
+model StockBasket {
+  id String @id @default(cuid())
+
+  // Basket Details
+  name        String
+  slug        String  @unique
+  description String? @db.Text
+  category    String // e.g., "High Growth", "Balanced", "Defensive"
+  iconUrl     String?
+
+  // Status Management
+  status                BasketStatus @default(DRAFT)
+  subscriptionStartDate DateTime?
+  subscriptionEndDate   DateTime?
+
+  // Investment Details
+  minInvestment      Float
+  priceEffectiveDate DateTime @default(now())
+
+  // Active Status
+  isActive Boolean @default(true)
+
+  // Audit Trail - Track which admin created/updated
+  createdById String
+  createdBy   Admin   @relation("BasketCreatedBy", fields: [createdById], references: [id])
+  updatedById String?
+  updatedBy   Admin?  @relation("BasketUpdatedBy", fields: [updatedById], references: [id])
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  constituents BasketConstituent[]
+  orders       Order[]
+
+  @@index([slug])
+  @@index([isActive])
+  @@index([status])
+  @@index([category])
+  @@index([createdById])
+}
+
+model BasketConstituent {
+  id String @id @default(cuid())
+
+  // Relations
+  basketId String
+  basket   StockBasket @relation(fields: [basketId], references: [id], onDelete: Cascade)
+  stockId  String
+  stock    Stock       @relation(fields: [stockId], references: [id])
+
+  // Weight Details
+  weight Float // Percentage weight (0-100)
+
+  // Timestamp
+  createdAt DateTime @default(now())
+
+  @@unique([basketId, stockId])
+  @@index([basketId])
+  @@index([stockId])
+}
+
+// ============================================
+// ORDER MODEL - User Stock Orders
+// ============================================
+// ============================================
+// ORDER MODEL - User Stock Orders
+// Status Flow: PENDING → PAID → ALLOCATED → COMPLETED
+// Payment Flow: PENDING → PROCESSING → PAID (tracked separately)
+// 
+// Phase 3 Enhancement: Added Cashfree payment tracking fields
+// - cashfreeOrderId: Cashfree order ID
+// - cashfreePaymentId: Cashfree payment ID
+// - paymentStatus: Tracks payment state (independent of order status)
+// - paymentData: Stores payment metadata (JSON)
+// ============================================
+model Order {
+  id String @id @default(cuid())
+
+  // Generated Identifiers
+  orderNumber   String? @unique
+  invoiceNumber String? @unique
+  receiptNumber String? @unique
+
+  // Admin Manual Approval
+  shareTransferReferenceNo String?
+  shareTransferDate        DateTime?
+  batchSequence            String?
+
+  // Order Details
+  userId  String
+  user    User    @relation(fields: [userId], references: [id])
+  stockId String?
+  stock   Stock?  @relation(fields: [stockId], references: [id])
+
+  // Basket Order Support (optional - either stockId or basketId must be present)
+  // IMPORTANT: Database-level CHECK constraint ensures exactly ONE of stockId or basketId is non-null
+  // Constraint: Order_stock_or_basket_check enforces (stockId XOR basketId)
+  basketId           String?
+  basket             StockBasket? @relation(fields: [basketId], references: [id])
+  basketConstituents Json? // Stores snapshot of basket constituents at order time
+
+  quantity      Int
+  pricePerShare Float
+  totalAmount   Float
+
+  // Coupons
+  couponId            String?
+  coupon              Coupon?
+  discountApplied     Float   @default(0)
+  originalTotalAmount Float?
+
+  // Order Status
+  status String @default("PENDING") // PENDING, PAID, ALLOCATED, COMPLETED, CANCELLED, EXPIRED
+
+  // Inventory Reservation Expiration
+  expiresAt DateTime?
+
+  // Payment Integration (Cashfree)
+  // Cashfree order ID generated when payment is initiated
+  cashfreeOrderId   String?
+  // Cashfree payment ID received after successful payment
+  cashfreePaymentId String?
+  // Payment status tracking (separate from order status)
+  // PENDING = Payment not initiated
+  // PROCESSING = Payment initiated, awaiting confirmation
+  // PAID = Payment verified successfully
+  // FAILED = Payment failed or cancelled
+  paymentStatus     String  @default("PENDING")
+
+  // Payment metadata storage
+  // paymentData structure:
+  // {
+  //   gateway: 'cashfree',
+  //   paymentTimestamp: timestamp,
+  //   cashfreePaymentId: string,
+  //   amount: number,
+  //   currency: string (INR),
+  //   errorCode?: string (if payment failed),
+  //   errorDescription?: string (if payment failed),
+  //   mockMode: boolean (true if mock payment)
+  // }
+  paymentData Json?
+
+  // Payment attempts explicitly track multiple Cashfree sessions
+  paymentAttempts PaymentAttempt[]
+
+  // eSign Integration (Digitap)
+  // Tracking signatures captured before cashfree initialization (required for purchase)
+  esignDocId  String?
+  esignStatus String  @default("PENDING") // PENDING, SIGNED, FAILED, MISMATCH
+
+  // eSign Identity Validation (Aadhaar signer check)
+  // Populated by handleESignWebhook and getESignDoc after signing completes.
+  // esignValidationVerdict: 'MATCH' | 'MISMATCH' | 'INSUFFICIENT_DATA'
+  // esignValidationDetail:  full EsignValidationResult JSON for audit/compliance
+  esignValidationVerdict String? // 'MATCH' | 'MISMATCH' | 'INSUFFICIENT_DATA'
+  esignValidationDetail  Json? // full EsignValidationResult, for audit trail
+
+  // Historical Revenue Share Snapshot (frozen at checkout)
+  revenueSharePercentage Float?
+  incentivePercentage    Float?
+  lendingPrice           Float? // Historical Lending Price Snapshot (frozen at checkout)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([stockId])
+  @@index([basketId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([paymentStatus])
+  @@index([cashfreeOrderId])
+  @@index([status, expiresAt])
+  @@index([couponId])
+}
+
+// ============================================
+// PAYMENT ATTEMPT MODEL
+// ============================================
+enum PaymentAttemptStatus {
+  PENDING
+  PAID
+  FAILED
+  EXPIRED
+  USER_DROPPED
+  SUPERSEDED
+}
+
+// Durable integration work is inserted in the same transaction as business state.
+model IntegrationTask {
+  id          String    @id
+  kind        String
+  entityId    String
+  attempts    Int       @default(0)
+  availableAt DateTime  @default(now())
+  leaseToken  String?
+  completedAt DateTime?
+  lastError   String?
+  createdAt   DateTime  @default(now())
+
+  @@index([kind, completedAt, availableAt])
+}
+
+model VoucherSequence {
+  prefix String @id
+  value  BigInt
+}
+
+model PaymentAttempt {
+  id               String               @id @default(cuid())
+  orderId          String
+  order            Order                @relation(fields: [orderId], references: [id])
+  cashfreeOrderId  String               @unique
+  paymentSessionId String?
+  status           PaymentAttemptStatus @default(PENDING)
+  amount           Decimal // snapshot at creation, for reconciliation
+  createdAt        DateTime             @default(now())
+  updatedAt        DateTime             @updatedAt
+
+  @@index([orderId, status])
+}
+
+// ============================================
+// PORTFOLIO MODEL - User Stock Holdings
+// ============================================
+model Portfolio {
+  id String @id @default(cuid())
+
+  // Portfolio Details
+  userId   String
+  user     User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+  // Portfolio stores the internal stock relation so holdings remain stable
+  // even after business-identifier changes.
+  stockId  String
+  stock    Stock  @relation(fields: [stockId], references: [id])
+  quantity Int
+  avgPrice Float // Average purchase price
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([userId, stockId])
+  @@index([userId])
+  @@index([stockId])
+}
+
+model WatchlistItem {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Support both regular and upcoming stocks.
+  // IMPORTANT:
+  // - DB-level XOR is enforced via a Postgres CHECK constraint added in a migration.
+  // - Exactly one of `stockId` or `upcomingStockId` must be non-null.
+  // - We also use `onDelete: Cascade` to avoid leaving dangling watchlist rows.
+  stockId String?
+  stock   Stock?  @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  upcomingStockId String?
+  upcomingStock   UpcomingStock? @relation(fields: [upcomingStockId], references: [id], onDelete: Cascade)
+
+  addedAt DateTime @default(now())
+
+  @@unique([userId, stockId])
+  @@unique([userId, upcomingStockId])
+  @@index([userId])
+  @@index([stockId])
+  @@index([upcomingStockId])
+}
+
+// ============================================
+// NEWS MODEL - News Articles
+// ============================================
+model News {
+  id String @id @default(cuid())
+
+  // News Details
+  title        String
+  content      String        @db.Text
+  imageUrl     String?
+  category     String? // News category (e.g., "Market", "IPO", "Company")
+  isActive     Boolean       @default(true)
+  stockId      String?
+  stock        Stock?        @relation(fields: [stockId], references: [id])
+  contentLikes ContentLike[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([category])
+}
+
+// ============================================
+// ARTICLE MODEL - Article Posts (formerly Blog)
+// ============================================
+model Article {
+  id String @id @default(cuid())
+
+  // Article Details
+  title        String
+  content      String        @db.Text
+  imageUrl     String?
+  category     String? // Article category (e.g., "Educational", "Insight", "Analysis")
+  isActive     Boolean       @default(true)
+  stockId      String?
+  stock        Stock?        @relation(fields: [stockId], references: [id])
+  contentLikes ContentLike[]
+
+  // SEO / answer-engine fields. Kept nullable so existing articles keep
+  // working: when `slug` is null the public URL falls back to slugify(title).
+  slug              String?   @unique
+  summary           String?   @db.Text // 120-150 word extractable answer
+  keyFacts          Json? // [{ label, value }]
+  authorName        String?
+  authorRole        String?
+  authorBio         String?   @db.Text
+  reviewedBy        String?
+  contentReviewedAt DateTime? // honest dateModified for crawlers
+
+  faqs ArticleFaq[]
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([category])
+  @@index([stockId])
+}
+
+// ============================================
+// ARTICLE FAQ MODEL - Per-article Q&A
+// ============================================
+// Separate from `Faq`, which is stock-scoped and feeds the stock-detail page.
+model ArticleFaq {
+  id String @id @default(cuid())
+
+  articleId String
+  article   Article @relation(fields: [articleId], references: [id], onDelete: Cascade)
+
+  question String @db.Text
+  answer   String @db.Text
+  order    Int    @default(0)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([articleId])
+}
+
+// ============================================
+// CONTENT LIKE MODEL - User Liked News & Articles
+// ============================================
+model ContentLike {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  contentType String // "news" | "article"
+  newsId      String?
+  news        News?    @relation(fields: [newsId], references: [id], onDelete: Cascade)
+  articleId   String?
+  article     Article? @relation(fields: [articleId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, contentType, newsId])
+  @@unique([userId, contentType, articleId])
+  @@index([userId])
+  @@index([contentType])
+}
+
+// ============================================
+// FAQ MODEL - Frequently Asked Questions
+// ============================================
+model Faq {
+  id String @id @default(cuid())
+
+  // FAQ Details
+  title    String
+  answer   String  @db.Text
+  category String
+  isActive Boolean @default(true)
+  stockId  String?
+  stock    Stock?  @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([createdAt])
+  @@index([category])
+  @@index([stockId])
+}
+
+// ============================================
+// BRANCH & INTERNAL RM MODELS
+// ============================================
+model Branch {
+  id           String @id @default(cuid())
+  name         String
+  email        String // Not unique: one Branch Manager email may own several branches
+  passwordHash String
+  status       String @default("ACTIVE") // ACTIVE, INACTIVE
+
+  // Classification: EQUITY, DISTRIBUTION, WEALTH, STOXKART, OTHER
+  classification      String?
+  classificationLabel String? // Custom label when classification = OTHER ("Add New")
+  zone                String? // EQUITY
+  zonalHead           String? // EQUITY
+  areaManager         String? // EQUITY
+  branchManager       String? // EQUITY
+  territory           String? // DISTRIBUTION
+  territoryHead       String? // DISTRIBUTION
+  reportingManager    String? // WEALTH, STOXKART, OTHER
+
+  internalRMs InternalRM[]
+
+  hashedRefreshToken String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([classification])
+}
+
+model InternalRM {
+  id           String @id @default(cuid())
+  name         String
+  email        String @unique
+  employeeId   String? // Required for new RMs created by a branch; nullable for existing accounts.
+  passwordHash String
+  status       String @default("ACTIVE") // ACTIVE, INACTIVE
+
+  branchId String
+  branch   Branch @relation(fields: [branchId], references: [id])
+
+  couponsGenerated Coupon[]
+
+  hashedRefreshToken String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([branchId])
+}
+
+// ============================================
+// DISTRIBUTOR & DISTRIBUTOR RM MODELS
+// ============================================
+model Distributor {
+  id           String @id @default(cuid())
+  name         String
+  email        String @unique
+  passwordHash String
+  status       String @default("ACTIVE") // ACTIVE, INACTIVE
+
+  distributorRMs DistributorRM[]
+
+  hashedRefreshToken String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+}
+
+model DistributorRM {
+  id           String @id @default(cuid())
+  name         String
+  email        String @unique
+  employeeId   String? // Required for new RMs created by a distributor; nullable for existing accounts.
+  passwordHash String
+  status       String @default("ACTIVE") // ACTIVE, INACTIVE
+
+  distributorId String
+  distributor   Distributor @relation(fields: [distributorId], references: [id])
+
+  couponsGenerated Coupon[]
+
+  hashedRefreshToken String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([email])
+  @@index([status])
+  @@index([distributorId])
+}
+
+// ============================================
+// AUDIT LOG MODEL - Admin Activity Tracking
+// ============================================
+model AuditLog {
+  id String @id @default(cuid())
+
+  // Admin Details (denormalized for audit compliance)
+  adminId    String
+  adminEmail String
+  adminRole  String
+
+  // Action Details
+  action   String // CREATE/UPDATE/DELETE/PUBLISH/UNPUBLISH
+  entity   String // STOCK/ARTICLE/NEWS/FAQ/STATIC_PAGE/BASKET
+  entityId String?
+
+  // Change Tracking
+  changes  Json? // Before/after values
+  metadata Json? // IP, user agent, etc.
+
+  // Timestamp
+  timestamp DateTime @default(now())
+
+  @@index([adminId])
+  @@index([entity])
+  @@index([timestamp])
+}
+
+// ============================================
+// CONTENT VERSION MODEL - Version History
+// ============================================
+model ContentVersion {
+  id String @id @default(cuid())
+
+  // Entity Details
+  entityType    String // STOCK/ARTICLE/NEWS/FAQ/STATIC_PAGE/BASKET
+  entityId      String
+  versionNumber Int
+
+  // Version Details
+  versionLabel String?
+  content      Json // Full entity snapshot
+  changeType   String // CREATE/UPDATE/PUBLISH/UNPUBLISH
+  changeNote   String?
+
+  // Creator Details (denormalized)
+  createdById    String
+  createdByEmail String
+  createdByRole  String
+
+  // Timestamp
+  createdAt DateTime @default(now())
+
+  @@unique([entityType, entityId, versionNumber])
+  @@index([entityType, entityId])
+  @@index([entityId, versionNumber])
+  @@index([createdAt])
+}
+
+// ============================================
+// STATIC PAGE MODEL - CMS Pages
+// ============================================
+model StaticPage {
+  id String @id @default(cuid())
+
+  // Page Details
+  slug    String @unique // 'about-us', 'contact', 'terms'
+  title   String
+  content String @db.Text
+
+  // SEO
+  metaTitle       String?
+  metaDescription String?
+
+  // Performance Metrics (About Us page only)
+  // Stores an array of up to 4 stat cards: [{label, value, change}, ...]
+  // Null for pages that don't use performance metrics
+  performanceMetrics Json?
+
+  // Status
+  isActive Boolean @default(true)
+
+  // Audit Trail (denormalized)
+  createdById String
+  updatedById String?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([slug])
+  @@index([isActive])
+}
+
+// ============================================
+// GLOBAL SEO METADATA - Manage SEO for any path
+// ============================================
+model SeoMetadata {
+  id                 String  @id @default(cuid())
+  path               String  @unique // e.g. '/', '/stocks', '/news', '/about'
+  metaTitle          String?
+  metaDescription    String?
+  schemaMarkup       String? @db.Text
+  ogTitle            String?
+  ogDescription      String?
+  ogImage            String?
+  twitterCard        String?
+  twitterTitle       String?
+  twitterDescription String?
+  twitterImage       String?
+  pageContent        String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([path])
+}
+
+// ============================================
+// MARKETING CAMPAIGN MODEL - Marketing Campaigns
+// ============================================
+model MarketingCampaign {
+  id String @id @default(cuid())
+
+  // Campaign Details
+  name               String // e.g., "C1", "C2", "C3"
+  platform           String // FACEBOOK, INSTAGRAM, GOOGLE, TWITTER
+  platformCampaignId String? // External campaign ID from platform
+  status             String    @default("ACTIVE") // ACTIVE, PAUSED, COMPLETED
+  budget             Float?
+  startDate          DateTime?
+  endDate            DateTime?
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  leads MarketingLead[]
+
+  @@index([platform])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// MARKETING LEAD MODEL - Leads from Marketing Campaigns
+// ============================================
+model MarketingLead {
+  id String @id @default(cuid())
+
+  // Campaign Relation
+  campaignId String
+  campaign   MarketingCampaign @relation(fields: [campaignId], references: [id])
+
+  // Lead Information
+  fullName String?
+  email    String?
+  phone    String?
+
+  // Status Tracking
+  status   String  @default("NEW") // NEW, CONTACTED, QUALIFIED, CONVERTED, LOST
+  source   String // FACEBOOK, INSTAGRAM, GOOGLE, TWITTER
+  referrer String? // UTM source or referrer URL
+
+  // Platform Integration
+  platformLeadId String? // External lead ID from platform (for deduplication)
+  metadata       Json? // Platform-specific fields (flexible storage)
+
+  // Conversion Tracking
+  convertedToUserId String? // Reference to User.id if lead converted
+  conversionDate    DateTime?
+
+  // Assignment
+  assignedToId String?
+  assignedTo   Admin?  @relation("AssignedLeads", fields: [assignedToId], references: [id])
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  // Most-recent activity across lead + linked user/orders (excludes logins).
+  // Default ordering for /marketing/leads: lastActivityAt desc.
+  lastActivityAt DateTime @default(now())
+
+  @@unique([platformLeadId, source])
+  @@index([campaignId])
+  @@index([status])
+  @@index([source])
+  @@index([createdAt])
+  @@index([lastActivityAt])
+  @@index([assignedToId])
+}
+
+// ============================================
+// NSDL BATCH MODEL - Pre-listing stock records
+// ============================================
+model NsdlBatchRecord {
+  id String @id @default(cuid())
+
+  isin                String
+  quantity            Int
+  dpId                String?
+  clientId            String?
+  considerationAmount Float?
+  executionDate       String?
+  dateOfPayment       String?
+  modeOfPayment       String? @default("03")
+  transfereeName      String?
+  bankName            String?
+  bankAccountNumber   String?
+  transactionId       String?
+
+  // Batch Tracking
+  batchSequence    Int?    @unique
+  isBatchGenerated Boolean @default(false)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isin])
+  @@index([createdAt])
+}
+
+// TESTIMONIAL MODEL - Client Testimonials
+// ============================================
+// Stores client/customer testimonials managed through the CMS/Admin panels.
+// Displayed on the public-facing landing page.
+// Stars/rating field will be added in a future iteration.
+model Testimonial {
+  id String @id @default(cuid())
+
+  // Testimonial author details
+  name        String // Full name (first + last in a single field)
+  designation String // Job title / role (e.g. "CEO", "CTO")
+  company     String // Company or organisation name
+
+  // Testimonial content
+  feedback String @db.Text // The testimonial quote / feedback note
+
+  // Visibility toggle -- inactive testimonials are hidden from the public page
+  isActive Boolean @default(true)
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([createdAt])
+}
+
+// ============================================
+// COMPANY DATA MODEL - Cached Probe42 Information
+// ============================================
+model CompanyData {
+  id        String   @id @default(cuid())
+  cin       String   @unique
+  data      Json // Stores the complete Probe42 API response
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============================================
+// ACCOUNTING ENUMS
+// ============================================
+enum LedgerType {
+  BANK
+  USER
+  STOCK // Auto-created per Stock, tracks stock quantity
+  PURCHASE // System control account — accumulates all purchase voucher amounts (Dr)
+  SALE // System control account — accumulates all sale voucher amounts (Cr)
+}
+
+enum VoucherType {
+  PAYMENT_SALES
+  RECEIPT
+  JOURNAL
+  STOCK_JOURNAL
+  DEBIT_NOTE
+  CREDIT_NOTE
+}
+
+enum EntryType {
+  DEBIT
+  CREDIT
+}
+
+// ============================================
+// LEDGER MODEL - Bank & User Accounts
+// ============================================
+// Represents a financial account in the double-entry system.
+// Type BANK: stores bank-specific fields (bankName, accountNumber, ifscCode).
+// Type USER: stores user/party-specific fields (phone, email, pan).
+model Ledger {
+  id String @id @default(cuid())
+
+  // Ledger identity
+  name    String // e.g. "HDFC Bank Current A/C" or "Harish Chandra Jaiswal"
+  code    String?    @unique // e.g. "UL0523A3F9KX2M", "BL0523B2C1D4E5"
+  sunCode String?
+  sunName String?
+  type    LedgerType // BANK or USER
+
+  // Linked user (1:1 — each user gets exactly one ledger, auto-created on full verification)
+  userId String? @unique
+  user   User?   @relation(fields: [userId], references: [id])
+
+  // Linked stock (1:1 — each stock gets exactly one ledger, auto-created on stock creation)
+  stockId String? @unique
+  stock   Stock?  @relation(fields: [stockId], references: [id])
+
+  // Balances
+  openingBalance     Float  @default(0) // Balance at Financial Year start
+  openingBalanceType String @default("DR") // DR or CR
+  currentBalance     Float  @default(0) // Running balance (updated on voucher posting)
+
+  // Bank-specific fields (nullable, used only when type = BANK)
+  bankName      String? // e.g. "HDFC Bank"
+  accountNumber String? // Bank account number
+  ifscCode      String? // IFSC code
+
+  // User/Party-specific fields (nullable, used only when type = USER)
+  phone               String?
+  email               String?
+  pan                 String? // PAN number
+  gstNo               String? // GST number
+  tanNo               String? // TAN number
+  dematAccountNo      String? // Client Demat account number
+  clientBankAccountNo String? // Client's bank account number
+  clientIfscCode      String? // Client's bank IFSC code
+
+  // Common optional fields
+  address  String?
+  isActive Boolean @default(true)
+  metadata Json? // Flexible extra fields
+
+  // Group assignment (optional — Tally-style group classification)
+  groupId String?
+  group   AccountingGroup? @relation(fields: [groupId], references: [id])
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Relations
+  voucherEntries VoucherEntry[]
+
+  @@index([type])
+  @@index([isActive])
+  @@index([name])
+  @@index([createdAt])
+}
+
+// ============================================
+// VOUCHER MODEL - Financial Transactions
+// ============================================
+// Represents a financial voucher/transaction.
+// Each voucher must have balanced debit and credit entries (double-entry).
+// Voucher is "posted" when isPosted = true, which locks the voucher
+// and applies the balance changes to the associated ledgers.
+model Voucher {
+  id String @id @default(cuid())
+
+  // Voucher identity
+  voucherNumber String      @unique // Auto-generated: PAY-0001, RCP-0001, etc.
+  type          VoucherType // PAYMENT_SALES, PAYMENT, RECEIPT, JOURNAL, CONTRA
+  date          DateTime // Transaction date
+
+  // Approval Lifecycle
+  status         VoucherStatus @default(PENDING)
+  approvedById   String? // Admin/PanelUser ID who approved or remarked
+  approvedAt     DateTime? // Timestamp of the approval/remark action
+  approvalRemark String?       @db.Text // Remark text (required when REMARKED)
+
+  // Details
+  narration   String? @db.Text // Description / memo
+  totalAmount Float // Sum of one side (debit or credit, they must be equal)
+
+  // Reference details
+  referenceNumber String? // UTR No, Contract Note No, etc.
+  referenceDate   DateTime? // UTR Date, Contract Advice Date, etc.
+
+  // Voucher Metadata
+  branch         String?
+  vertical       String?
+  employeeId     String?
+  employeeName   String?
+  subBrokerCode  String?
+  subBrokerName  String?
+  // Audit
+  createdById    String // Admin ID who created the voucher
+  updatedById    String? // Admin ID who updated/edited the voucher
+  adjustmentType String? // BONUS, SPLIT, TRANSFER_IN, TRANSFER_OUT, ADJUSTMENT_IN, ADJUSTMENT_OUT
+
+  // Flexible storage
+  metadata Json? // Ref numbers, attachments, notes, etc.
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  // Custom Voucher Type Relation
+  customTypeId String?
+  customType   CustomVoucherType? @relation(fields: [customTypeId], references: [id])
+
+  // Relations
+  entries            VoucherEntry[]
+  inventoryMovements InventoryMovement[]
+  inventoryShortfalls InventoryShortfall[]
+  inventoryLots      InventoryLot[]
+  saleAllocations    InventoryLotAllocation[] @relation("SaleVoucherAllocation")
+  cogsAllocations    InventoryLotAllocation[] @relation("CogsVoucherAllocation")
+
+  @@index([type])
+  @@index([date])
+  @@index([status])
+  @@index([createdById])
+  @@index([createdAt])
+  @@index([voucherNumber])
+  @@index([customTypeId])
+  @@index([referenceNumber])
+}
+
+// ============================================
+// VOUCHER ENTRY MODEL - Debit/Credit Line Items
+// ============================================
+// Each voucher has 2+ entries. In a valid voucher:
+//   ∑ DEBIT amounts === ∑ CREDIT amounts
+model VoucherEntry {
+  id String @id @default(cuid())
+
+  // Parent voucher
+  voucherId String
+  voucher   Voucher @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+
+  // Target ledger
+  ledgerId String
+  ledger   Ledger @relation(fields: [ledgerId], references: [id])
+
+  // Entry details
+  entryType EntryType // DEBIT or CREDIT
+  amount    Float // Always positive
+  narration String? // Optional line-level narration
+
+  // Stock/Script details (for sale/purchase vouchers)
+  scriptName String? // e.g. "NSE Ltd"
+  isin       String? // e.g. "INE721I01024"
+  qty        Int? // Quantity
+  rate       Float? // Rate per unit
+
+  // Additional
+  remarks  String? @db.Text // Extra remarks
+  metadata Json? // Flexible storage for row-level details (Order ID, Mode of Payment, Sub Ledger, etc.)
+
+  // Timestamp
+  createdAt DateTime @default(now())
+
+  @@index([ledgerId])
+  @@index([entryType])
+}
+
+// ============================================
+// COUPON MODEL - RM Generated Discounts
+// ============================================
+model Coupon {
+  id   String @id @default(cuid())
+  code String @unique
+
+  // Relations
+  internalRmId String?
+  internalRm   InternalRM? @relation(fields: [internalRmId], references: [id])
+
+  distributorRmId String?
+  distributorRm   DistributorRM? @relation(fields: [distributorRmId], references: [id])
+
+  stockId String // The specific stock this applies to
+  stock   Stock  @relation(fields: [stockId], references: [id])
+
+  assignedUserId String? // Optional: If tied to a specific user
+  assignedUser   User?   @relation("AssignedCoupons", fields: [assignedUserId], references: [id])
+
+  // Rules
+  minQuantity        Int // Minimum number of shares required
+  maxQuantity        Int // Maximum number of shares allowed
+  discountAmount     Float // Fixed discount amount to apply (for FIXED type) or computed snapshot (for PERCENTAGE type)
+  discountType       String @default("FIXED") // "FIXED" or "PERCENTAGE"
+  discountPercentage Float? // Percentage discount (0.01 - 100). Only used when discountType = "PERCENTAGE"
+  lendingPrice       Float? // Historical Lending Price Floor Snapshot (frozen at coupon generation)
+
+  // Status
+  isUsed Boolean   @default(false)
+  usedAt DateTime?
+
+  usedByUserId String? // The user who actually used it
+  usedByUser   User?   @relation("UsedCoupons", fields: [usedByUserId], references: [id])
+
+  orderId String? @unique // Link to the order it was used on
+  order   Order?  @relation(fields: [orderId], references: [id])
+
+  expiresAt DateTime? // Expiration date
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([code])
+  @@index([internalRmId])
+  @@index([distributorRmId])
+  @@index([stockId])
+  @@index([isUsed])
+}
+
+// ============================================
+// LOGS & HISTORY
+// ============================================
+
+model LoginHistory {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  ipAddress  String
+  deviceInfo String?
+  location   String?
+  loginAt    DateTime @default(now())
+
+  @@index([userId])
+  @@index([loginAt])
+}
+
+// ============================================
+// E-SIGN ATTEMPTS (first-class log of every Digitap session)
+// Captures sign-first sessions that never become Orders so e-sign
+// dropouts (initiated but never signed) are visible in marketing.
+// Status: INITIATED | SIGNED | CANCELLED | MISMATCH | FAILED | EXPIRED
+// ============================================
+model EsignAttempt {
+  id     String @id @default(cuid())
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  docId String @unique
+
+  stockId  String?
+  basketId String?
+  stockName String?
+  quantity Int     @default(1)
+  pricePerShare Float?
+  totalAmount   Float?
+
+  orderId String?
+
+  status String @default("INITIATED")
+
+  intent Json?
+
+  signedAt DateTime?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([status])
+  @@index([createdAt])
+  @@index([docId])
+  @@index([orderId])
+}
+
+// ============================================
+// E-SIGN TEMPLATES
+// ============================================
+model ESignTemplate {
+  id         String  @id @default(cuid())
+  templateId String // External template ID used in e-sign API requests
+  pdfUrl     String? // MinIO URL of the PDF document to be signed
+
+  // Audit Trail
+  createdById String
+  createdBy   Admin  @relation("ESignTemplateCreatedBy", fields: [createdById], references: [id])
+
+  // Status
+  isActive Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive])
+}
+
+// ============================================
+// VOUCHER STATUS LIFECYCLE
+// ============================================
+enum VoucherStatus {
+  PENDING // Created, awaiting approval
+  APPROVED // Approved — counts in books
+  REMARKED // Rejected with a note
+}
+
+// ============================================
+// ACCOUNTING GROUP (Tally-style)
+// ============================================
+model AccountingGroup {
+  id               String   @id @default(cuid())
+  name             String
+  code             String?  @unique
+  alias            String?
+  under            String // Parent group e.g. "Capital Account"
+  isSublLedger     Boolean  @default(false) // Behaves like sub-ledger
+  nettBalance      Boolean  @default(false) // Nett Dr/Cr balances for reporting
+  usedForCalc      Boolean  @default(false) // Used for calculation (taxes/discounts)
+  allocationMethod String   @default("Not Applicable") // Not Applicable | Quantity | Value
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  // Ledgers assigned to this group
+  ledgers Ledger[]
+
+  @@index([under])
+  @@index([createdAt])
+}
+
+// ============================================
+// CUSTOM VOUCHER TYPE MODEL (Tally-style sub-types)
+// ============================================
+model CustomVoucherType {
+  id            String      @id @default(cuid())
+  name          String      @unique // e.g. "GST Sales", "Petty Cash"
+  baseType      VoucherType // PAYMENT_SALES, RECEIPT, JOURNAL
+  prefix        String? // e.g. "GSTS-" or "PC-"
+  needsApproval Boolean     @default(true) // Dynamic opt-out of audit approvals
+  isActive      Boolean     @default(true)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  vouchers      Voucher[]
+
+  @@index([isActive])
+  @@index([baseType])
+}
+
+// ============================================
+// ACCOUNTING PERIOD MODEL (Tally-style Lock Period)
+// ============================================
+model AccountingPeriod {
+  id            String    @id @default(cuid())
+  name          String // e.g. "FY 2026-27"
+  startDate     DateTime // Financial year start date
+  endDate       DateTime // Financial year end date
+  lockStartDate DateTime? // Lock range start date (optional)
+  lockEndDate   DateTime? // Lock range end date (optional)
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([isActive])
+}
+
+// ============================================
+// SUN ACCOUNT MODEL (Database-backed Sun Mappings)
+// ============================================
+model SunAccount {
+  id        String   @id @default(cuid())
+  code      String   @unique // e.g. "STOCKBSRP"
+  name      String // e.g. "Closing Stocks-BS (Retail Platform)"
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([code])
+}
+
+// ============================================
+// INVENTORY MOVEMENT MODEL (Audit log of stock quantities)
+// ============================================
+model InventoryMovement {
+  id           String    @id @default(cuid())
+  stockId      String
+  stock        Stock     @relation(fields: [stockId], references: [id])
+  voucherId    String?
+  voucher      Voucher?  @relation(fields: [voucherId], references: [id], onDelete: Cascade)
+  qty          Int
+  rate         Float?
+  type         String // BONUS, SPLIT, TRANSFER_IN, TRANSFER_OUT, ADJUSTMENT_IN, ADJUSTMENT_OUT, PURCHASE, SALE, etc.
+  snapshotDate DateTime?
+  createdAt    DateTime  @default(now())
+  createdById  String
+
+  @@index([stockId])
+  @@index([voucherId])
+  @@index([stockId, snapshotDate(sort: Desc)])
+}
+
+// ============================================
+// STOCK INTEREST MODEL - Captures out-of-stock user interest
+// ============================================
+model StockInterest {
+  id                String   @id @default(cuid())
+  userId            String
+  user              User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  stockId           String
+  stock             Stock    @relation(fields: [stockId], references: [id], onDelete: Cascade)
+  requestedQuantity Int? // The quantity the user originally wanted to buy
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([userId, stockId])
+  @@index([userId])
+  @@index([stockId])
+}
+
+// ============================================
+// REVENUE SHARING SETTINGS MODEL
+// ============================================
+model RevenueShareSetting {
+  id                  String   @id @default(cuid())
+  type                String   @unique // "INTERNAL" or "EXTERNAL"
+  revenuePercentage   Float    @default(0) // Revenue share percentage (0-100)
+  incentivePercentage Float    @default(0) // Incentive percentage (0-100, relevant for INTERNAL)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+}
+
+// ============================================
+// MAKER-CHECKER APPROVAL REQUEST MODEL
+// ============================================
+model ChangeRequest {
+  id         String  @id @default(cuid())
+  entityType String // "STOCK_PRICING", "REVENUE_SHARING"
+  entityId   String? // The ID of the Stock or RevenueShareSetting (if applicable)
+
+  // The proposed changes as a JSON object
+  proposedData Json
+
+  // Who made the request
+  requestedById String
+  requestedBy   Admin  @relation("RequestedBy", fields: [requestedById], references: [id])
+
+  status String @default("PENDING") // PENDING, APPROVED, REJECTED
+
+  // Who reviewed it (Super Admin)
+  reviewedById String?
+  reviewedBy   Admin?  @relation("ReviewedBy", fields: [reviewedById], references: [id])
+  reviewNote   String? @db.Text
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([status])
+  @@index([entityType])
+  @@index([requestedById])
+}
+
+// ============================================
+// SELL REQUEST MODEL
+// ============================================
+enum SellRequestStatus {
+  PENDING
+  UNDER_REVIEW
+  CONTACTED
+  NEGOTIATING
+  ACCEPTED
+  REJECTED
+}
+
+model SellRequest {
+  id String @id @default(cuid())
+
+  // User who wants to sell
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  // Stock they want to sell (must be a listed stock)
+  stockId String
+  stock   Stock  @relation(fields: [stockId], references: [id], onDelete: Cascade)
+
+  // Sell details
+  quantity      Int // Number of shares user wants to sell
+  pricePerShare Float // Price per share user is asking for
+  totalAmount   Float // quantity × pricePerShare (computed on server)
+
+  // Lifecycle
+  status    SellRequestStatus @default(PENDING)
+  adminNote String?           @db.Text // Internal operations note
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+  @@index([stockId])
+  @@index([status])
+  @@index([createdAt])
+}
+
+// ============================================
+// CASHFREE RECONCILIATION RUN MODEL
+// ============================================
+model ReconciliationRun {
+  id         String   @id @default(cuid())
+  runDate    DateTime
+  executedAt DateTime @default(now())
+  executedBy String   @default("SYSTEM")
+  status     String   @default("COMPLETED")
+
+  totalTransactions Int @default(0)
+  reconciledCount   Int @default(0)
+  failedCount       Int @default(0)
+  missingCashfree   Int @default(0)
+  missingLocal      Int @default(0)
+
+  reportData Json?
+  summary    Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([runDate])
+  @@index([executedAt])
+}
+
+// ============================================
+// PERPETUAL INVENTORY (FIFO COGS) MODELS
+// ============================================
+
+enum InventoryLotStatus {
+  ACTIVE
+  EXHAUSTED
+  CANCELLED
+}
+
+enum AllocationStatus {
+  ACTIVE
+  REVERSED
+}
+
+// Uncosted sales waiting for a later purchase, settled at actual purchase cost.
+model InventoryShortfall {
+  id            String   @id @default(cuid())
+  stockId       String
+  stock         Stock    @relation(fields: [stockId], references: [id])
+  saleVoucherId String
+  saleVoucher   Voucher  @relation(fields: [saleVoucherId], references: [id])
+  remainingQty  Decimal
+  saleDate      DateTime
+  createdAt     DateTime @default(now())
+
+  @@unique([stockId, saleVoucherId])
+  @@index([stockId, saleDate, createdAt, id])
+}
+
+model InventoryLot {
+  id           String             @id @default(cuid())
+  stockId      String
+  stock        Stock              @relation(fields: [stockId], references: [id])
+  voucherId    String
+  voucher      Voucher            @relation(fields: [voucherId], references: [id])
+  purchaseDate DateTime // Effective date for deterministic FIFO ordering
+  originalQty  Decimal
+  remainingQty Decimal
+  unitCost     Decimal
+  status       InventoryLotStatus @default(ACTIVE)
+  createdAt    DateTime           @default(now())
+  updatedAt    DateTime           @updatedAt
+
+  allocations InventoryLotAllocation[]
+
+  @@index([stockId])
+  @@index([voucherId])
+  @@index([stockId, status, purchaseDate, createdAt, id]) // Optimized for FIFO selection
+}
+
+model InventoryLotAllocation {
+  id            String           @id @default(cuid())
+  lotId         String
+  lot           InventoryLot     @relation(fields: [lotId], references: [id])
+  saleVoucherId String
+  saleVoucher   Voucher          @relation("SaleVoucherAllocation", fields: [saleVoucherId], references: [id])
+  cogsVoucherId String
+  cogsVoucher   Voucher          @relation("CogsVoucherAllocation", fields: [cogsVoucherId], references: [id])
+  qtyConsumed   Decimal
+  unitCost      Decimal // Copied from InventoryLot for historical safety
+  cogsAmount    Decimal
+  status        AllocationStatus @default(ACTIVE)
+  createdAt     DateTime         @default(now())
+
+  @@index([lotId])
+  @@index([saleVoucherId])
+  @@index([cogsVoucherId])
+}
+
+// ============================================
+// CASHFREE SETTLEMENT RECONCILIATION
+// ============================================
+
+model CashfreeSettlement {
+  id             String   @id @default(cuid())
+  utrNumber      String   @unique
+  settlementId   String?  @unique
+  grossAmount    Decimal
+  feeAmount      Decimal
+  netAmount      Decimal
+  paymentDate    DateTime // The date the original transaction occurred (e.g. 31-Jul)
+  settlementDate DateTime // The date Cashfree deposited to HDFC (e.g. 01-Aug)
+  voucherId      String?  @unique
+  createdAt      DateTime @default(now())
+
+  @@index([paymentDate])
+  @@index([settlementDate])
+}
+
+// ============================================
+// CAROUSEL MEDIA MODEL - App Carousel (Images/Videos/GIFs)
+// ============================================
+model CarouselMedia {
+  id String @id @default(cuid())
+
+  // Media details
+  title       String   // Display title (e.g. "Summer Sale", "New Stock Alert")
+  description String?  // Optional short description / caption
+  mediaType   String   // IMAGE | VIDEO | GIF
+  mediaUrl    String   // Storage URL (MinIO path e.g. /storage/carousel/...)
+  thumbnailUrl String? // Optional thumbnail for videos
+  linkUrl     String?  // Optional deep-link URL (e.g. stock page, offer page)
+  linkType    String?  // Optional link type: STOCK | ARTICLE | NEWS | URL | NONE
+
+  // Display control
+  displayOrder Int     @default(0) // Lower = shown first in carousel
+  isActive     Boolean @default(true) // Toggle visibility
+
+  // Timestamps
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([isActive, displayOrder])
+  @@index([createdAt])
+}

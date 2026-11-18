@@ -1,0 +1,39 @@
+{
+  "name": "db-unlisted-stox",
+  "version": "1.0.0",
+  "main": "./dist/index.js",
+  "type": "commonjs",
+  "exports": {
+    ".": "./dist/index.js",
+    "./client": "./dist/index.js",
+    "./dist/index": "./dist/index.js",
+    "./src/constants/admin-permissions": "./dist/constants/admin-permissions.js"
+  },
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "generate": "prisma generate",
+    "find:digitap": "node find-digitap-tx.js",
+    "seed": "ts-node src/seed.ts",
+    "seed:articles": "ts-node src/seed-flagship-articles.ts",
+    "seed:prices": "ts-node src/seed-stock-prices.ts",
+    "feed:purchases": "ts-node src/feed-purchase-vouchers.ts"
+  },
+  "dependencies": {
+    "@47ng/cloak": "^1.2.0",
+    "@prisma/client": "^6.18.0",
+    "@repo/typescript-config": "workspace:*",
+    "bcrypt": "^6.0.0",
+    "dotenv": "^17.4.2",
+    "prisma": "^6.18.0",
+    "prisma-field-encryption": "^1.6.0",
+    "xlsx": "^0.18.5"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
+    "@types/node": "^24.7.2",
+    "ts-node": "^10.9.2"
+  }
+}

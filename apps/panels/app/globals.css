@@ -1,0 +1,104 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 0 0% 7%;
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 7%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 7%;
+    --primary: 142 71% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 96.1%;
+    --secondary-foreground: 0 0% 7%;
+    --muted: 220 14% 96%;
+    --muted-foreground: 220 9% 46%;
+    --accent: 141 79% 85%;
+    --accent-foreground: 142 71% 45%;
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 13% 91%;
+    --input: 220 13% 91%;
+    --ring: 142 71% 45%;
+    --radius: 0.75rem;
+    --emerald: 142 71% 45%;
+    --emerald-light: 141 79% 85%;
+    --emerald-dark: 142 76% 36%;
+  }
+
+  .dark {
+    --background: 0 0% 3.9%;
+    --foreground: 0 0% 98%;
+    --card: 0 0% 3.9%;
+    --card-foreground: 0 0% 98%;
+    --popover: 0 0% 3.9%;
+    --popover-foreground: 0 0% 98%;
+    --primary: 142 71% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 0 0% 14.9%;
+    --secondary-foreground: 0 0% 98%;
+    --muted: 0 0% 14.9%;
+    --muted-foreground: 0 0% 63.9%;
+    --accent: 0 0% 14.9%;
+    --accent-foreground: 0 0% 98%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 0 0% 14.9%;
+    --input: 0 0% 14.9%;
+    --ring: 142 71% 45%;
+    --emerald: 142 71% 45%;
+    --emerald-light: 141 79% 85%;
+    --emerald-dark: 142 76% 36%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', 'Geist', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  }
+}
+
+@layer utilities {
+  .stat-card-shadow {
+    box-shadow: 0px 4px 20px rgba(0, 0, 0, 0.06);
+  }
+  .stat-card-shadow-hover {
+    box-shadow: 0px 8px 30px rgba(0, 0, 0, 0.1);
+  }
+  .panel-shadow {
+    box-shadow: 0px 4px 24px rgba(0, 0, 0, 0.05);
+  }
+}
+
+/* Add Lead Button */
+.add-lead-btn {
+  background-color: #16A34A;
+  color: white;
+  border: 2px solid transparent;
+  transition: background-color 280ms ease, color 280ms ease, border-color 280ms ease, box-shadow 280ms ease, transform 150ms ease;
+}
+
+.add-lead-btn:hover {
+  background-color: white;
+  color: #111827;
+  border-color: #16A34A;
+}
+
+.add-lead-btn:hover svg {
+  color: #111827;
+}
+
+.add-lead-btn:active {
+  background-color: white;
+  color: #111827;
+  border-color: #16A34A;
+  transform: scale(0.98);
+  box-shadow: 0px 2px 8px rgba(22, 163, 74, 0.2);
+}

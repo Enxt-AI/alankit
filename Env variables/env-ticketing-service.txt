@@ -1,0 +1,34 @@
+# ==============================================================================
+# KUBERNETES SERVICE-SPECIFIC RUN-TIME SECRET: ticketing-service (env-ticketing-service.txt)
+# ==============================================================================
+# IMPORTANT: Mount `env-global.txt` FIRST and `env-ticketing-service.txt` SECOND
+# in the K8s Deployment so `DATABASE_URL` here (pointing to `ticketing_system`)
+# overrides the `DATABASE_URL` in `env-global.txt` (which points to `unlisted_stox_db`),
+# while `ADMIN_DATABASE_URL` points to `unlisted_stox_db`.
+# ==============================================================================
+
+## 1. Server & Node Runtime (`ticketing-service` specific)
+NAME                                REQUIRED    FALLBACK                        WHERE USED                                                              DESCRIPTION
+PORT                                Optional    3001                            src/main.ts                                                             Port the Fastify NestJS HTTP server listens on.
+NODE_OPTIONS                        Optional    --max-old-space-size=200        apps/ticketing-service/Dockerfile                                       Node.js V8 heap memory limit configured in the Docker production image.
+
+## 2. Dual Database Connections (`ticketing_system` + `unlisted_stox_db`)
+NAME                                REQUIRED    FALLBACK                        WHERE USED                                                              DESCRIPTION
+DATABASE_URL                        Yes         None (Overrides env-global.txt) src/prisma/prisma.service.ts, src/main.ts, packages/db-ticketing/prisma/schema.prisma    Primary PostgreSQL runtime connection string for the Ticketing database (`ticketing_system`). MUST override `DATABASE_URL` from `env-global.txt`.
+ADMIN_DATABASE_URL                  Yes         DATABASE_URL                    src/prisma/admin-prisma.service.ts                                      PostgreSQL runtime connection string for the main `unlisted_stox_db` database used by `AdminPrismaService` to query `Admin` (support agents) and `User` records.
+
+## 3. Ticket Assignment & Cron Schedulers
+NAME                                REQUIRED    FALLBACK                        WHERE USED                                                              DESCRIPTION
+TICKET_ASSIGNMENT_STRATEGY          Optional    round-robin                     src/assignment/assignment.service.ts                                    Strategy used by `autoAssignTicket()` (`'round-robin'` or `'workload'`).
+CRON_AGENT_AVAILABILITY_UPDATE      Optional    0 0 * * *                       src/scheduler/scheduler.service.ts                                      Cron schedule expression for resetting active `SUPPORT_AGENT` availability to `'available'` (defaults to daily at midnight).
+CRON_AUTO_CLOSE_RESOLVED            Optional    0 2 * * *                       src/scheduler/scheduler.service.ts                                      Cron schedule expression for automatically closing resolved tickets past the cutoff threshold (defaults to daily at 2:00 AM).
+AUTO_CLOSE_RESOLVED_DAYS            Optional    7                               src/scheduler/scheduler.service.ts                                      Number of days a ticket must remain in `'resolved'` status before `autoCloseResolvedTickets()` transitions it to `'closed'`.
+
+# ------------------------------------------------------------------------------
+# INHERITED FROM GLOBAL SECRET (`env-global.txt`):
+# - NODE_ENV, FRONTEND_URL, COOKIE_ENCRYPTION_KEY
+# - DIRECT_DATABASE_URL
+# - PRISMA_FIELD_ENCRYPTION_KEY, PRISMA_FIELD_DECRYPTION_KEYS, JSON_FIELD_ENCRYPTION_KEY, JSON_FIELD_DECRYPTION_KEYS
+# - REDIS_URL, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_TLS
+# - RESEND_API_KEY, RESEND_FROM_EMAIL
+# ------------------------------------------------------------------------------

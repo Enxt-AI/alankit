@@ -1,0 +1,4 @@
+; PgBouncer userlist.txt
+; Format: "username" "password"
+; Must match the PostgreSQL credentials used in DATABASE_URL
+"unlisted" "Kx9mZpLq3Wr"

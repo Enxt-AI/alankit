@@ -1,0 +1,75 @@
+# See https://help.github.com/articles/ignoring-files/ for more about ignoring files.
+
+# Dependencies
+node_modules
+.pnp
+.pnp.js
+
+# Local env files
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+.env.staging
+
+# Testing
+coverage
+
+# Turbo
+.turbo
+
+# Vercel
+.vercel
+
+# Build Outputs
+.next/
+out/
+build
+dist
+
+.state/
+logs/
+.logs
+
+# Debug
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+.DS_Store
+*.pem
+*.pemz
+.tmp-*/
+
+postgres-data/
+uploads/
+redis-data/
+
+smc_key
+
+
+# Test Scripts
+test-*.ts
+smc-unlisted-stox\pnpm-lock.yaml
+.code-review-graph
+DSMC
+
+# Android / TWA
+apps/android-twa/android.keystore
+local.properties
+.gradle/
+.idea/
+*.iml
+apps/android-twa/app/release/*
+apps/react-native-app/
+apps/capacitor-app/
+logo.webp
+
+.state
+.turbo
+
+.playwright-mcp
+unlisted_backup.dump
+.dump

@@ -1,0 +1,360 @@
+{
+  "schema_version": 1,
+  "diagram_type": "architecture",
+  "meta": {
+    "title": "SMC Unlisted Stox — Platform Architecture",
+    "quality_profile": "showcase",
+    "views": [
+      {
+        "id": "public-path",
+        "label": "Public request path",
+        "focus": [
+          "clients",
+          "nginx",
+          "web",
+          "stocks",
+          "postgres"
+        ],
+        "note": "Investor traffic from edge to catalog and orders."
+      },
+      {
+        "id": "ops-path",
+        "label": "Ops and money path",
+        "focus": [
+          "portals",
+          "tickets",
+          "payments",
+          "storage",
+          "external"
+        ],
+        "note": "Back-office, support tickets and Cashfree payments."
+      },
+      {
+        "id": "platform",
+        "label": "Platform backbone",
+        "focus": [
+          "auth",
+          "postgres",
+          "redis",
+          "storage"
+        ],
+        "note": "Identity, Postgres plus PgBouncer, Redis cache and queues."
+      }
+    ]
+  },
+  "components": [
+    {
+      "id": "clients",
+      "type": "external",
+      "label": "Clients",
+      "sublabel": "Browser / PWA / Mobile",
+      "pos": [
+        40,
+        40
+      ],
+      "size": [
+        180,
+        70
+      ]
+    },
+    {
+      "id": "nginx",
+      "type": "cloud",
+      "label": "Nginx Gateway",
+      "sublabel": "WAF + cache + rate limit",
+      "pos": [
+        300,
+        40
+      ],
+      "size": [
+        180,
+        70
+      ],
+      "tag": ":80 / :90"
+    },
+    {
+      "id": "web",
+      "type": "frontend",
+      "label": "Web App",
+      "sublabel": "Next.js public :3000",
+      "pos": [
+        560,
+        40
+      ],
+      "size": [
+        180,
+        70
+      ]
+    },
+    {
+      "id": "portals",
+      "type": "frontend",
+      "label": "Ops Portals",
+      "sublabel": "Panels :4000 + RM :8000",
+      "pos": [
+        820,
+        40
+      ],
+      "size": [
+        180,
+        70
+      ]
+    },
+    {
+      "id": "auth",
+      "type": "security",
+      "label": "Auth Service",
+      "sublabel": "NestJS OTP + JWT :3002",
+      "pos": [
+        40,
+        220
+      ],
+      "size": [
+        180,
+        70
+      ],
+      "tag": "OTP + JWT"
+    },
+    {
+      "id": "stocks",
+      "type": "backend",
+      "label": "Stocks Service",
+      "sublabel": "Catalog + baskets :3003",
+      "pos": [
+        300,
+        220
+      ],
+      "size": [
+        180,
+        70
+      ]
+    },
+    {
+      "id": "tickets",
+      "type": "backend",
+      "label": "Ticketing Service",
+      "sublabel": "Support + labels :3001",
+      "pos": [
+        560,
+        220
+      ],
+      "size": [
+        180,
+        70
+      ]
+    },
+    {
+      "id": "payments",
+      "type": "backend",
+      "label": "Payments Service",
+      "sublabel": "Cashfree + Bull :3004",
+      "pos": [
+        820,
+        220
+      ],
+      "size": [
+        180,
+        70
+      ]
+    },
+    {
+      "id": "storage",
+      "type": "backend",
+      "label": "Storage Service",
+      "sublabel": "Upload + MinIO S3 :3005",
+      "pos": [
+        300,
+        400
+      ],
+      "size": [
+        180,
+        70
+      ]
+    },
+    {
+      "id": "postgres",
+      "type": "database",
+      "label": "PostgreSQL",
+      "sublabel": "Main + ticketing via PgBouncer",
+      "pos": [
+        40,
+        400
+      ],
+      "size": [
+        180,
+        70
+      ],
+      "tag": ":5432 / :6432"
+    },
+    {
+      "id": "redis",
+      "type": "database",
+      "label": "Redis 7",
+      "sublabel": "Cache + sessions + Bull",
+      "pos": [
+        560,
+        400
+      ],
+      "size": [
+        180,
+        70
+      ],
+      "tag": ":6379"
+    },
+    {
+      "id": "external",
+      "type": "external",
+      "label": "External Providers",
+      "sublabel": "Cashfree + Resend + Google",
+      "pos": [
+        820,
+        400
+      ],
+      "size": [
+        180,
+        70
+      ]
+    }
+  ],
+  "boundaries": [
+    {
+      "kind": "region",
+      "label": "Staging network (EC2 compose)",
+      "wraps": [
+        "nginx",
+        "web",
+        "portals",
+        "auth",
+        "stocks",
+        "tickets",
+        "payments",
+        "storage",
+        "postgres",
+        "redis"
+      ]
+    }
+  ],
+  "connections": [
+    {
+      "id": "edge-in",
+      "from": "clients",
+      "to": "nginx",
+      "label": "HTTPS",
+      "variant": "emphasis",
+      "labelDy": -18
+    },
+    {
+      "id": "web-serve",
+      "from": "nginx",
+      "to": "web"
+    },
+    {
+      "id": "ops-serve",
+      "from": "nginx",
+      "to": "portals",
+      "fromSide": "top",
+      "toSide": "top",
+      "via": [
+        [
+          390,
+          12
+        ],
+        [
+          910,
+          12
+        ]
+      ]
+    },
+    {
+      "id": "gw-auth",
+      "from": "nginx",
+      "to": "auth"
+    },
+    {
+      "id": "gw-stocks",
+      "from": "nginx",
+      "to": "stocks"
+    },
+    {
+      "id": "gw-tickets",
+      "from": "nginx",
+      "to": "tickets"
+    },
+    {
+      "id": "gw-pay",
+      "from": "nginx",
+      "to": "payments",
+      "fromSide": "bottom",
+      "toSide": "top",
+      "via": [
+        [
+          390,
+          150
+        ],
+        [
+          910,
+          150
+        ]
+      ]
+    },
+    {
+      "id": "gw-store",
+      "from": "stocks",
+      "to": "storage"
+    },
+    {
+      "id": "auth-data",
+      "from": "auth",
+      "to": "postgres",
+      "label": "SQL",
+      "labelAt": [
+        170,
+        348
+      ]
+    },
+    {
+      "id": "stocks-cache",
+      "from": "stocks",
+      "to": "redis",
+      "label": "cache",
+      "labelDx": 20
+    },
+    {
+      "id": "pay-webhook",
+      "from": "payments",
+      "to": "external",
+      "label": "Cashfree",
+      "variant": "security",
+      "labelAt": [
+        946,
+        348
+      ]
+    }
+  ],
+  "cards": [
+    {
+      "dot": "cyan",
+      "title": "Edge",
+      "items": [
+        "Nginx Lua fronts web, panels, RM and api.* domains",
+        "1s proxy cache on stocks, auth and payments rate limits"
+      ]
+    },
+    {
+      "dot": "emerald",
+      "title": "Application",
+      "items": [
+        "Turborepo: 3 Next.js apps plus 5 NestJS services",
+        "Shared packages for Prisma DB, Redis, email and UI"
+      ]
+    },
+    {
+      "dot": "rose",
+      "title": "Data and trust",
+      "items": [
+        "Postgres plus PgBouncer, Redis 7, MinIO S3 object store",
+        "Cashfree PG webhooks, Resend email, Google OAuth"
+      ]
+    }
+  ]
+}

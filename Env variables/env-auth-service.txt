@@ -1,0 +1,37 @@
+# ==============================================================================
+# KUBERNETES SERVICE-SPECIFIC RUN-TIME SECRET: auth-service (env-auth-service.txt)
+# ==============================================================================
+# Mount `env-global.txt` FIRST and `env-auth-service.txt` SECOND in the K8s Deployment.
+# ==============================================================================
+
+## 1. Server & Cookie Domain (`auth-service` specific)
+NAME                            REQUIRED    FALLBACK                        WHERE USED                                                              DESCRIPTION
+PORT                            Optional    3002                            src/main.ts                                                             Port the Fastify NestJS HTTP server listens on.
+COOKIE_DOMAIN                   Optional    undefined (e.g. .unlistedstox.com in prod)  src/auth/auth.controller.ts                                 Sets the `domain` attribute on all auth and signup cookies so cookies work across subdomains if required.
+
+## 2. SMS Delivery (SMC Gateway)
+NAME                            REQUIRED    FALLBACK                        WHERE USED                                                              DESCRIPTION
+SMS_GATEWAY_URL                 Optional    https://web.smsgw.in/smsapi/httpapi.jsp    src/sms/sms.service.ts                                       HTTP endpoint for the primary SMC SMS gateway.
+SMS_GATEWAY_USERNAME            Yes         ''                              src/sms/sms.service.ts                                                  SMC SMS Gateway account username.
+SMS_GATEWAY_PASSWORD            Yes         ''                              src/sms/sms.service.ts                                                  SMC SMS Gateway account password.
+SMS_SENDER_ID                   Yes         ''                              src/sms/sms.service.ts                                                  DLT-registered 6-character Sender ID (`from` query param).
+SMS_PE_ID                       Yes         ''                              src/sms/sms.service.ts                                                  DLT Principal Entity ID (`pe_id` query param).
+SMS_TEMPLATE_ID                 Yes         ''                              src/sms/sms.service.ts                                                  DLT Template ID (`template_id` query param) for login OTP message.
+
+## 3. Rate Limiting, Throttling & Dev/Testing Overrides
+NAME                            REQUIRED    FALLBACK                        WHERE USED                                                              DESCRIPTION
+THROTTLE_TTL                    Optional    60000 (60s)                     src/auth/auth.module.ts                                                 Global `@nestjs/throttler` time-to-live window in milliseconds.
+THROTTLE_LIMIT                  Optional    1000                            src/auth/auth.module.ts                                                 Global `@nestjs/throttler` max requests per `THROTTLE_TTL` window.
+OTP_DAILY_LIMIT                 Optional    20 (prod) / 200 (dev)           src/redis/redis.service.ts                                              Max OTP requests per target (phone/email) per 24 hours.
+OTP_HOURLY_LIMIT                Optional    10 (prod) / 100 (dev)           src/redis/redis.service.ts                                              Max OTP requests per target (phone/email) per hour.
+OTP_15MIN_LIMIT                 Optional    5 (prod) / 50 (dev)             src/redis/redis.service.ts                                              Max OTP requests per target (phone/email) per 15 minutes.
+TEST_PHONE_NUMBERS              Optional    ''                              src/auth/auth.service.ts, src/redis/redis.service.ts                    Comma-separated phone numbers that bypass OTP cooldowns and rate limits when `NODE_ENV !== 'production'`. Ignored in production.
+
+# ------------------------------------------------------------------------------
+# INHERITED FROM GLOBAL SECRET (`env-global.txt`):
+# - NODE_ENV, FRONTEND_URL, COOKIE_ENCRYPTION_KEY, SECURE_COOKIES
+# - DATABASE_URL, DIRECT_DATABASE_URL
+# - PRISMA_FIELD_ENCRYPTION_KEY, PRISMA_FIELD_DECRYPTION_KEYS, JSON_FIELD_ENCRYPTION_KEY, JSON_FIELD_DECRYPTION_KEYS
+# - REDIS_URL, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_TLS
+# - RESEND_API_KEY, RESEND_FROM_EMAIL
+# ------------------------------------------------------------------------------

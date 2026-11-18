@@ -1,0 +1,386 @@
+# Environment variables loaded from .env.staging file (copy from .env.staging.example)
+# See docs/ENVIRONMENT_SETUP.md for detailed setup instructions
+
+services:
+  nginx:
+    image: fabiocicerchia/nginx-lua:1.25.3-alpine
+    container_name: smc-nginx-staging
+    extra_hosts:
+      - "host-gateway:host-gateway"   
+    ports:
+      - "80:80"
+      - "90:90"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./logs/nginx:/var/log/nginx
+    depends_on:
+      - auth-service
+      - stocks-service
+      - ticketing-service
+      - payments-service
+    restart: unless-stopped
+    networks:
+      staging-network:
+        aliases:
+          - smc-nginx-staging
+          - nginx
+    mem_limit: 100m
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:80/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+
+  auth-service:
+    build:
+      context: .
+      dockerfile: apps/auth-service/Dockerfile
+      network: host
+      args:
+        DATABASE_URL: ${DATABASE_URL}
+    image: smc-auth-service:staging
+    container_name: smc-auth-staging
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=${AUTH_SERVICE_PORT:-3002}
+      - ALLOW_CONSOLE_OTP_FALLBACK=${ALLOW_CONSOLE_OTP_FALLBACK:-false}
+      - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=200
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+        required: false
+    restart: unless-stopped
+    networks:
+      - staging-network
+    mem_limit: 250m
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3002/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+
+  stocks-service:
+    build:
+      context: .
+      dockerfile: apps/stocks-service/Dockerfile
+      network: host
+      args:
+        DATABASE_URL: ${DATABASE_URL}
+    image: smc-stocks-service:staging
+    container_name: smc-stocks-staging
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=${STOCKS_SERVICE_PORT:-3003}
+      # Leave room outside the JS heap for PDF buffers and native allocations.
+      - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=${STOCKS_HEAP_MB:-512}
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+        required: false
+    restart: unless-stopped
+    networks:
+      - staging-network
+    mem_limit: ${STOCKS_MEMORY:-1g}
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3003/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+
+  esign-worker:
+    build:
+      context: .
+      dockerfile: apps/stocks-service/Dockerfile
+      network: host
+      args:
+        DATABASE_URL: ${DATABASE_URL}
+    image: smc-esign-worker:staging
+    command: ["node", "dist/esign-worker.js"]
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - ESIGN_CONCURRENCY=${ESIGN_CONCURRENCY:-1}
+      - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=256
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+        required: false
+    restart: unless-stopped
+    stop_grace_period: 120s
+    networks:
+      - staging-network
+    mem_limit: ${ESIGN_WORKER_MEMORY:-768m}
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+
+  ticketing-service:
+    build:
+      context: .
+      dockerfile: apps/ticketing-service/Dockerfile
+      network: host
+      args:
+        DATABASE_URL: ${DATABASE_URL}
+        TICKETING_DATABASE_URL: ${TICKETING_DATABASE_URL}
+    image: smc-ticketing-service:staging
+    container_name: smc-ticketing-staging
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=${TICKETING_SERVICE_PORT:-3001}
+      - DATABASE_URL=${TICKETING_DATABASE_URL}
+      - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=200
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+        required: false
+    restart: unless-stopped
+    networks:
+      - staging-network
+    mem_limit: 250m
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3001/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+
+  payments-service:
+    build:
+      context: .
+      dockerfile: apps/payments-service/Dockerfile
+      network: host
+      args:
+        DATABASE_URL: ${DATABASE_URL}
+    image: smc-payments-service:staging
+    container_name: smc-payments-staging
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=${PAYMENTS_SERVICE_PORT:-3004}
+      - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=200
+    depends_on:
+      pgbouncer:
+        condition: service_healthy
+        required: false
+    restart: unless-stopped
+    networks:
+      - staging-network
+    mem_limit: 250m
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3004/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
+        max-file: 3
+
+  storage-service:
+    build:
+      context: .
+      dockerfile: apps/storage-service/Dockerfile
+      network: host
+    image: smc-storage-service:staging
+    container_name: smc-storage-staging
+    env_file:
+      - .env
+    environment:
+      - NODE_ENV=production
+      - PORT=3005
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://10.0.2.100:9000}
+      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:-http://10.0.2.100:9000}
+    develop:
+      watch:
+        - action: rebuild
+          path: ./apps/storage-service
+        - action: rebuild
+          path: ./packages
+        - action: rebuild
+          path: ./package.json
+        - action: rebuild
+          path: ./pnpm-lock.yaml
+        - action: rebuild
+          path: ./pnpm-workspace.yaml
+    restart: unless-stopped
+    networks:
+      - staging-network
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3005/api/health || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  pgbouncer:
+    image: edoburu/pgbouncer:latest
+    container_name: smc-pgbouncer-staging
+    environment:
+      # Pool both databases so services that route through PgBouncer
+      # (auth/storage -> unlisted_stox_db, ticketing -> ticketing_system)
+      # can all resolve their database. edoburu/pgbouncer uses DATABASE_URLS
+      # (plural) for a comma-separated list of connection URLs.
+      - DATABASE_URLS=${DIRECT_DATABASE_URL},${TICKETING_DATABASE_URL}
+      - POOL_MODE=transaction
+      - MAX_CLIENT_CONN=1000
+      - DEFAULT_POOL_SIZE=20
+      - RESERVE_POOL_SIZE=5
+      - SERVER_IDLE_TIMEOUT=600
+      - AUTH_TYPE=scram-sha-256
+      - IGNORE_STARTUP_PARAMETERS=extra_float_digits,options
+    ports:
+      - "6432:5432"
+    depends_on:
+      postgres:
+        condition: service_healthy
+        required: false
+    restart: unless-stopped
+    networks:
+      - staging-network
+    mem_limit: 64m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: 5m
+        max-file: 3
+
+  postgres:
+    profiles:
+      - local-db
+    image: postgres:15-alpine
+    container_name: smc-postgres-staging
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=postgres
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_DB=ticketing_system
+    ports:
+      - "5432:5432"
+    volumes:
+      - ./.state/postgres-data:/var/lib/postgresql/data
+      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
+    networks:
+      - staging-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  web:
+    container_name: smc-web
+    build:
+      context: .
+      dockerfile: apps/web/Dockerfile
+      network: host
+      args:
+        NEXT_PUBLIC_GTM_ID: ${NEXT_PUBLIC_GTM_ID:-}
+        NEXT_PUBLIC_META_PIXEL_ID: ${NEXT_PUBLIC_META_PIXEL_ID:-}
+        BACKEND_ORIGIN: ${BACKEND_ORIGIN:-http://smc-nginx-staging:90}
+    ports:
+      - "3000:3000"
+    env_file:
+      - apps/web/.env
+    environment:
+      - NODE_OPTIONS=--dns-result-order=ipv4first
+      - BACKEND_ORIGIN=${BACKEND_ORIGIN:-http://smc-nginx-staging:90}
+      # Next.js profile/signout handlers run at runtime; use the internal service
+      # instead of depending on the public gateway used by BACKEND_ORIGIN.
+      - AUTH_SERVICE_URL=http://auth-service:${AUTH_SERVICE_PORT:-3002}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://10.0.2.100:9000}
+      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:-http://10.0.2.100:9000}
+      - NEXT_PUBLIC_GTM_ID=${NEXT_PUBLIC_GTM_ID:-}
+      - GTM_ID=${GTM_ID:-}
+      - SMARTPING_API_KEY=${SMARTPING_API_KEY}
+      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-Unlistedstox <no-reply@unlistedstox.com>}
+    restart: unless-stopped
+    networks:
+      - staging-network
+
+  panels:
+    container_name: smc-panels
+    build:
+      context: .
+      dockerfile: apps/panels/Dockerfile
+      network: host
+      args:
+        BACKEND_ORIGIN: ${BACKEND_ORIGIN:-http://smc-nginx-staging:90}
+    ports:
+      - "4000:4000"
+    env_file:
+      - apps/panels/.env
+    environment:
+      - NODE_OPTIONS=--dns-result-order=ipv4first
+      - BACKEND_ORIGIN=${BACKEND_ORIGIN:-http://smc-nginx-staging:90}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://10.0.2.100:9000}
+      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:-http://10.0.2.100:9000}
+    restart: unless-stopped
+    networks:
+      - staging-network
+
+  rm-distributors:
+    container_name: smc-rm-distributors
+    build:
+      context: .
+      dockerfile: apps/rm-distributors/Dockerfile
+      network: host
+      args:
+        BACKEND_ORIGIN: ${BACKEND_ORIGIN:-http://smc-nginx-staging:90}
+    ports:
+      - "8000:8000"
+    env_file:
+      - apps/rm-distributors/.env
+    environment:
+      - NODE_OPTIONS=--dns-result-order=ipv4first
+      - BACKEND_ORIGIN=${BACKEND_ORIGIN:-http://smc-nginx-staging:90}
+      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://10.0.2.100:9000}
+      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:-http://10.0.2.100:9000}
+    restart: unless-stopped
+    networks:
+      - staging-network
+
+networks:
+  staging-network:
+    external: true
+    name: smc-staging-network

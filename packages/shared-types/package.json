@@ -1,0 +1,25 @@
+{
+  "name": "shared-types",
+  "version": "1.0.0",
+  "description": "Shared TypeScript interfaces and types used across services and frontend",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "typescript",
+    "types",
+    "interfaces",
+    "shared"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "files": [
+    "dist"
+  ]
+}

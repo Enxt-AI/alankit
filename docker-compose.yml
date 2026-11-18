@@ -1,0 +1,117 @@
+# Docker Compose configuration specifically for Redis, MinIO, and RedisInsight services.
+# 
+# Usage:
+#   Start services:   docker compose up -d
+#   View logs:        docker compose logs -f
+#   Check status:     docker compose ps
+#   Stop services:    docker compose down
+#   Redis CLI:        docker exec -it smc-redis redis-cli
+#   Redis Web UI:     http://<host-or-server-ip>:5540
+#   MinIO Web UI:     http://<host-or-server-ip>:9001
+
+services:
+  redis:
+    image: redis:7-alpine
+    container_name: smc-redis
+    restart: unless-stopped
+    ports:
+      - "${REDIS_PORT:-6379}:6379"
+    volumes:
+      - ./.state/redis-data:/data
+    # NOTE (local dev only): no --requirepass. The shared redis-service package
+    # creates its client at import time, before Nest loads apps/*/.env, so a
+    # password would require exporting REDIS_PASSWORD in every terminal.
+    # Staging/prod use remote Redis with their own credentials (see root .env).
+    command: >
+      redis-server
+      --maxclients 20000
+      --tcp-backlog 4096
+      --tcp-keepalive 300
+      --timeout 0
+      --maxmemory 2gb
+      --maxmemory-policy volatile-lru
+      --io-threads 4
+      --io-threads-do-reads yes
+      --lazyfree-lazy-eviction yes
+      --lazyfree-lazy-expire yes
+      --lazyfree-lazy-server-del yes
+      --appendonly yes
+      --appendfsync everysec
+      --auto-aof-rewrite-percentage 100
+      --auto-aof-rewrite-min-size 64mb
+    mem_limit: 3g
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    sysctls:
+      net.core.somaxconn: 65535
+    healthcheck:
+      test: ["CMD-SHELL", "redis-cli ping | grep PONG || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        compress: "true"
+    networks:
+      - smc-network
+
+  minio:
+    image: minio/minio:latest
+    container_name: smc-minio
+    restart: unless-stopped
+    ports:
+      - "${MINIO_PORT:-9000}:9000"         # S3 API endpoint
+      - "${MINIO_CONSOLE_PORT:-9001}:9001" # MinIO Web Console UI
+    volumes:
+      - ./.state/minio-data:/data
+    command: server /data --console-address ":${MINIO_CONSOLE_PORT:-9001}"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ACCESS_KEY:-minioadmin}
+      - MINIO_ROOT_PASSWORD=${MINIO_SECRET_KEY:-minioadmin}
+      - MINIO_API_REQUESTS_MAX=${MINIO_API_REQUESTS_MAX:-10000}
+      - MINIO_API_REQUESTS_DEADLINE=${MINIO_API_REQUESTS_DEADLINE:-60s}
+      - MINIO_CONSOLE_ADDRESS=:${MINIO_CONSOLE_PORT:-9001}
+    mem_limit: 2g
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    sysctls:
+      net.core.somaxconn: 65535
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:9000/minio/health/live || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+        compress: "true"
+    networks:
+      - smc-network
+
+  redis-insight:
+    image: redis/redisinsight:latest
+    container_name: smc-redis-insight
+    restart: unless-stopped
+    ports:
+      - "${REDIS_INSIGHT_PORT:-5540}:5540"
+    volumes:
+      - ./.state/redisinsight-data:/data
+    mem_limit: 512m
+    networks:
+      - smc-network
+
+networks:
+  smc-network:
+    name: smc-staging-network
+    external: true

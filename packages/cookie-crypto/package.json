@@ -1,0 +1,38 @@
+{
+  "name": "cookie-crypto",
+  "version": "1.0.0",
+  "description": "Shared cookie encryption/decryption utility using AES-256-GCM for secure HTTP cookie values",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./src/index.ts",
+      "default": "./dist/index.js"
+    },
+    "./constants": {
+      "types": "./dist/constants.d.ts",
+      "import": "./src/constants.ts",
+      "default": "./dist/constants.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "cookie",
+    "encryption",
+    "aes-256-gcm",
+    "security"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "@types/node": "^22.15.3",
+    "typescript": "^5.9.2"
+  },
+  "files": [
+    "dist"
+  ]
+}

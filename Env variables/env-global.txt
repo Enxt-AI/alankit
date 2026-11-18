@@ -1,0 +1,79 @@
+# ==============================================================================
+# KUBERNETES GLOBAL RUN-TIME SECRET / CONFIGMAP (env-global.txt)
+# ==============================================================================
+# These environment variables are shared across multiple services at run-time
+# and should be stored in a single shared K8s Secret (e.g., `smc-global-env`)
+# mounted via `envFrom` before the service-specific secret (`smc-<service>-env`).
+#
+# IMPORTANT K8S OVERRIDE NOTE:
+# - Always list `smc-global-env` FIRST and `smc-<service>-env` SECOND in pod
+#   `envFrom` so service-specific variables (like `DATABASE_URL` in
+#   `ticketing-service` or `PORT` in each service) cleanly override global ones.
+# ==============================================================================
+
+## 1. Core Runtime & Public Origins
+NAME                                        REQUIRED    FALLBACK / EXAMPLE VALUE                                    SERVICES USING IT                                                       DESCRIPTION
+NODE_ENV                                    Yes         production                                                  auth-service, payments-service, stocks-service, storage-service, ticketing-service, web, panels, rm-distributors    Sets production runtime mode across all NestJS and Next.js containers.
+FRONTEND_URL                                Yes (Prod)  https://www.unlistedstox.com                                auth-service, payments-service, stocks-service, storage-service, ticketing-service  Added to Fastify CORS allowed origins in all 5 backend services; also used by `payments-service` (Cashfree return URL) and `stocks-service` (DigiLocker KYC callback & SEO/static-page revalidation).
+
+
+## 2. Authentication, Session Cookies & JWT Security
+NAME                                        REQUIRED    FALLBACK / EXAMPLE VALUE                                    SERVICES USING IT                                                       DESCRIPTION
+COOKIE_ENCRYPTION_KEY                       Yes         <64-char-hex-string> (32 bytes for AES-256-GCM)             auth-service, payments-service, stocks-service, ticketing-service, storage-service, panels, rm-distributors         Must be identical across all services. Used to encrypt session cookies in `auth-service`/`stocks-service` and decrypt them in backend hooks and Next.js Edge middleware (`proxy.ts`).
+JWT_SECRET                                  Yes         <strong-random-secret>                                      stocks-service, storage-service                                         Secret key used to sign and verify JWT tokens (`stocks-service` auth/panel tokens and `storage-service` `JwtStrategy`).
+SECURE_COOKIES                              Optional    true (default when NODE_ENV=production)                     auth-service, stocks-service                                            Set to `'false'` only if running `NODE_ENV=production` over plain HTTP without TLS termination.
+
+
+## 3. Primary Database (`unlisted_stox_db`) & Field-Level Encryption
+NAME                                        REQUIRED    FALLBACK / EXAMPLE VALUE                                    SERVICES USING IT                                                       DESCRIPTION
+DATABASE_URL                                Yes         postgresql://user:pass@pgbouncer:6432/unlisted_stox_db      auth-service, payments-service, stocks-service (Overridden in ticketing-service)    Primary PostgreSQL runtime connection string for `unlisted_stox_db`. Note: `ticketing-service` overrides `DATABASE_URL` in `env-ticketing-service.txt` with its `ticketing_system` DB URL.
+DIRECT_DATABASE_URL                         Optional    postgresql://user:pass@postgres:5432/unlisted_stox_db       auth-service, payments-service, stocks-service, ticketing-service       Direct PostgreSQL connection string (bypassing PgBouncer) used by Prisma schema `directUrl` / migrations.
+PRISMA_FIELD_ENCRYPTION_KEY                 Yes         k1.aesgcm256.<base64-key>                                   auth-service, payments-service, stocks-service, ticketing-service       Cloak key used by `prisma-field-encryption` to encrypt/decrypt `User.email` and `User.phone`, and fallback key for JSON encryption. Must be identical across all DB-connected services.
+PRISMA_FIELD_DECRYPTION_KEYS                Optional    ''                                                          auth-service, payments-service, stocks-service, ticketing-service       Comma-separated list of historical/rotated Cloak keys for decrypting older encrypted fields.
+JSON_FIELD_ENCRYPTION_KEY                   Optional    Defaults to PRISMA_FIELD_ENCRYPTION_KEY                     auth-service, payments-service, stocks-service, ticketing-service       Primary Cloak key used by `jsonEncryptionExtension()` to encrypt/decrypt `kycData`, `bankData`, and `dematData` on `User`.
+JSON_FIELD_DECRYPTION_KEYS                  Optional    Defaults to PRISMA_FIELD_DECRYPTION_KEYS                    auth-service, payments-service, stocks-service, ticketing-service       Comma-separated extra decryption keys for `kycData`, `bankData`, and `dematData`.
+
+
+## 4. Redis & Bull Queue Cluster
+NAME                                        REQUIRED    FALLBACK / EXAMPLE VALUE                                    SERVICES USING IT                                                       DESCRIPTION
+REDIS_URL                                   Yes*        redis://:password@redis:6379                                auth-service, payments-service, stocks-service, storage-service, ticketing-service  Full Redis connection URI for session store (`session:<sha256>`), rate limiting, and Bull queues. (*Set both `REDIS_URL` and `REDIS_HOST`/`REDIS_PORT` because `stocks-service` `AppModule` reads `REDIS_HOST`/`REDIS_PORT` directly).
+REDIS_HOST                                  Yes         redis                                                       auth-service, payments-service, stocks-service, storage-service, ticketing-service  Redis K8s service hostname (required directly by `stocks-service` `AppModule` Bull configuration and as fallback in other services).
+REDIS_PORT                                  Yes         6379                                                        auth-service, payments-service, stocks-service, storage-service, ticketing-service  Redis port (required directly by `stocks-service` `AppModule` Bull configuration and as fallback in other services).
+REDIS_PASSWORD                              Optional    undefined                                                   auth-service, payments-service, stocks-service, storage-service, ticketing-service  Redis password used when connecting via `REDIS_HOST`/`REDIS_PORT`.
+REDIS_TLS                                   Optional    false                                                       auth-service, payments-service, stocks-service, storage-service, ticketing-service  Set to `'true'` to enable TLS (`tls: {}`) on ioredis / Bull connections.
+
+
+## 5. Email Delivery (Resend / SmartPing)
+NAME                                        REQUIRED    FALLBACK / EXAMPLE VALUE                                    SERVICES USING IT                                                       DESCRIPTION
+EMAIL_PROVIDER                              Optional    smartping                                                   auth-service, payments-service, stocks-service, ticketing-service, web  Selects the email provider used by `packages/email-service` and the web contact form. Valid values: `smartping` (default) or `resend`.
+RESEND_API_KEY                              Yes*        re_xxxxxxxxx                                                auth-service, payments-service, stocks-service, ticketing-service, web  Resend API key used when `EMAIL_PROVIDER=resend`; also used directly by `POST /api/contact` in `web`.
+SMARTPING_API_KEY                           Yes*        sp_xxxxxxxxx                                                auth-service, payments-service, stocks-service, ticketing-service, web  SmartPing API key used when `EMAIL_PROVIDER=smartping`. Sent as `Authorization: App <SMARTPING_API_KEY>`.
+SMARTPING_ENDPOINT                          Optional    https://1eqrmn.apiemail.smartping.io/email/4/messages       auth-service, payments-service, stocks-service, ticketing-service, web  SmartPing messages endpoint override.
+RESEND_FROM_EMAIL                           Optional    Unlistedstox <no-reply@unlistedstox.com>                 auth-service, payments-service, stocks-service, ticketing-service, web  Primary default `from` email address for all outbound transactional and contact-form emails.
+EMAIL_FROM                                  Optional    Unlistedstox <no-reply@unlistedstox.com>                 auth-service, payments-service, stocks-service, ticketing-service, web  Secondary fallback `from` email address when `RESEND_FROM_EMAIL` is not set.
+
+* Required only for the provider you actually use.
+
+
+## 6. Cashfree Payment Gateway (Shared between `payments-service` & `stocks-service`)
+NAME                                        REQUIRED    FALLBACK / EXAMPLE VALUE                                    SERVICES USING IT                                                       DESCRIPTION
+CASHFREE_CLIENT_ID                          Yes         <cashfree-client-id>                                        payments-service, stocks-service                                        Cashfree PG Client ID (`x-client-id` header) used for order creation/webhooks in `payments-service` and settlement/order reconciliation in `stocks-service`.
+CASHFREE_CLIENT_SECRET                      Yes         <cashfree-client-secret>                                    payments-service, stocks-service                                        Cashfree PG Client Secret (`x-client-secret` header) and HMAC-SHA256 webhook signature verification secret in both `payments-service` and `stocks-service`.
+CASHFREE_ENVIRONMENT                        Optional    PRODUCTION (or SANDBOX)                                     payments-service, stocks-service                                        Cashfree environment mode (`PRODUCTION` or `SANDBOX`); selects production vs sandbox Cashfree REST API base URL.
+
+
+## 7. MinIO / S3 Object Storage (Shared across `storage-service`, `stocks-service`, `web`, `panels`)
+NAME                                        REQUIRED    FALLBACK / EXAMPLE VALUE                                    SERVICES USING IT                                                       DESCRIPTION
+MINIO_ENDPOINT                              Yes (Prod)  http://minio:9000                                           storage-service, stocks-service, web, panels                            Internal MinIO/S3 endpoint URL used by `storage-service` and `stocks-service` (`S3Client`) and by Next.js `/storage/[...path]` proxy routes in `web` and `panels`.
+MINIO_PUBLIC_URL                            Optional    http://minio:9000                                           web, panels                                                             Secondary fallback upstream MinIO URL for `/storage/[...path]` proxy routes in `web` and `panels` when `MINIO_ENDPOINT` is unset.
+MINIO_ACCESS_KEY                            Yes (Prod)  <minio-access-key>                                          storage-service, stocks-service                                         MinIO S3 access key ID used by `storage-service` (`MinioService`) and `stocks-service` (`SignedDealSheetService`, `SettingsService`).
+MINIO_SECRET_KEY                            Yes (Prod)  <minio-secret-key>                                          storage-service, stocks-service                                         MinIO S3 secret access key used by `storage-service` and `stocks-service`.
+
+
+## 8. Internal Service Discovery & Next.js ISR Revalidation
+NAME                                        REQUIRED    FALLBACK / EXAMPLE VALUE                                    SERVICES USING IT                                                       DESCRIPTION
+BACKEND_ORIGIN                              Optional    http://smc-nginx:80 (or internal K8s gateway URL)           web, panels                                                             Internal reverse-proxy/gateway origin used at runtime by Next.js route handlers, SSR helpers (`web`), and `/storage/[...path]` fallback (`web`, `panels`).
+AUTH_SERVICE_URL                            Optional    http://auth-service:3002/api                                web                                                                     Internal K8s URL for `auth-service` used during Next.js SSR (`lib/api-client.ts`).
+STOCKS_SERVICE_URL                          Optional    http://stocks-service:3003/api                              web                                                                     Internal K8s URL for `stocks-service` used during Next.js SSR/ISR (`lib/api-client.ts`, `lib/static-pages-server.ts`).
+STORAGE_SERVICE_URL                         Optional    http://storage-service:3005                                 stocks-service                                                          Internal K8s URL for `storage-service` used by `CarouselService` in `stocks-service` to upload/delete/stream carousel media.
+REVALIDATION_SECRET                         Yes (Prod)  <shared-random-secret>                                      stocks-service, web                                                     Shared Bearer token sent by `stocks-service` (`RevalidationProcessor`, `SeoMetadataService`, `StaticPagesService`) and verified by `web` (`POST /api/revalidate`).

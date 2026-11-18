@@ -1,0 +1,183 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// ============================================
+// TICKET MODEL - Core entity for support tickets
+// ============================================
+model Ticket {
+  id          String    @id @default(cuid())
+  
+  // ===== Ticket Series (Human-Readable Identifier) =====
+  ticketNumber String?  @unique // e.g. TKT-10001, TKT-10002...
+  
+  // ===== Basic Information =====
+  title       String                    // Ticket title/subject
+  description String    @db.Text        // Detailed description (use Text for long content)
+  
+  // ===== Status & Priority =====
+  status      String    @default("open")   // open, in-progress, resolved, closed, blocked, escalated
+  priority    String?   // low, medium, high, urgent
+  
+  // ===== Category (BRD Requirement) =====
+  // Examples: portfolio, kyc, settlement, platform, investment, redemption, other
+  category    String?
+  
+  // ===== Multi-Application Support (Agnostic Design) =====
+  // Identifies which parent app raised the ticket
+  // Examples: "smc-unlisted", "mutual-fund", etc.
+  source      String?
+  
+  // ===== User Tracking =====
+  createdBy   String    // User who raised the ticket (renamed from userId for clarity)
+  assignedTo  String?   // Support expert assigned to resolve the ticket
+  
+  // ===== SLA & Escalation (BRD Requirement) =====
+  dueDate     DateTime? // When ticket should be resolved (SLA deadline)
+  escalatedAt DateTime? // When ticket was escalated to superior
+  escalatedTo String?   // Superior who was notified about escalation
+  
+  // ===== Resolution Tracking =====
+  resolvedAt  DateTime? // When ticket was marked as resolved
+  resolvedBy  String?   // Who resolved the ticket (support expert ID)
+  resolution  String?   @db.Text // Resolution details/message provided by support
+  closedAt    DateTime? // When ticket was closed (after user confirmation)
+  
+  // ===== User Feedback (BRD Requirement) =====
+  rating      Int?      // User rating (1-5 stars) after resolution
+  feedback    String?   @db.Text // User's feedback on the resolution
+  reopenCount Int       @default(0) // How many times ticket was reopened
+  
+  // ===== Admin Features =====
+  isHidden    Boolean   @default(false) // Hide ticket from user view (admin action)
+  isLocked    Boolean   @default(false) // Prevent further edits (admin action)
+  
+  // ===== Metadata =====
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  // ===== Relations =====
+  comments    Comment[]       // All comments on this ticket
+  labels      Label[]         // Tags/labels attached to this ticket
+  attachments Attachment[]    // Files attached to this ticket
+  history     TicketHistory[] // Audit trail of all changes
+  
+  // ===== Indexes for Query Performance =====
+  // These speed up common queries (filtering, sorting)
+  @@index([status])      // Fast filtering by status
+  @@index([priority])    // Fast filtering by priority
+  @@index([category])    // Fast filtering by category
+  @@index([source])      // Fast filtering by source app
+  @@index([assignedTo])  // Fast queries for assigned tickets
+  @@index([createdBy])   // Fast queries for user's tickets
+  @@index([createdAt])   // Fast sorting by creation date
+}
+
+// ============================================
+// COMMENT MODEL - Threaded discussions on tickets
+// ============================================
+model Comment {
+  id        String   @id @default(cuid())
+  content   String   @db.Text // Comment text (use Text for long content)
+  
+  // ===== User Tracking =====
+  userId    String   // Who wrote this comment (user or support expert)
+  
+  // ===== Internal Notes Feature =====
+  // Internal comments are only visible to support team, not end users
+  isInternal Boolean @default(false)
+  
+  // ===== Metadata =====
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // ===== Relations =====
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId  String   // Which ticket this comment belongs to
+  
+  // ===== Indexes =====
+  @@index([ticketId]) // Fast queries for ticket's comments
+  @@index([userId])   // Fast queries for user's comments
+}
+
+// ============================================
+// LABEL MODEL - Tags/Categories for tickets
+// ============================================
+model Label {
+  id        String   @id @default(cuid())
+  name      String   @unique        // Label name (must be unique)
+  color     String   @default("#000000") // Hex color code for UI display
+  
+  // ===== Metadata =====
+  createdAt DateTime @default(now())
+  
+  // ===== Relations =====
+  // Many-to-many: One label can be on many tickets, one ticket can have many labels
+  tickets   Ticket[]
+}
+
+// ============================================
+// ATTACHMENT MODEL - File uploads on tickets
+// ============================================
+model Attachment {
+  id         String   @id @default(cuid())
+  
+  // ===== File Information =====
+  filename   String   // Original filename (e.g., "screenshot.png")
+  filepath   String   // Path where file is stored (local or S3 URL)
+  mimetype   String   // File type (e.g., "image/png", "application/pdf")
+  size       Int      // File size in bytes
+  
+  // ===== User Tracking =====
+  uploadedBy String   // Who uploaded this file
+  
+  // ===== Metadata =====
+  createdAt  DateTime @default(now())
+  
+  // ===== Relations =====
+  ticket     Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId   String   // Which ticket this file is attached to
+  
+  // ===== Indexes =====
+  @@index([ticketId]) // Fast queries for ticket's attachments
+}
+
+// ============================================
+// TICKET HISTORY MODEL - Audit trail for compliance
+// ============================================
+model TicketHistory {
+  id        String   @id @default(cuid())
+  
+  // ===== Change Tracking =====
+  action    String   // Type of action: "created", "updated", "assigned", "status_changed", 
+                     // "escalated", "resolved", "closed", "reopened", "commented"
+  field     String?  // Which field changed (e.g., "status", "assignedTo", "priority")
+  oldValue  String?  @db.Text // Previous value (JSON string for complex data)
+  newValue  String?  @db.Text // New value (JSON string for complex data)
+  
+  // ===== User Tracking =====
+  userId    String   // Who made this change
+  
+  // ===== Metadata =====
+  createdAt DateTime @default(now())
+  
+  // ===== Relations =====
+  ticket    Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  ticketId  String   // Which ticket this history entry belongs to
+  
+  // ===== Indexes =====
+  @@index([ticketId])  // Fast queries for ticket's history
+  @@index([createdAt]) // Fast sorting by date
+}

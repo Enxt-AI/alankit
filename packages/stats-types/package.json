@@ -1,0 +1,32 @@
+{
+  "name": "stats-types",
+  "version": "1.0.0",
+  "description": "Shared TypeScript interfaces for statistics and analytics across services",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "clean": "rm -rf dist"
+  },
+  "keywords": [
+    "typescript",
+    "types",
+    "interfaces",
+    "statistics",
+    "analytics"
+  ],
+  "author": "",
+  "license": "UNLICENSED",
+  "devDependencies": {
+    "typescript": "^5.9.2"
+  },
+  "files": [
+    "dist"
+  ]
+}

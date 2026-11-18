@@ -1,0 +1,32 @@
+# ==============================================================================
+# KUBERNETES SERVICE-SPECIFIC RUN-TIME SECRET: web (env-web.txt)
+# ==============================================================================
+# Mount `env-global.txt` FIRST and `env-web.txt` SECOND in the K8s Deployment.
+# Note: Client-side `NEXT_PUBLIC_*` values are baked in at build time (`env-build.txt`),
+# while the variables below are read at run-time by the Next.js Node server,
+# SSR/ISR data fetchers, and Next.js API Route Handlers (`/api/*`, `/storage/*`).
+# ==============================================================================
+
+## 1. Server & Next.js Runtime (`web` specific)
+NAME                                        REQUIRED    FALLBACK                                        WHERE USED                                                              DESCRIPTION
+PORT                                        Optional    3000                                            Dockerfile, lib/ticketing-api.ts                                        Port the Next.js standalone server listens on (`node apps/web/server.js`).
+NEXT_TELEMETRY_DISABLED                     Optional    1 (in Dockerfile)                               Dockerfile                                                              Disables Next.js telemetry at runtime.
+
+## 2. SSR Route Handlers, Cookie Config & Analytics (`web` specific)
+NAME                                        REQUIRED    FALLBACK                                        WHERE USED                                                              DESCRIPTION
+NEXT_PUBLIC_AUTH_SERVICE_URL                Optional    /api (or candidate list in route handlers)      app/api/auth/profile/route.ts, app/api/auth/signout/route.ts, lib/api-client.ts Candidate upstream base URL for `/api/auth/profile` and `/api/auth/signout` Next.js route handlers and `authApi`.
+NEXT_PUBLIC_STOCKS_SERVICE_URL              Optional    BACKEND_ORIGIN/api or http://127.0.0.1:3003/api app/api/company/[cin]/details/route.ts, app/api/company/[cin]/documents/route.ts, app/api/company/[cin]/documents/attachment/route.ts, app/api/company/[cin]/documents/attachments/route.ts, lib/api-client.ts, lib/static-pages-server.ts    Upstream base URL for `/api/company/[cin]/*` proxy routes, `static-pages-server.ts`, and `stocksApi`.
+NEXT_PUBLIC_TICKETING_SERVICE_URL           Optional    /api                                            lib/ticketing-api.ts                                                    Base URL resolved on server/client for `ticketingApi` requests.
+NEXT_PUBLIC_SESSION_COOKIE_NAME             Optional    __s_a1 (in production) / auth_token (in dev)    lib/cookie-constants.ts, proxy.ts, app/api/auth/signout/route.ts        Session cookie name inspected by `proxy.ts` for route protection and cleared by `/api/auth/signout`.
+BACKEND_SESSION_COOKIE_NAME                 Optional    undefined                                       lib/cookie-constants.ts                                                 Optional server-side variable used in non-production environments to warn if frontend and backend session cookie names diverge.
+GTM_ID                                      Optional    ''                                              app/layout.tsx                                                          Server-side runtime fallback for Google Tag Manager container ID when `NEXT_PUBLIC_GTM_ID` is not set.
+CONTACT_SUPPORT_EMAIL                       Optional    support@unlistedstox.com                        app/api/contact/route.ts                                                Destination recipient email address (`to`) for contact form inquiries submitted via `POST /api/contact`.
+
+# ------------------------------------------------------------------------------
+# INHERITED FROM GLOBAL SECRET (`env-global.txt`):
+# - NODE_ENV
+# - BACKEND_ORIGIN, AUTH_SERVICE_URL, STOCKS_SERVICE_URL
+# - MINIO_ENDPOINT, MINIO_PUBLIC_URL
+# - REVALIDATION_SECRET
+# - RESEND_API_KEY, RESEND_FROM_EMAIL
+# ------------------------------------------------------------------------------

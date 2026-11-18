@@ -1,0 +1,37 @@
+{
+  "name": "smc-unlisted-stox",
+  "private": true,
+  "scripts": {
+    "build": "turbo run build",
+    "dev": "turbo run dev",
+    "lint": "turbo run lint",
+    "format": "prettier --write \"**/*.{ts,tsx,md}\"",
+    "check-types": "turbo run check-types",
+    "start:dev": "turbo run start:dev --filter=stocks-service --filter=ticketing-service --filter=auth-service --filter=payments-service --filter=storage-service",
+    "docker:dev": "docker compose -f docker-compose.dev.yml up -d --build",
+    "verify:no-browser-storage": "node scripts/verify-no-browser-storage.mjs"
+  },
+  "devDependencies": {
+    "prettier": "^3.6.2",
+    "turbo": "^2.5.8",
+    "typescript": "5.9.2"
+  },
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=18"
+  },
+  "pnpm": {
+    "overrides": {
+      "@nestjs/common": "11.1.8",
+      "@nestjs/core": "11.1.8",
+      "@nestjs/bull": "11.0.4",
+      "@nestjs/config": "4.0.2",
+      "@nestjs/schedule": "6.1.1",
+      "bull": "4.16.5",
+      "reflect-metadata": "0.2.2"
+    }
+  },
+  "dependencies": {
+    "prisma-field-encryption": "^1.6.0"
+  }
+}
