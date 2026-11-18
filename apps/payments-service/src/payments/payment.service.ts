@@ -14,6 +14,7 @@ import { acquireProviderSlot } from 'redis-service';
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
 import { PinoNestLogger } from '@smc/logger';
+import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()
 export class PaymentService {
@@ -158,6 +159,183 @@ export class PaymentService {
     }
 
     return await response.json();
+  }
+
+  async getCashfreeSettlements(orderId: string) {
+    const response = await this.fetchWithRetry(`${this.cashfreeBaseUrl}/orders/${encodeURIComponent(orderId)}/settlements`, {
+      method: 'GET',
+      headers: {
+        'x-client-id': this.cashfreeClientId,
+        'x-client-secret': this.cashfreeClientSecret,
+        'x-api-version': '2025-01-01',
+        Accept: 'application/json',
+      },
+    });
+    if (!response.ok) throw new Error(`Cashfree settlements request failed: ${response.status}`);
+    return response.json();
+  }
+
+  private resolveCandidateCashfreeOrderIds(order: any): string[] {
+    const paymentData = typeof order.paymentData === 'string'
+      ? JSON.parse(order.paymentData || '{}')
+      : order.paymentData || {};
+    return Array.from(new Set([
+      order.cashfreeOrderId,
+      paymentData.cf_order_id,
+      paymentData.order_id,
+      paymentData.cashfreeOrderId,
+      ...(order.paymentAttempts || []).map((attempt: any) => attempt.cashfreeOrderId),
+      order.orderNumber,
+      order.id,
+    ].filter(Boolean)));
+  }
+
+  private applySettlementData(existingData: any, settlement: any, source: 'WEBHOOK' | 'CRON') {
+    const paymentData = typeof existingData === 'string' ? JSON.parse(existingData || '{}') : (existingData || {});
+    const utr = settlement.transfer_utr || settlement.utr || paymentData.settlement?.transfer_utr || paymentData.transfer_utr || paymentData.settlement_utr;
+    const settlementId = String(settlement.cf_settlement_id || settlement.settlement_id || settlement.settlementId || paymentData.settlement?.cf_settlement_id || paymentData.cf_settlement_id || '');
+    const settlementDate = settlement.transfer_time || settlement.settlement_date || settlement.settlementDate || paymentData.settlement?.settlement_date || paymentData.settlement_date || new Date().toISOString();
+    const serviceCharge = settlement.service_charge ?? settlement.fee;
+    const serviceTax = settlement.service_tax ?? settlement.tax;
+    const alreadyReconciled = Boolean(
+      ((utr && paymentData.settlement?.transfer_utr === utr) || (utr && paymentData.transfer_utr === utr) ||
+       (settlementId && paymentData.settlement?.cf_settlement_id === settlementId) || (settlementId && paymentData.cf_settlement_id === settlementId)) &&
+      paymentData.reconciliation?.status === 'RECONCILED',
+    );
+    if (alreadyReconciled) return { alreadyReconciled: true, paymentData };
+
+    const settlementSection = {
+      cf_settlement_id: settlementId,
+      transfer_utr: utr || '',
+      settlement_date: settlementDate,
+      service_charge: serviceCharge !== undefined ? Number(serviceCharge) : Number(paymentData.settlement?.service_charge ?? paymentData.service_charge ?? 0),
+      service_tax: serviceTax !== undefined ? Number(serviceTax) : Number(paymentData.settlement?.service_tax ?? paymentData.service_tax ?? 0),
+      status: utr ? 'SETTLED' : (paymentData.settlement?.status || 'PENDING'),
+    };
+    return {
+      alreadyReconciled: false,
+      paymentData: {
+        ...paymentData,
+        settlement: settlementSection,
+        settlement_utr: settlementSection.transfer_utr,
+        transfer_utr: settlementSection.transfer_utr,
+        cf_settlement_id: settlementSection.cf_settlement_id,
+        settlement_id: settlementSection.cf_settlement_id,
+        settlement_date: settlementSection.settlement_date,
+        service_charge: settlementSection.service_charge,
+        service_tax: settlementSection.service_tax,
+        reconciliation: { ...(paymentData.reconciliation || {}), status: 'RECONCILED', reconciliation_date: new Date().toISOString(), source },
+        reconciliation_status: 'RECONCILED',
+        settlement_synced_at: new Date().toISOString(),
+        settlement_sync_source: source,
+      },
+    };
+  }
+
+  async runCashfreeReconciliation(targetDateStr?: string, executedBy = 'ACCOUNTANT') {
+    const targetDate = targetDateStr ? new Date(targetDateStr) : new Date(Date.now() - 86400000);
+    const startOfDay = new Date(targetDate); startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(targetDate); endOfDay.setHours(23, 59, 59, 999);
+    const orders = await this.prisma.order.findMany({
+      where: { createdAt: { gte: startOfDay, lte: endOfDay } },
+      include: { user: { select: { id: true, fullName: true, email: true, phone: true } }, paymentAttempts: { orderBy: { createdAt: 'desc' } } },
+      orderBy: { createdAt: 'desc' },
+    });
+    let reconciledCount = 0, failedCount = 0, missingCashfreeCount = 0;
+    const reportData: any[] = [];
+    for (const order of orders) {
+      const pData = typeof order.paymentData === 'string' ? JSON.parse(order.paymentData || '{}') : ((order.paymentData as any) || {});
+      const candidateIds = this.resolveCandidateCashfreeOrderIds(order);
+      let cfOrder: any = null, cfPayments: any = null, matchedSearchId = candidateIds[0] || 'N/A';
+      for (const candidateId of candidateIds) {
+        try {
+          const [fetchedOrder, fetchedPayments] = await Promise.all([
+            this.fetchCashfreeOrderStatus(candidateId).catch(() => null),
+            this.fetchCashfreePaymentDetails(candidateId).catch(() => null),
+          ]);
+          if (fetchedOrder || (Array.isArray(fetchedPayments) && fetchedPayments.length)) {
+            cfOrder = fetchedOrder; cfPayments = fetchedPayments; matchedSearchId = candidateId; break;
+          }
+        } catch { /* Try the next known Cashfree order identifier. */ }
+      }
+      const cfPayment = Array.isArray(cfPayments) && cfPayments.length
+        ? (cfPayments.find((payment: any) => payment.payment_status === 'SUCCESS') || cfPayments[0]) : null;
+      const localOrderId = order.orderNumber || order.cashfreeOrderId || order.id;
+      const localCfPaymentId = pData.cf_payment_id || pData.payment_id || order.cashfreePaymentId || 'N/A';
+      const localStatus = order.paymentStatus || order.status || 'PENDING';
+      const localAmount = Number(order.totalAmount || pData.order_amount || pData.amount || 0);
+      const localBankRef = pData.bank_reference || pData.referenceId || pData.settlement_utr || pData.utr || 'N/A';
+      const localPaymentMethod = pData.payment_method || pData.payment_group || 'Cashfree';
+      const cfStatus = cfPayment?.payment_status || cfOrder?.order_status || 'MISSING_IN_CASHFREE';
+      const cfPaymentId = cfPayment?.cf_payment_id?.toString() || cfPayment?.payment_id?.toString() || 'N/A';
+      const cfAmount = Number(cfPayment?.payment_amount ?? cfOrder?.order_amount ?? 0);
+      const cfBankRef = cfPayment?.bank_reference || cfPayment?.payment_completion_id || 'N/A';
+      const cfMethod = cfPayment?.payment_group || cfPayment?.payment_method?.type || 'UNKNOWN';
+      const mismatches: string[] = [];
+      const isLocalPaid = localStatus === 'PAID' || localStatus === 'SUCCESS';
+      const isCfPaid = cfStatus === 'SUCCESS';
+      if (!cfOrder && !cfPayment) {
+        if (isLocalPaid) { missingCashfreeCount++; mismatches.push('Order missing in Cashfree'); }
+      } else {
+        if (isLocalPaid !== isCfPaid) mismatches.push(`Status mismatch: Local ${localStatus} vs Cashfree ${cfStatus}`);
+        if (isLocalPaid && isCfPaid && Math.abs(localAmount - cfAmount) > 0.01 && cfAmount > 0) mismatches.push(`Amount mismatch: Local ₹${localAmount.toFixed(2)} vs Cashfree ₹${cfAmount.toFixed(2)}`);
+        if (isLocalPaid && isCfPaid && cfPaymentId !== 'N/A' && localCfPaymentId !== 'N/A' && cfPaymentId !== localCfPaymentId) {
+          const exactMatch = Array.isArray(cfPayments) && cfPayments.some((p: any) => p.cf_payment_id?.toString() === localCfPaymentId || p.payment_id?.toString() === localCfPaymentId);
+          if (!exactMatch) mismatches.push(`CF Payment ID mismatch: Local ${localCfPaymentId} vs Cashfree ${cfPaymentId}`);
+        }
+      }
+      const isReconciled = mismatches.length === 0 && isLocalPaid;
+      const recStatus = isReconciled ? 'RECONCILED' : 'FAILED';
+      const recRemark = isReconciled ? 'All 6 payment fields matched successfully' : mismatches.join('; ');
+      if (isReconciled) reconciledCount++; else failedCount++;
+      await this.prisma.order.update({ where: { id: order.id }, data: { paymentData: {
+        ...pData,
+        cf_payment_id: cfPaymentId !== 'N/A' ? cfPaymentId : pData.cf_payment_id,
+        bank_reference: cfBankRef !== 'N/A' ? cfBankRef : pData.bank_reference,
+        payment_method: cfMethod !== 'UNKNOWN' ? cfMethod : pData.payment_method,
+        reconciliation: { ...(pData.reconciliation || {}), status: recStatus, reconciliation_date: new Date().toISOString(), mismatch_reason: isReconciled ? null : recRemark, source: 'MANUAL_RECONCILIATION_RUN' },
+        reconciliation_status: recStatus,
+        reconciliation_remark: isReconciled ? null : recRemark,
+      } } });
+      reportData.push({
+        orderId: localOrderId, internalId: order.id, customerName: order.user?.fullName || 'N/A', customerEmail: order.user?.email || 'N/A',
+        cfOrderId: matchedSearchId !== 'N/A' ? matchedSearchId : (order.cashfreeOrderId || pData.cf_order_id || pData.order_id || '—'),
+        cfPaymentId, amount: localAmount, cfAmount, localStatus, cashfreeStatus: cfStatus,
+        bankReference: cfBankRef !== 'N/A' ? cfBankRef : localBankRef,
+        paymentMethod: cfMethod !== 'UNKNOWN' ? cfMethod : localPaymentMethod,
+        reconciliationStatus: recStatus, mismatchReason: isReconciled ? null : recRemark,
+        reconciliationDate: new Date().toISOString(), createdAt: order.createdAt,
+      });
+    }
+    const runRecord = await (this.prisma as any).reconciliationRun.create({ data: {
+      runDate: startOfDay, executedBy, status: failedCount === 0 ? 'COMPLETED' : 'PARTIAL', totalTransactions: orders.length,
+      reconciledCount, failedCount, missingCashfree: missingCashfreeCount, missingLocal: 0, reportData,
+      summary: { date: startOfDay.toISOString().split('T')[0], total: orders.length, reconciled: reconciledCount, failed: failedCount, missingCashfree: missingCashfreeCount, missingLocal: 0 },
+    } });
+    return { runId: runRecord.id, runDate: startOfDay.toISOString().split('T')[0], totalTransactions: orders.length, reconciledCount, failedCount, missingCashfree: missingCashfreeCount, reportData };
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_5AM)
+  async reconcilePendingCashfreeSettlements() {
+    const fromDate = new Date(); fromDate.setDate(fromDate.getDate() - 14);
+    const orders = await this.prisma.order.findMany({
+      where: { createdAt: { gte: fromDate }, OR: [{ paymentStatus: 'PAID' }, { paymentStatus: 'SUCCESS' }, { status: 'PAID' }, { status: 'COMPLETED' }] },
+      select: { id: true, orderNumber: true, cashfreeOrderId: true, cashfreePaymentId: true, paymentData: true, paymentAttempts: { select: { cashfreeOrderId: true } } },
+    });
+    for (const order of orders) {
+      const paymentData = typeof order.paymentData === 'string' ? JSON.parse(order.paymentData || '{}') : ((order.paymentData as any) || {});
+      if (paymentData.reconciliation?.status === 'RECONCILED' && (paymentData.settlement_utr || paymentData.transfer_utr)) continue;
+      for (const orderId of this.resolveCandidateCashfreeOrderIds(order)) {
+        try {
+          const settlements = await this.getCashfreeSettlements(orderId);
+          const settlement = Array.isArray(settlements) ? settlements[0] : settlements?.data?.[0] || settlements?.settlement || settlements;
+          if (!settlement) continue;
+          const updated = this.applySettlementData(paymentData, settlement, 'CRON');
+          if (!updated.alreadyReconciled) await this.prisma.order.update({ where: { id: order.id }, data: { paymentData: updated.paymentData } });
+          break;
+        } catch { /* Keep trying candidate IDs; the next daily pass retries transient provider failures. */ }
+      }
+    }
   }
 
   /**
@@ -1124,16 +1302,18 @@ export class PaymentService {
    */
   async processWebhookPayload(data: any) {
     const { body } = data;
-    
-
-
     const type = body?.type || body?.event || 'UNKNOWN';
+    const settlementEventType = type.toUpperCase().includes('SETTLEMENT') || type.toUpperCase().includes('TRANSFER');
+    const settlementData = body?.data?.settlement || body?.settlement ||
+      (settlementEventType ? body?.data || body : undefined);
     const rawOrderId =
       body?.data?.order?.order_id ||
+      settlementData?.order_id ||
       body?.order_id ||
       body?.data?.order_id;
     const rawCfOrderId =
       body?.data?.order?.cf_order_id?.toString() ||
+      settlementData?.cf_order_id?.toString() ||
       body?.cf_order_id?.toString();
     const cfPaymentId =
       body?.data?.payment?.cf_payment_id?.toString() ||
@@ -1185,26 +1365,27 @@ export class PaymentService {
 
     this.logger.log(`Processing Cashfree webhook: type=${type}, status=${status}, orderId=${order.id}, orderNumber=${order.orderNumber}`);
 
-    const isSuccess =
+    const isSettlement = settlementEventType || Boolean(settlementData);
+    const isSuccess = !isSettlement && (
       type === 'PAYMENT_SUCCESS_WEBHOOK' ||
       status === 'SUCCESS' ||
-      status === 'PAID';
+      status === 'PAID');
 
-    const isUserDropped =
+    const isUserDropped = !isSettlement && (
       type === 'PAYMENT_USER_DROPPED_WEBHOOK' ||
       type === 'USER_DROPPED_WEBHOOK' ||
       status === 'USER_DROPPED' ||
       status === 'ABANDONED_CHECKOUT' ||
-      status === 'ABANDONED';
+      status === 'ABANDONED');
 
-    const isFailure =
+    const isFailure = !isSettlement && (
       type === 'PAYMENT_FAILED_WEBHOOK' ||
       type === 'PAYMENT_DECLINED_WEBHOOK' ||
       type === 'PAYMENT_EXPIRED_WEBHOOK' ||
       status === 'FAILED' ||
       status === 'DECLINED' ||
       status === 'CANCELLED' ||
-      status === 'EXPIRED';
+      status === 'EXPIRED');
 
     // Store rich payload on order.paymentData for Cashfree Reconciliation & Audit
     const existingPaymentData = (order.paymentData as object) || {};
@@ -1272,25 +1453,27 @@ export class PaymentService {
       });
     } else {
       // General webhook updates (settlements, disputes, verification updates, refunds)
-      const isSettlement =
-        type.includes('SETTLEMENT') ||
-        type.includes('TRANSFER') ||
-        body?.data?.settlement != null;
-
-      if (isSettlement && body?.data?.settlement) {
-        const st = body.data.settlement;
+      if (isSettlement && settlementData) {
+        const st = settlementData;
         const cfSettlementId = st.cf_settlement_id || st.settlement_id || st.transfer_id;
         const transferUtr = st.transfer_utr || st.utr;
         const transferTime = st.transfer_time || st.settlement_date || body.event_time || new Date().toISOString();
-        const serviceCharge = typeof st.service_charge === 'number' ? st.service_charge : undefined;
-        const serviceTax = typeof st.service_tax === 'number' ? st.service_tax : undefined;
-        const settlementAmount = typeof st.settlement_amount === 'number' ? st.settlement_amount : undefined;
+        const parseAmount = (value: unknown) => {
+          if (value === undefined || value === null || value === '') return undefined;
+          const amount = Number(value);
+          return Number.isFinite(amount) ? amount : undefined;
+        };
+        const serviceCharge = parseAmount(st.service_charge ?? st.fee);
+        const serviceTax = parseAmount(st.service_tax ?? st.tax);
+        const settlementAmount = parseAmount(st.settlement_amount ?? st.amount);
 
         updatedPaymentData = {
           ...updatedPaymentData,
           cf_settlement_id: cfSettlementId || (existingPaymentData as any)?.cf_settlement_id,
           transfer_utr: transferUtr || (existingPaymentData as any)?.transfer_utr,
+          settlement_utr: transferUtr || (existingPaymentData as any)?.settlement_utr,
           transfer_time: transferTime || (existingPaymentData as any)?.transfer_time,
+          settlement_date: transferTime || (existingPaymentData as any)?.settlement_date,
           service_charge: serviceCharge ?? (existingPaymentData as any)?.service_charge,
           service_tax: serviceTax ?? (existingPaymentData as any)?.service_tax,
           settlement_amount: settlementAmount ?? (existingPaymentData as any)?.settlement_amount,

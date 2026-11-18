@@ -48,7 +48,6 @@
     "adm-zip": "^0.5.17",
     "bcrypt": "^6.0.0",
     "bull": "^4.16.5",
-    "cashfree-pg": "^5.1.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.14.2",
     "cookie-crypto": "workspace:*",

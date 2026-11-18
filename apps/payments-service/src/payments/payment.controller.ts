@@ -9,6 +9,7 @@ import {
   Req,
   Headers,
   HttpCode,
+  UnauthorizedException,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
@@ -21,6 +22,7 @@ import { AdminGuard } from '../auth/guards/admin.guard';
 import { Public } from '../auth/decorators/public.decorator';
 import { authenticateWebhook } from './webhook-auth';
 import { ConfigService } from '@nestjs/config';
+import * as crypto from 'crypto';
 
 @Controller('payments')
 export class PaymentController {
@@ -36,6 +38,49 @@ export class PaymentController {
     return {
       status: 'ok',
     };
+  }
+
+  private assertInternalService(headers: Record<string, string>) {
+    const expected = this.config.get<string>('PAYMENT_SERVICE_INTERNAL_TOKEN', '');
+    const supplied = headers['x-payment-service-token'] || '';
+    const expectedBuffer = Buffer.from(expected);
+    const suppliedBuffer = Buffer.from(supplied);
+    if (!expected || expectedBuffer.length !== suppliedBuffer.length || !crypto.timingSafeEqual(expectedBuffer, suppliedBuffer)) {
+      throw new UnauthorizedException('Invalid service credentials');
+    }
+  }
+
+  @Post('internal/cashfree/reconcile')
+  @Public()
+  async internalCashfreeReconcile(
+    @Body() body: { date?: string; executedBy?: string },
+    @Headers() headers: Record<string, string>,
+  ) {
+    this.assertInternalService(headers);
+    return this.paymentService.runCashfreeReconciliation(body?.date, body?.executedBy || 'ACCOUNTANT');
+  }
+
+  @Post('cashfree-settlement-webhook')
+  @HttpCode(200)
+  @Public()
+  async handleCashfreeSettlementWebhook(
+    @Body() body: any,
+    @Headers() headers: Record<string, string>,
+    @Req() req: any,
+  ) {
+    const signature = headers['x-webhook-signature'] || headers['x-cashfree-signature'];
+    const timestamp = headers['x-webhook-timestamp'] || headers['x-cashfree-timestamp'];
+    const rawBody = req.rawBody;
+    const rawBodyBuffer = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(typeof rawBody === 'string' ? rawBody : JSON.stringify(body));
+    const jobId = authenticateWebhook(rawBodyBuffer, signature || '', timestamp || '',
+      this.config.get<string>('CASHFREE_CLIENT_SECRET', ''));
+    await this.paymentQueue.add('cashfree-event', {
+      body,
+      signature: signature || 'none',
+      timestamp: timestamp || new Date().toISOString(),
+      type: body?.type || body?.event,
+    }, { jobId });
+    return { status: 'Received' };
   }
 
   @Post(':orderId/create')

@@ -37,18 +37,17 @@ TWITTER_WEBHOOK_SECRET              Conditional undefined                       
 MARKETING_LEAD_SYNC_CRON            Optional    */2 * * * *                     src/marketing/marketing.service.ts                                      Cron expression controlling how often the scheduled marketing lead sync job runs.
 MARKETING_LEAD_SYNC_ENABLED         Optional    true                            src/marketing/marketing.service.ts                                      Set to `'false'` to disable the scheduled marketing lead sync cron job.
 
-## 5. Legacy Cashfree Alias Fallbacks & Testing Flags (Optional)
+## 5. Payments Service Integration
 NAME                                REQUIRED    FALLBACK                        WHERE USED                                                              DESCRIPTION
-CASHFREE_APP_ID                     Optional    CASHFREE_CLIENT_ID              src/accounting/accounting.service.ts, src/orders/orders.service.ts      Optional alias fallback for `CASHFREE_CLIENT_ID` (already provided in `env-global.txt`).
-CASHFREE_SECRET_KEY                 Optional    CASHFREE_CLIENT_SECRET          src/accounting/accounting.service.ts, src/orders/orders.service.ts      Optional alias fallback for `CASHFREE_CLIENT_SECRET` (already provided in `env-global.txt`).
-CASHFREE_ENV                        Optional    CASHFREE_ENVIRONMENT            src/accounting/accounting.service.ts, src/orders/orders.service.ts      Optional alias fallback for `CASHFREE_ENVIRONMENT` (already provided in `env-global.txt`).
+PAYMENTS_SERVICE_URL                Optional    http://payments-service:3004/api src/orders/orders.service.ts                                               Payments URL used to trigger manual reconciliation.
+PAYMENT_SERVICE_INTERNAL_TOKEN      Yes         <shared-random-token>            src/orders/orders.service.ts                                               Shared token authorizing reconciliation requests to Payments.
 
 # ------------------------------------------------------------------------------
 # INHERITED FROM GLOBAL SECRET (`env-global.txt`):
 # - NODE_ENV, FRONTEND_URL, COOKIE_ENCRYPTION_KEY, JWT_SECRET, SECURE_COOKIES
 # - PRISMA_FIELD_ENCRYPTION_KEY, PRISMA_FIELD_DECRYPTION_KEYS, JSON_FIELD_ENCRYPTION_KEY, JSON_FIELD_DECRYPTION_KEYS
 # - REDIS_URL, REDIS_HOST, REDIS_PORT, REDIS_PASSWORD, REDIS_TLS
-# - CASHFREE_CLIENT_ID, CASHFREE_CLIENT_SECRET, CASHFREE_ENVIRONMENT
+# - PAYMENT_SERVICE_INTERNAL_TOKEN
 # - MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, STORAGE_SERVICE_URL
 # - REVALIDATION_SECRET
 # - RESEND_API_KEY, RESEND_FROM_EMAIL

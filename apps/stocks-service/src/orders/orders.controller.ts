@@ -189,24 +189,6 @@ export class OrdersController {
     return await this.ordersService.handleESignWebhook(payload);
   }
 
-  /**
-   * POST /api/orders/cashfree-settlement-webhook
-   * Cashfree automatically POSTs settlement event details here (T+1)
-   */
-  @Post('cashfree-settlement-webhook')
-  @Public()
-  async handleCashfreeSettlementWebhook(
-    @Body() payload: any,
-    @Headers() headers: Record<string, string>,
-    @Req() req: any,
-  ) {
-    return await this.ordersService.handleCashfreeSettlementWebhook(
-      payload,
-      headers,
-      req?.rawBody,
-    );
-  }
-
   // ADMIN ENDPOINTS (Require admin authentication)
   /**
    * GET /api/orders/admin/all
@@ -228,7 +210,7 @@ export class OrdersController {
   @Public()
   @UseGuards(AdminOrOperationJwtAuthGuard)
   async runManualReconciliation(@Body() body: { date?: string; executedBy?: string }) {
-    return await this.ordersService.runManualCashfreeReconciliation(body?.date, body?.executedBy || 'ACCOUNTANT');
+    return await this.ordersService.requestPaymentsReconciliation(body?.date, body?.executedBy || 'ACCOUNTANT');
   }
 
   /**

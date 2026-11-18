@@ -54,11 +54,11 @@ EMAIL_FROM                                  Optional    Unlistedstox <no-reply@u
 * Required only for the provider you actually use.
 
 
-## 6. Cashfree Payment Gateway (Shared between `payments-service` & `stocks-service`)
+## 6. Cashfree Payment Gateway (`payments-service` only)
 NAME                                        REQUIRED    FALLBACK / EXAMPLE VALUE                                    SERVICES USING IT                                                       DESCRIPTION
-CASHFREE_CLIENT_ID                          Yes         <cashfree-client-id>                                        payments-service, stocks-service                                        Cashfree PG Client ID (`x-client-id` header) used for order creation/webhooks in `payments-service` and settlement/order reconciliation in `stocks-service`.
-CASHFREE_CLIENT_SECRET                      Yes         <cashfree-client-secret>                                    payments-service, stocks-service                                        Cashfree PG Client Secret (`x-client-secret` header) and HMAC-SHA256 webhook signature verification secret in both `payments-service` and `stocks-service`.
-CASHFREE_ENVIRONMENT                        Optional    PRODUCTION (or SANDBOX)                                     payments-service, stocks-service                                        Cashfree environment mode (`PRODUCTION` or `SANDBOX`); selects production vs sandbox Cashfree REST API base URL.
+CASHFREE_CLIENT_ID                          Yes         <cashfree-client-id>                                        payments-service                                        Cashfree PG Client ID (`x-client-id` header) used for all Cashfree API requests.
+CASHFREE_CLIENT_SECRET                      Yes         <cashfree-client-secret>                                    payments-service                                        Cashfree PG Client Secret (`x-client-secret` header) and HMAC-SHA256 webhook signature verification secret.
+CASHFREE_ENVIRONMENT                        Optional    PRODUCTION (or SANDBOX)                                     payments-service                                        Cashfree environment mode (`PRODUCTION` or `SANDBOX`); selects production vs sandbox Cashfree REST API base URL.
 
 
 ## 7. MinIO / S3 Object Storage (Shared across `storage-service`, `stocks-service`, `web`, `panels`)

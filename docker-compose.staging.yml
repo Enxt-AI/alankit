@@ -83,6 +83,9 @@ services:
     environment:
       - NODE_ENV=production
       - PORT=${STOCKS_SERVICE_PORT:-3003}
+      - CASHFREE_CLIENT_ID=
+      - CASHFREE_CLIENT_SECRET=
+      - CASHFREE_ENVIRONMENT=
       # Leave room outside the JS heap for PDF buffers and native allocations.
       - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=${STOCKS_HEAP_MB:-512}
     restart: unless-stopped
