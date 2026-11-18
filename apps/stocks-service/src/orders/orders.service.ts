@@ -1,6 +1,6 @@
 import { reserveStock } from '../common/stock-inventory';
 import { EsignRequestsService } from './esign-requests.service';
-import { allocateVoucherNumber } from 'db-unlisted-stox';
+import { allocateVoucherNumber } from 'db-unlistedstock';
 import { assertCompletionTransfer } from './completion-validation';
 import { SignedDealSheetService } from './signed-deal-sheet.service';
 import {
@@ -31,7 +31,7 @@ import { GenerateESignSessionDto } from './dto/generate-esign-session.dto';
 import { RedisService } from '../redis/redis.service';
 import { validateSignerIdentity } from './esign-validation.util';
 import { AccountingService } from '../accounting/accounting.service';
-import { deepDecryptSensitiveFields } from 'db-unlisted-stox';
+import { deepDecryptSensitiveFields } from 'db-unlistedstock';
 
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';

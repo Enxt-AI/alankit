@@ -5,7 +5,7 @@ import {
 } from '@nestjs/common';
 import { PinoNestLogger } from '@smc/logger';
 import { ConfigService } from '@nestjs/config';
-import { Prisma } from 'db-unlisted-stox';
+import { Prisma } from 'db-unlistedstock';
 import { PrismaService } from '../prisma/prisma.service';
 import { VersioningService } from '../versioning/versioning.service';
 import { CreateStaticPageDto } from './dto/create-static-page.dto';

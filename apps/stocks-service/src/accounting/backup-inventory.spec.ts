@@ -1,6 +1,6 @@
 jest.mock('redis-service', () => ({ redis: {}, acquireProviderSlot: jest.fn() }));
 import { AccountingService } from './accounting.service';
-import { Prisma, deepDecryptSensitiveFields } from 'db-unlisted-stox';
+import { Prisma, deepDecryptSensitiveFields } from 'db-unlistedstock';
 
 describe('Deferred inventory costs', () => {
   it('preserves Decimal quantities through decryption when a receipt has no shortfalls', async () => {

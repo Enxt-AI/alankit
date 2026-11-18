@@ -179,7 +179,7 @@ All test data is cleaned up after tests complete.
 
 #### Test Fails with "Module not found: PrismaService"
 - **Cause**: Wrong import path
-- **Fix**: Import from `../src/prisma/prisma.service` not `db-unlisted-stox`
+- **Fix**: Import from `../src/prisma/prisma.service` not `db-unlistedstock`
 
 ### CI/CD Integration
 
@@ -224,7 +224,7 @@ Potential test additions:
 
 - **Main Test**: `apps/stocks-service/test/user-journey.e2e-spec.ts`
 - **Jest Config**: `apps/stocks-service/test/jest-e2e.json`
-- **Prisma Schema**: `packages/db-unlisted-stox/prisma/schema.prisma`
+- **Prisma Schema**: `packages/db-unlistedstock/prisma/schema.prisma`
 - **Test Script**: `apps/stocks-service/package.json` → `test:e2e`
 
 ---

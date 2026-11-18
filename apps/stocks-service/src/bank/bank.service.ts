@@ -12,7 +12,7 @@ import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/types/notification-types';
 import { LinkBankDto } from './dto/link-bank.dto';
 import { AccountingService } from '../accounting/accounting.service';
-import { Prisma } from 'db-unlisted-stox';
+import { Prisma } from 'db-unlistedstock';
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
 

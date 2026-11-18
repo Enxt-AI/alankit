@@ -1,6 +1,6 @@
 import { BadRequestException, ConflictException, ServiceUnavailableException } from '@nestjs/common';
 import { KycService } from './kyc.service';
-import { Prisma } from 'db-unlisted-stox';
+import { Prisma } from 'db-unlistedstock';
 import { validateDigilockerIdentity } from './digilocker-validation';
 jest.mock('redis-service', () => ({ redis: {}, getKey: jest.fn(), setKey: jest.fn(), delKey: jest.fn() }));
 

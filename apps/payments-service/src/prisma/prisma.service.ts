@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PrismaClient } from 'db-unlisted-stox';
+import { PrismaClient } from 'db-unlistedstock';
 import { PinoNestLogger } from '@smc/logger';
 
 const service = 'payments-service';

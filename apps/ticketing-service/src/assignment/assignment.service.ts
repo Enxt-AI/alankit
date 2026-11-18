@@ -10,7 +10,7 @@ import { AdminPrismaService } from '../prisma/admin-prisma.service';
 import { TicketHistoryService } from '../ticket-history/ticket-history.service';
 import { NotificationService } from '../notification/notification.service';
 import { Ticket } from 'db-ticketing';
-import { Admin } from 'db-unlisted-stox';
+import { Admin } from 'db-unlistedstock';
 
 @Injectable()
 export class AssignmentService {
@@ -240,7 +240,7 @@ export class AssignmentService {
         })),
       );
       this.logger.warn(
-        `[TIP] Run 'pnpm db:seed' in packages/db-unlisted-stox to create test agents`,
+        `[TIP] Run 'pnpm db:seed' in packages/db-unlistedstock to create test agents`,
       );
       return agents;
     }
@@ -252,7 +252,7 @@ export class AssignmentService {
     this.logger.error(
       `1. Verify ADMIN_DATABASE_URL is set in .env (should point to unlisted_stox_db)`,
     );
-    this.logger.error(`2. Run: cd packages/db-unlisted-stox && pnpm db:seed`);
+    this.logger.error(`2. Run: cd packages/db-unlistedstock && pnpm db:seed`);
     this.logger.error(`3. Check AdminPrismaService connection logs on startup`);
     this.logger.error(
       `4. Verify agents exist: SELECT * FROM "Admin" WHERE role='SUPPORT_AGENT' AND "isActive"=true;`,

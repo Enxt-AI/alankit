@@ -1,5 +1,5 @@
 {
-  "name": "db-unlisted-stox",
+  "name": "db-unlistedstock",
   "version": "1.0.0",
   "main": "./dist/index.js",
   "type": "commonjs",

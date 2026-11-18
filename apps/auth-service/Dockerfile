@@ -21,8 +21,8 @@ RUN --mount=type=cache,id=npm-cache,target=/root/.npm npm install -g pnpm@9.0.0
 
 # Copy only the package manifests required for auth-service build context
 # This minimizes the build context size and improves build performance
-# auth-service depends on: db-unlisted-stox (Prisma), redis-service, email-service, cookie-crypto
-COPY packages/db-unlisted-stox/package.json packages/db-unlisted-stox/
+# auth-service depends on: db-unlistedstock (Prisma), redis-service, email-service, cookie-crypto
+COPY packages/db-unlistedstock/package.json packages/db-unlistedstock/
 COPY packages/redis-service/package.json packages/redis-service/
 COPY packages/email-service/package.json packages/email-service/
 COPY packages/cookie-crypto/package.json packages/cookie-crypto/
@@ -35,7 +35,7 @@ COPY packages/typescript-config/package.json packages/typescript-config/
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Copy source only after installing dependencies to preserve the install cache.
-COPY packages/db-unlisted-stox/ packages/db-unlisted-stox/
+COPY packages/db-unlistedstock/ packages/db-unlistedstock/
 COPY packages/redis-service/ packages/redis-service/
 COPY packages/email-service/ packages/email-service/
 COPY packages/cookie-crypto/ packages/cookie-crypto/
@@ -47,14 +47,14 @@ COPY packages/typescript-config/ packages/typescript-config/
 ARG DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
 
-# Generate Prisma client for db-unlisted-stox package
+# Generate Prisma client for db-unlistedstock package
 # This must happen before building the package or any dependent services
 # The client is generated to custom output path: ../generated/prisma
-RUN cd packages/db-unlisted-stox && pnpm run generate
+RUN cd packages/db-unlistedstock && pnpm run generate
 
 # Build shared packages in dependency order
-# db-unlisted-stox must be built first as it contains the Prisma client
-RUN cd packages/db-unlisted-stox && pnpm run build
+# db-unlistedstock must be built first as it contains the Prisma client
+RUN cd packages/db-unlistedstock && pnpm run build
 
 # redis-service is a TypeScript utility package used by auth-service
 RUN cd packages/redis-service && pnpm run build
@@ -81,7 +81,7 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm deploy --filter=aut
 
 # Copy generated Prisma client to the deployed package
 # pnpm deploy doesn't include generated files, so we copy them manually
-RUN cp -r /app/packages/db-unlisted-stox/generated /app/deploy/node_modules/.pnpm/db-unlisted-stox@file+packages+db-unlisted-stox*/node_modules/db-unlisted-stox/
+RUN cp -r /app/packages/db-unlistedstock/generated /app/deploy/node_modules/.pnpm/db-unlistedstock@file+packages+db-unlistedstock*/node_modules/db-unlistedstock/
 
 # Production stage: Creates minimal runtime image
 FROM node:22-alpine AS production

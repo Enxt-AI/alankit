@@ -14,7 +14,7 @@ import { CreateSellRequestDto } from './dto/create-sell-request.dto';
 import { UpdateSellRequestStatusDto } from './dto/update-sell-request-status.dto';
 import { UserJwtAuthGuard } from '../auth/guards/user-jwt-auth.guard';
 import { AdminOrOperationJwtAuthGuard } from '../auth/guards/admin-or-operation-jwt-auth.guard';
-import { SellRequestStatus } from 'db-unlisted-stox';
+import { SellRequestStatus } from 'db-unlistedstock';
 import { Public } from '../auth/decorators/public.decorator';
 
 /**

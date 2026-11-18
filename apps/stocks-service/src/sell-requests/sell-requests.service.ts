@@ -8,7 +8,7 @@ import {
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateSellRequestDto } from './dto/create-sell-request.dto';
 import { UpdateSellRequestStatusDto } from './dto/update-sell-request-status.dto';
-import { SellRequestStatus } from 'db-unlisted-stox';
+import { SellRequestStatus } from 'db-unlistedstock';
 
 /**
  * Sell Requests Service

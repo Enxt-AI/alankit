@@ -1,4 +1,4 @@
-import { allocateVoucherNumber } from 'db-unlisted-stox';
+import { allocateVoucherNumber } from 'db-unlistedstock';
 import {
   Injectable,
   NotFoundException,

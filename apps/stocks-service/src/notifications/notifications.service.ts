@@ -3,7 +3,7 @@ import { PinoNestLogger } from '@smc/logger';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { RedisService } from '../redis/redis.service';
-import { Prisma } from 'db-unlisted-stox';
+import { Prisma } from 'db-unlistedstock';
 import { NotificationMetadata, NotificationType } from './types/notification-types';
 
 /**

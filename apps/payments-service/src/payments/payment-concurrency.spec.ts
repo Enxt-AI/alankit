@@ -1,6 +1,6 @@
 jest.mock('redis-service', () => ({ acquireProviderSlot: jest.fn().mockResolvedValue(true) }));
 import { PaymentService } from './payment.service';
-import { runIntegrationTasks } from 'db-unlisted-stox';
+import { runIntegrationTasks } from 'db-unlistedstock';
 
 describe('Payment settlement and recovery', () => {
   let service: any;

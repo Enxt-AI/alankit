@@ -10,7 +10,7 @@
  * left untouched — only the SEO fields are (re)filled.
  *
  * Run:
- *   pnpm --filter db-unlisted-stox seed:articles
+ *   pnpm --filter db-unlistedstock seed:articles
  */
 import 'dotenv/config';
 import { PrismaClient } from '../generated/prisma';

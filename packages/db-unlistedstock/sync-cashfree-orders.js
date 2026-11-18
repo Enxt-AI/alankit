@@ -182,7 +182,7 @@ async function runMigration() {
     });
   } else {
     console.error('❌ Could not load Prisma Client or pg driver.');
-    console.error('👉 Please run: pnpm --filter db-unlisted-stox run generate');
+    console.error('👉 Please run: pnpm --filter db-unlistedstock run generate');
     process.exit(1);
   }
 

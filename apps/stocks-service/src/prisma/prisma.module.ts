@@ -2,7 +2,7 @@ import { Module, Global } from '@nestjs/common';
 import { PrismaService } from './prisma.service';
 import { AdminContextService } from '../common/admin-context.service';
 import { fieldEncryptionExtension } from 'prisma-field-encryption';
-import { Prisma, jsonEncryptionExtension } from 'db-unlisted-stox';
+import { Prisma, jsonEncryptionExtension } from 'db-unlistedstock';
 
 /**
  * Global module that provides Prisma database access and admin context to all modules

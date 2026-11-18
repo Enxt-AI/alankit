@@ -1,5 +1,5 @@
 import { reserveStock } from '../common/stock-inventory';
-import { allocateVoucherNumber } from 'db-unlisted-stox';
+import { allocateVoucherNumber } from 'db-unlistedstock';
 import {
   Injectable,
   BadRequestException,
@@ -18,7 +18,7 @@ import {
 } from './dto/create-voucher.dto';
 import { CreateCustomVoucherTypeDto, UpdateCustomVoucherTypeDto } from './dto/create-custom-voucher-type.dto';
 import { CreateAccountingPeriodDto, UpdateAccountingPeriodDto } from './dto/accounting-period.dto';
-import { LedgerType, VoucherType, EntryType, VoucherStatus, Prisma } from 'db-unlisted-stox';
+import { LedgerType, VoucherType, EntryType, VoucherStatus, Prisma } from 'db-unlistedstock';
 import * as crypto from 'crypto';
 import { PinoNestLogger } from '@smc/logger';
 

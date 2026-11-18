@@ -47,7 +47,7 @@
     "cookie-crypto": "workspace:*",
     "cron": "^4.4.0",
     "db-ticketing": "workspace:*",
-    "db-unlisted-stox": "workspace:*",
+    "db-unlistedstock": "workspace:*",
     "email-service": "workspace:*",
     "fastify": "^5.6.1",
     "isomorphic-dompurify": "^2.31.0",

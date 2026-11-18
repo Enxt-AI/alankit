@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PinoNestLogger } from '@smc/logger';
-import { PrismaClient } from 'db-unlisted-stox';
+import { PrismaClient } from 'db-unlistedstock';
 
 @Injectable()
 export class AdminPrismaService
@@ -50,7 +50,7 @@ export class AdminPrismaService
   }
 
   /**
-   * Get user details by ID from db-unlisted-stox database
+   * Get user details by ID from db-unlistedstock database
    * Used for notification purposes
    * @param userId - User ID to fetch
    * @returns User object or null if not found

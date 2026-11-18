@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PinoNestLogger } from '@smc/logger';
-import { PrismaClient } from 'db-unlisted-stox';
+import { PrismaClient } from 'db-unlistedstock';
 import { createAuditMiddleware } from './audit-middleware';
 import { AdminContextService } from '../common/admin-context.service';
 

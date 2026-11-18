@@ -4,7 +4,7 @@ import {
   BadRequestException,
   ConflictException,
 } from '@nestjs/common';
-import { Prisma } from 'db-unlisted-stox';
+import { Prisma } from 'db-unlistedstock';
 import { PrismaService } from '../prisma/prisma.service';
 import { VersioningService } from '../versioning/versioning.service';
 import { CreateNewsDto } from './dto/create-news.dto';

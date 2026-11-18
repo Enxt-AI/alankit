@@ -1,5 +1,5 @@
 import { IsString, IsEnum } from 'class-validator';
-import { DocumentType } from 'db-unlisted-stox';
+import { DocumentType } from 'db-unlistedstock';
 
 /**
  * DTO for attaching a document to an upcoming stock.

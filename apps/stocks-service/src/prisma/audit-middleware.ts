@@ -1,4 +1,4 @@
-import { PrismaClient } from 'db-unlisted-stox';
+import { PrismaClient } from 'db-unlistedstock';
 import { AdminContextService } from '../common/admin-context.service';
 import { PinoNestLogger } from '@smc/logger';
 

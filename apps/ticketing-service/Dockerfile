@@ -21,9 +21,9 @@ RUN --mount=type=cache,id=npm-cache,target=/root/.npm npm install -g pnpm@9.0.0
 
 # Copy only the package manifests required for ticketing-service build context
 # This minimizes the build context size and improves build performance
-# ticketing-service depends on: db-ticketing (Prisma), db-unlisted-stox (Prisma), email-service (TypeScript utility), shared-types (TypeScript types), stats-types (TypeScript types)
+# ticketing-service depends on: db-ticketing (Prisma), db-unlistedstock (Prisma), email-service (TypeScript utility), shared-types (TypeScript types), stats-types (TypeScript types)
 COPY packages/db-ticketing/package.json packages/db-ticketing/
-COPY packages/db-unlisted-stox/package.json packages/db-unlisted-stox/
+COPY packages/db-unlistedstock/package.json packages/db-unlistedstock/
 COPY packages/redis-service/package.json packages/redis-service/
 COPY packages/email-service/package.json packages/email-service/
 COPY packages/shared-types/package.json packages/shared-types/
@@ -39,7 +39,7 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install --frozen-lo
 
 # Copy source only after installing dependencies to preserve the install cache.
 COPY packages/db-ticketing/ packages/db-ticketing/
-COPY packages/db-unlisted-stox/ packages/db-unlisted-stox/
+COPY packages/db-unlistedstock/ packages/db-unlistedstock/
 COPY packages/redis-service/ packages/redis-service/
 COPY packages/email-service/ packages/email-service/
 COPY packages/shared-types/ packages/shared-types/
@@ -58,12 +58,12 @@ ENV TICKETING_DATABASE_URL=$TICKETING_DATABASE_URL
 # Generate Prisma clients for both database packages
 # This must happen before building the packages or any dependent services
 # Clients are generated to custom output paths: ../generated/prisma
-RUN cd packages/db-unlisted-stox && pnpm run generate
+RUN cd packages/db-unlistedstock && pnpm run generate
 RUN cd packages/db-ticketing && pnpm run generate
 
 # Build shared packages in dependency order
 # Database packages must be built first as they contain Prisma clients
-RUN cd packages/db-unlisted-stox && pnpm run build
+RUN cd packages/db-unlistedstock && pnpm run build
 RUN cd packages/db-ticketing && pnpm run build
 
 # redis-service is a TypeScript utility package used by ticketing-service
@@ -95,7 +95,7 @@ RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm deploy --filter=tic
 
 # Copy generated Prisma clients to the deployed packages
 # pnpm deploy doesn't include generated files, so we copy them manually
-RUN cp -r /app/packages/db-unlisted-stox/generated /app/deploy/node_modules/.pnpm/db-unlisted-stox@file+packages+db-unlisted-stox*/node_modules/db-unlisted-stox/
+RUN cp -r /app/packages/db-unlistedstock/generated /app/deploy/node_modules/.pnpm/db-unlistedstock@file+packages+db-unlistedstock*/node_modules/db-unlistedstock/
 RUN cp -r /app/packages/db-ticketing/generated /app/deploy/node_modules/.pnpm/db-ticketing@file+packages+db-ticketing*/node_modules/db-ticketing/
 
 # Production stage: Creates minimal runtime image

@@ -1,6 +1,6 @@
 /**
  * Stock-related TypeScript types matching the Prisma Stock model
- * from packages/db-unlisted-stox/prisma/schema.prisma
+ * from packages/db-unlistedstock/prisma/schema.prisma
  */
 
 /** A single row in the slab pricing table. */

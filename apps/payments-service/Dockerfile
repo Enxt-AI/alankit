@@ -10,7 +10,7 @@ COPY package.json pnpm-lock.yaml pnpm-workspace.yaml turbo.json ./
 ENV npm_config_store_dir=/pnpm/store
 RUN --mount=type=cache,id=npm-cache,target=/root/.npm npm install -g pnpm@9.0.0
 
-COPY packages/db-unlisted-stox/package.json packages/db-unlisted-stox/
+COPY packages/db-unlistedstock/package.json packages/db-unlistedstock/
 COPY packages/cookie-crypto/package.json packages/cookie-crypto/
 COPY packages/email-service/package.json packages/email-service/
 COPY packages/redis-service/package.json packages/redis-service/
@@ -22,7 +22,7 @@ COPY apps/payments-service/package.json apps/payments-service/
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm install --frozen-lockfile
 
 # Copy source only after installing dependencies to preserve the install cache.
-COPY packages/db-unlisted-stox/ packages/db-unlisted-stox/
+COPY packages/db-unlistedstock/ packages/db-unlistedstock/
 COPY packages/cookie-crypto/ packages/cookie-crypto/
 COPY packages/email-service/ packages/email-service/
 COPY packages/redis-service/ packages/redis-service/
@@ -33,8 +33,8 @@ COPY apps/payments-service/ apps/payments-service/
 ARG DATABASE_URL
 ENV DATABASE_URL=$DATABASE_URL
 
-RUN cd packages/db-unlisted-stox && pnpm run generate
-RUN cd packages/db-unlisted-stox && pnpm run build
+RUN cd packages/db-unlistedstock && pnpm run generate
+RUN cd packages/db-unlistedstock && pnpm run build
 RUN cd packages/cookie-crypto && pnpm run build
 RUN cd packages/email-service && pnpm run build
 RUN cd packages/redis-service && pnpm run build
@@ -43,7 +43,7 @@ RUN cd packages/logger && pnpm run build
 RUN cd apps/payments-service && pnpm run build
 RUN --mount=type=cache,id=pnpm-store,target=/pnpm/store pnpm deploy --filter=payments-service --prod /app/deploy
 RUN test -f /app/deploy/dist/main.js
-RUN cp -r /app/packages/db-unlisted-stox/generated /app/deploy/node_modules/.pnpm/db-unlisted-stox@file+packages+db-unlisted-stox*/node_modules/db-unlisted-stox/
+RUN cp -r /app/packages/db-unlistedstock/generated /app/deploy/node_modules/.pnpm/db-unlistedstock@file+packages+db-unlistedstock*/node_modules/db-unlistedstock/
 
 # Production stage
 FROM node:22-alpine AS production

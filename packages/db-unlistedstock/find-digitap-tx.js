@@ -4,9 +4,9 @@
  * Script to find Digitap Transaction ID and KYC details by phone number
  *
  * Usage:
- *   node packages/db-unlisted-stox/find-digitap-tx.js
- *   node packages/db-unlisted-stox/find-digitap-tx.js 9958127810 9319579291
- *   node packages/db-unlisted-stox/find-digitap-tx.js "+91 93195 79291"
+ *   node packages/db-unlistedstock/find-digitap-tx.js
+ *   node packages/db-unlistedstock/find-digitap-tx.js 9958127810 9319579291
+ *   node packages/db-unlistedstock/find-digitap-tx.js "+91 93195 79291"
  */
 
 const path = require('path');
@@ -56,7 +56,7 @@ try {
     PrismaModule = defaultPrisma.Prisma;
   } catch (e2) {
     try {
-      const fallbackPrisma = require('../db-unlisted-stox/generated/prisma');
+      const fallbackPrisma = require('./generated/prisma');
       PrismaClient = fallbackPrisma.PrismaClient;
       PrismaModule = fallbackPrisma.Prisma;
     } catch (e3) {

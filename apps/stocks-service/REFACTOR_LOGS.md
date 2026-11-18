@@ -171,7 +171,7 @@ This follow-up cleanup aligned UpcomingStock with the stricter identity rules.
 ### Verification for This Follow-up
 
 - Prisma client generation completed successfully after a transient Windows file-lock retry.
-- `db-unlisted-stox` generated successfully with the new UpcomingStock schema.
+- `db-unlistedstock` generated successfully with the new UpcomingStock schema.
 - `stocks-service`, `panels`, and `web` builds completed without reported source errors.
 - editor Problems checks across the affected packages returned no errors.
 

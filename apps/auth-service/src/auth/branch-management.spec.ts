@@ -2,7 +2,7 @@ import { BadRequestException, NotFoundException, UnauthorizedException, Validati
 import { ConfigService } from '@nestjs/config';
 import { FastifyAdapter, NestFastifyApplication } from '@nestjs/platform-fastify';
 import { Test } from '@nestjs/testing';
-import { Prisma } from 'db-unlisted-stox';
+import { Prisma } from 'db-unlistedstock';
 import { PrismaService } from '../prisma/prisma.service';
 import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';

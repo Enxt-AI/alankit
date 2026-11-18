@@ -3,7 +3,7 @@ import { PrismaService } from './prisma.service';
 import { AdminPrismaService } from './admin-prisma.service';
 import { fieldEncryptionExtension } from 'prisma-field-encryption';
 import { Prisma as TicketingPrisma } from 'db-ticketing';
-import { Prisma as MainPrisma, jsonEncryptionExtension } from 'db-unlisted-stox';
+import { Prisma as MainPrisma, jsonEncryptionExtension } from 'db-unlistedstock';
 
 /* The Global decorator makes the PrismaModule available to be injected
  across the entire application without needing to import it in every module. */

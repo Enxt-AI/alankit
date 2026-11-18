@@ -12,7 +12,7 @@ import { PrismaService } from '../prisma/prisma.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { NotificationType } from '../notifications/types/notification-types';
 import { SubmitBankDetailsDto } from './dto/submit-bank-details.dto';
-import { Prisma } from 'db-unlisted-stox';
+import { Prisma } from 'db-unlistedstock';
 import { AccountingService } from '../accounting/accounting.service';
 import * as fs from 'fs';
 import * as path from 'path';

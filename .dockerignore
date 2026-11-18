@@ -9,7 +9,7 @@ build/
 **/build/
 **/.next/
 **/.turbo/
-packages/db-unlisted-stox/generated/
+packages/db-unlistedstock/generated/
 packages/db-ticketing/generated/
 **/*.tsbuildinfo
 
