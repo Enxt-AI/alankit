@@ -265,7 +265,6 @@ EMAIL_MOCK_MODE=false
 ### Database Connection Errors
 - Check Supabase IP allowlist includes your EC2 IP
 - Verify connection string format and credentials
-- Ensure PgBouncer parameters are included
 
 ### Redis Connection Errors
 - Verify `REDIS_TLS=true` is set

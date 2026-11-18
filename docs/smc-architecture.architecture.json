@@ -38,7 +38,7 @@
           "redis",
           "storage"
         ],
-        "note": "Identity, Postgres plus PgBouncer, Redis cache and queues."
+        "note": "Identity, Postgres, Redis cache and queues."
       }
     ]
   },
@@ -175,7 +175,7 @@
       "id": "postgres",
       "type": "database",
       "label": "PostgreSQL",
-      "sublabel": "Main + ticketing via PgBouncer",
+      "sublabel": "Main + ticketing databases",
       "pos": [
         40,
         400
@@ -184,7 +184,7 @@
         180,
         70
       ],
-      "tag": ":5432 / :6432"
+      "tag": ":5432"
     },
     {
       "id": "redis",
@@ -352,7 +352,7 @@
       "dot": "rose",
       "title": "Data and trust",
       "items": [
-        "Postgres plus PgBouncer, Redis 7, MinIO S3 object store",
+        "Postgres, Redis 7, MinIO S3 object store",
         "Cashfree PG webhooks, Resend email, Google OAuth"
       ]
     }
