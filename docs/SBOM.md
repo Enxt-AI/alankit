@@ -64,7 +64,7 @@ smc-unlisted-stox/
 ├── packages/
 │   ├── cookie-crypto         (AES-256-GCM utility)
 │   ├── db-ticketing          (Prisma – ticketing DB)
-│   ├── db-unlisted-stox      (Prisma – main DB)
+│   ├── db-unlistedstock      (Prisma – main DB)
 │   ├── email-service         (Resend – NestJS injectable)
 │   ├── eslint-config         (Shared ESLint presets)
 │   ├── redis-service         (ioredis wrapper)
@@ -83,7 +83,7 @@ These are first-party packages linked via `workspace:*` or `workspace:^`.
 | Package | Version | Consumed By |
 |---------|---------|-------------|
 | `cookie-crypto` | `1.0.0` | auth, payments, stocks, ticketing, storage, web, panels, rm-distributors |
-| `db-unlisted-stox` | `1.0.0` | auth, payments, stocks, ticketing |
+| `db-unlistedstock` | `1.0.0` | auth, payments, stocks, ticketing |
 | `db-ticketing` | `1.0.0` | ticketing |
 | `email-service` | `1.0.0` | auth, payments, stocks, ticketing, rm-distributors |
 | `redis-service` | `1.0.0` | auth, stocks |
@@ -91,7 +91,7 @@ These are first-party packages linked via `workspace:*` or `workspace:^`.
 | `stats-types` | `1.0.0` | ticketing, web, panels |
 | `@repo/ui` | `0.0.0` | web, panels |
 | `@repo/eslint-config` | `0.0.0` | web, panels, ui |
-| `@repo/typescript-config` | `0.0.0` | db-ticketing, db-unlisted-stox, email, ui, panels |
+| `@repo/typescript-config` | `0.0.0` | db-ticketing, db-unlistedstock, email, ui, panels |
 
 ---
 
@@ -662,7 +662,7 @@ These are first-party packages linked via `workspace:*` or `workspace:^`.
 
 ---
 
-### 5.12 `packages/db-unlisted-stox`
+### 5.12 `packages/db-unlistedstock`
 
 | Dependency | Version | Type | License |
 |------------|---------|------|---------|

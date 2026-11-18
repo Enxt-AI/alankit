@@ -64,79 +64,79 @@ An online platform for trading unlisted/pre-IPO stocks featuring:
 
 ```
 +-----------------------------------------------------------------------------+
-¦                              CLIENT LAYER                                    ¦
-+-----------------------------------------------------------------------------¦
-¦  +-------------+  +-------------+  +-----------------+  +----------------+  ¦
-¦  ¦   Web App   ¦  ¦ Panels App  ¦  ¦ RM-Distributors ¦  ¦  Mobile/PWA    ¦  ¦
-¦  ¦ (Port 3000) ¦  ¦ (Port 4000) ¦  ¦   (Port 8000)   ¦  ¦   (Service     ¦  ¦
-¦  ¦  Customers  ¦  ¦ Admin/CMS/  ¦  ¦  Distributors   ¦  ¦    Worker)     ¦  ¦
-¦  ¦             ¦  ¦ Support/etc ¦  ¦                 ¦  ¦                ¦  ¦
-¦  +-------------+  +-------------+  +-----------------+  +----------------+  ¦
+ï¿½                              CLIENT LAYER                                    ï¿½
++-----------------------------------------------------------------------------ï¿½
+ï¿½  +-------------+  +-------------+  +-----------------+  +----------------+  ï¿½
+ï¿½  ï¿½   Web App   ï¿½  ï¿½ Panels App  ï¿½  ï¿½ RM-Distributors ï¿½  ï¿½  Mobile/PWA    ï¿½  ï¿½
+ï¿½  ï¿½ (Port 3000) ï¿½  ï¿½ (Port 4000) ï¿½  ï¿½   (Port 8000)   ï¿½  ï¿½   (Service     ï¿½  ï¿½
+ï¿½  ï¿½  Customers  ï¿½  ï¿½ Admin/CMS/  ï¿½  ï¿½  Distributors   ï¿½  ï¿½    Worker)     ï¿½  ï¿½
+ï¿½  ï¿½             ï¿½  ï¿½ Support/etc ï¿½  ï¿½                 ï¿½  ï¿½                ï¿½  ï¿½
+ï¿½  +-------------+  +-------------+  +-----------------+  +----------------+  ï¿½
 +---------+----------------+------------------+-------------------+-----------+
-          ¦                ¦                  ¦                   ¦
+          ï¿½                ï¿½                  ï¿½                   ï¿½
           ?                ?                  ?                   ?
 +-----------------------------------------------------------------------------+
-¦                           NGINX REVERSE PROXY                                ¦
-¦  - Rate limiting (auth: 10r/m, api: 100r/s)                                  ¦
-¦  - SSL termination (external)                                               ¦
-¦  - Static file serving (MinIO)                                               ¦
-¦  - API gateway routing                                                       ¦
+ï¿½                           NGINX REVERSE PROXY                                ï¿½
+ï¿½  - Rate limiting (auth: 10r/m, api: 100r/s)                                  ï¿½
+ï¿½  - SSL termination (external)                                               ï¿½
+ï¿½  - Static file serving (MinIO)                                               ï¿½
+ï¿½  - API gateway routing                                                       ï¿½
 +-----------------------------------------------------------------------------+
-          ¦
+          ï¿½
           ?
 +-----------------------------------------------------------------------------+
-¦                          MICROSERVICES LAYER                                  ¦
-+------------------------------------------------------------------------------¦
-¦  +---------------+ +---------------+ +---------------+ +----------------+   ¦
-¦  ¦ Auth Service  ¦ ¦Stocks Service ¦ ¦Ticketing Svc  ¦ ¦Payments Service¦   ¦
-¦  ¦ (Port 3002)   ¦ ¦ (Port 3003)   ¦ ¦ (Port 3001)   ¦ ¦ (Port 3004)    ¦   ¦
-¦  ¦               ¦ ¦               ¦ ¦               ¦ ¦                ¦   ¦
-¦  ¦ - JWT Auth    ¦ ¦ - Stocks      ¦ ¦ - Tickets     ¦ ¦ - Cashfree     ¦   ¦
-¦  ¦ - OTP Verify  ¦ ¦ - Orders      ¦ ¦ - Labels      ¦ ¦ - Webhooks     ¦   ¦
-¦  ¦ - Sessions    ¦ ¦ - Portfolio   ¦ ¦ - Support     ¦ ¦ - Transactions ¦   ¦
-¦  ¦ - Admin Panel ¦ ¦ - KYC/Demat   ¦ ¦ - Assignment  ¦ ¦                ¦   ¦
-¦  ¦   Auth        ¦ ¦ - Content     ¦ ¦               ¦ ¦                ¦   ¦
-¦  +---------------+ ¦ - Baskets     ¦ +---------------+ +----------------+   ¦
-¦          ¦         ¦ - Accounting  ¦         ¦                  ¦           ¦
-¦          ¦         +---------------+         ¦                  ¦           ¦
-¦          ¦         ¦                        ¦                  ¦           ¦
-¦          ¦         ¦  +----------------+     ¦                  ¦           ¦
-¦          ¦         ¦  ¦Storage Service ¦     ¦                  ¦           ¦
-¦          ¦         ¦  ¦ (Port 3005)    ¦     ¦                  ¦           ¦
-¦          ¦         ¦  ¦ - MinIO Upload ¦     ¦                  ¦           ¦
-¦          ¦         ¦  ¦ - S3 API       ¦     ¦                  ¦           ¦
-¦          ¦         ¦  +----------------+     ¦                  ¦           ¦
-+-----------------------------------------------------------------------------¦
-¦                            SHARED PACKAGES                                    ¦
-+-----------------------------------------------------------------------------¦
-¦  +-----------------+ +-----------------+ +-----------------+               ¦
-¦  ¦ db-unlisted-stox¦ ¦  db-ticketing   ¦ ¦  email-service  ¦               ¦
-¦  ¦ (Prisma Client) ¦ ¦ (Prisma Client) ¦ ¦ (Resend wrapper)¦               ¦
-¦  +-----------------+ +-----------------+ +-----------------+               ¦
-¦  +-----------------+ +-----------------+ +-----------------+               ¦
-¦  ¦  redis-service  ¦ ¦  cookie-crypto  ¦ ¦  shared-types   ¦               ¦
-¦  ¦ (IORedis wrapper¦ ¦ (AES-256-GCM)   ¦ ¦ (TypeScript)    ¦               ¦
-¦  +-----------------+ +-----------------+ +-----------------+               ¦
-¦  +-----------------+ +-----------------+ +-----------------+               ¦
-¦  ¦     @repo/ui    ¦ ¦  stats-types    ¦ ¦ @repo/ts-config ¦               ¦
-¦  ¦ (Shared React   ¦ ¦ (Statistics     ¦ ¦ (TS Configs)    ¦               ¦
-¦  ¦  Components)    ¦ ¦  Interfaces)    ¦ ¦                 ¦               ¦
-¦  +-----------------+ +-----------------+ +-----------------+               ¦
+ï¿½                          MICROSERVICES LAYER                                  ï¿½
++------------------------------------------------------------------------------ï¿½
+ï¿½  +---------------+ +---------------+ +---------------+ +----------------+   ï¿½
+ï¿½  ï¿½ Auth Service  ï¿½ ï¿½Stocks Service ï¿½ ï¿½Ticketing Svc  ï¿½ ï¿½Payments Serviceï¿½   ï¿½
+ï¿½  ï¿½ (Port 3002)   ï¿½ ï¿½ (Port 3003)   ï¿½ ï¿½ (Port 3001)   ï¿½ ï¿½ (Port 3004)    ï¿½   ï¿½
+ï¿½  ï¿½               ï¿½ ï¿½               ï¿½ ï¿½               ï¿½ ï¿½                ï¿½   ï¿½
+ï¿½  ï¿½ - JWT Auth    ï¿½ ï¿½ - Stocks      ï¿½ ï¿½ - Tickets     ï¿½ ï¿½ - Cashfree     ï¿½   ï¿½
+ï¿½  ï¿½ - OTP Verify  ï¿½ ï¿½ - Orders      ï¿½ ï¿½ - Labels      ï¿½ ï¿½ - Webhooks     ï¿½   ï¿½
+ï¿½  ï¿½ - Sessions    ï¿½ ï¿½ - Portfolio   ï¿½ ï¿½ - Support     ï¿½ ï¿½ - Transactions ï¿½   ï¿½
+ï¿½  ï¿½ - Admin Panel ï¿½ ï¿½ - KYC/Demat   ï¿½ ï¿½ - Assignment  ï¿½ ï¿½                ï¿½   ï¿½
+ï¿½  ï¿½   Auth        ï¿½ ï¿½ - Content     ï¿½ ï¿½               ï¿½ ï¿½                ï¿½   ï¿½
+ï¿½  +---------------+ ï¿½ - Baskets     ï¿½ +---------------+ +----------------+   ï¿½
+ï¿½          ï¿½         ï¿½ - Accounting  ï¿½         ï¿½                  ï¿½           ï¿½
+ï¿½          ï¿½         +---------------+         ï¿½                  ï¿½           ï¿½
+ï¿½          ï¿½         ï¿½                        ï¿½                  ï¿½           ï¿½
+ï¿½          ï¿½         ï¿½  +----------------+     ï¿½                  ï¿½           ï¿½
+ï¿½          ï¿½         ï¿½  ï¿½Storage Service ï¿½     ï¿½                  ï¿½           ï¿½
+ï¿½          ï¿½         ï¿½  ï¿½ (Port 3005)    ï¿½     ï¿½                  ï¿½           ï¿½
+ï¿½          ï¿½         ï¿½  ï¿½ - MinIO Upload ï¿½     ï¿½                  ï¿½           ï¿½
+ï¿½          ï¿½         ï¿½  ï¿½ - S3 API       ï¿½     ï¿½                  ï¿½           ï¿½
+ï¿½          ï¿½         ï¿½  +----------------+     ï¿½                  ï¿½           ï¿½
++-----------------------------------------------------------------------------ï¿½
+ï¿½                            SHARED PACKAGES                                    ï¿½
++-----------------------------------------------------------------------------ï¿½
+ï¿½  +-----------------+ +-----------------+ +-----------------+               ï¿½
+ï¿½  ï¿½ db-unlistedstockï¿½ ï¿½  db-ticketing   ï¿½ ï¿½  email-service  ï¿½               ï¿½
+ï¿½  ï¿½ (Prisma Client) ï¿½ ï¿½ (Prisma Client) ï¿½ ï¿½ (Resend wrapper)ï¿½               ï¿½
+ï¿½  +-----------------+ +-----------------+ +-----------------+               ï¿½
+ï¿½  +-----------------+ +-----------------+ +-----------------+               ï¿½
+ï¿½  ï¿½  redis-service  ï¿½ ï¿½  cookie-crypto  ï¿½ ï¿½  shared-types   ï¿½               ï¿½
+ï¿½  ï¿½ (IORedis wrapperï¿½ ï¿½ (AES-256-GCM)   ï¿½ ï¿½ (TypeScript)    ï¿½               ï¿½
+ï¿½  +-----------------+ +-----------------+ +-----------------+               ï¿½
+ï¿½  +-----------------+ +-----------------+ +-----------------+               ï¿½
+ï¿½  ï¿½     @repo/ui    ï¿½ ï¿½  stats-types    ï¿½ ï¿½ @repo/ts-config ï¿½               ï¿½
+ï¿½  ï¿½ (Shared React   ï¿½ ï¿½ (Statistics     ï¿½ ï¿½ (TS Configs)    ï¿½               ï¿½
+ï¿½  ï¿½  Components)    ï¿½ ï¿½  Interfaces)    ï¿½ ï¿½                 ï¿½               ï¿½
+ï¿½  +-----------------+ +-----------------+ +-----------------+               ï¿½
 +-----------------------------------------------------------------------------+
-          ¦                                           ¦
+          ï¿½                                           ï¿½
           ?                                           ?
 +---------------------------------+    +-------------------------------------+
-¦          DATABASES              ¦    ¦          INFRASTRUCTURE              ¦
-+---------------------------------¦    +--------------------------------------¦
-¦  PostgreSQL (Main DB)           ¦    ¦  Redis (Cache/Queue/OTP Store)       ¦
-¦  - Users, Stocks, Orders        ¦    ¦  - Session management                ¦
-¦  - Portfolio, KYC, etc.         ¦    ¦  - OTP verification                   ¦
-¦                                 ¦    ¦  - Bull job queues                    ¦
-¦  PostgreSQL (Ticketing DB)      ¦    ¦                                       ¦
-¦  - Tickets, Labels, Comments    ¦    ¦  MinIO (Object Storage)               ¦
-¦                                 ¦    ¦  - KYC documents                      ¦
-¦                                 ¦    ¦  - Stock documents                    ¦
-¦                                 ¦    ¦  - Static assets                      ¦
+ï¿½          DATABASES              ï¿½    ï¿½          INFRASTRUCTURE              ï¿½
++---------------------------------ï¿½    +--------------------------------------ï¿½
+ï¿½  PostgreSQL (Main DB)           ï¿½    ï¿½  Redis (Cache/Queue/OTP Store)       ï¿½
+ï¿½  - Users, Stocks, Orders        ï¿½    ï¿½  - Session management                ï¿½
+ï¿½  - Portfolio, KYC, etc.         ï¿½    ï¿½  - OTP verification                   ï¿½
+ï¿½                                 ï¿½    ï¿½  - Bull job queues                    ï¿½
+ï¿½  PostgreSQL (Ticketing DB)      ï¿½    ï¿½                                       ï¿½
+ï¿½  - Tickets, Labels, Comments    ï¿½    ï¿½  MinIO (Object Storage)               ï¿½
+ï¿½                                 ï¿½    ï¿½  - KYC documents                      ï¿½
+ï¿½                                 ï¿½    ï¿½  - Stock documents                    ï¿½
+ï¿½                                 ï¿½    ï¿½  - Static assets                      ï¿½
 +---------------------------------+    +-------------------------------------+
 ```
 
@@ -160,7 +160,7 @@ graph TD
     end
 
     subgraph "Shared Packages (packages/*)"
-        DB_MAIN[db-unlisted-stox<br/>Prisma Client]
+        DB_MAIN[db-unlistedstock<br/>Prisma Client]
         DB_TICKET[db-ticketing<br/>Prisma Client]
         REDIS[redis-service<br/>IORedis]
         EMAIL[email-service<br/>Resend]
@@ -221,7 +221,7 @@ graph TD
 
 ### Package Dependency Matrix
 
-| Package | db-unlisted-stox | db-ticketing | redis-service | email-service | cookie-crypto | shared-types | stats-types |
+| Package | db-unlistedstock | db-ticketing | redis-service | email-service | cookie-crypto | shared-types | stats-types |
 |---------|-------------------|--------------|---------------|---------------|---------------|--------------|-------------|
 | auth-service | **X** | - | **X** | **X** | **X** | - | - |
 | stocks-service | **X** | - | **X** | **X** | **X** | - | - |
@@ -244,24 +244,24 @@ graph TD
 ```
 apps/web/
 +-- app/                    # Next.js App Router pages
-¦   +-- (main)/            # Public routes (stocks, baskets, news)
-¦   +-- (user)/            # Authenticated user routes (dashboard, settings)
-¦   +-- login/             # Authentication pages
+ï¿½   +-- (main)/            # Public routes (stocks, baskets, news)
+ï¿½   +-- (user)/            # Authenticated user routes (dashboard, settings)
+ï¿½   +-- login/             # Authentication pages
 +-- components/
-¦   +-- ui/                # Base UI components (Radix + Tailwind)
-¦   +-- stocks/            # Stock-related components
-¦   +-- baskets/           # Basket components
-¦   +-- orders/            # Order flow components
-¦   +-- kyc/               # KYC verification flow
-¦   +-- auth/              # Authentication components
-¦   +-- layout/            # Layout components
+ï¿½   +-- ui/                # Base UI components (Radix + Tailwind)
+ï¿½   +-- stocks/            # Stock-related components
+ï¿½   +-- baskets/           # Basket components
+ï¿½   +-- orders/            # Order flow components
+ï¿½   +-- kyc/               # KYC verification flow
+ï¿½   +-- auth/              # Authentication components
+ï¿½   +-- layout/            # Layout components
 +-- lib/                   # API clients and utilities
-¦   +-- api-client.ts      # Axios configuration
-¦   +-- stocks-api.ts       # Stock API calls
-¦   +-- auth-api.ts        # Auth API calls
-¦   +-- [...]-api.ts       # Other API modules
+ï¿½   +-- api-client.ts      # Axios configuration
+ï¿½   +-- stocks-api.ts       # Stock API calls
+ï¿½   +-- auth-api.ts        # Auth API calls
+ï¿½   +-- [...]-api.ts       # Other API modules
 +-- store/                 # Zustand state stores
-¦   +-- auth-store.ts      # Authentication state
+ï¿½   +-- auth-store.ts      # Authentication state
 +-- types/                 # TypeScript type definitions
 +-- middleware.ts          # Auth middleware (protected routes)
 ```
@@ -377,12 +377,12 @@ apps/panels/app/
 
 | Package | Database | Usage |
 |---------|----------|-------|
-| `db-unlisted-stox` | PostgreSQL (main) | Users, Stocks, Orders, Portfolio, KYC, Accounting |
+| `db-unlistedstock` | PostgreSQL (main) | Users, Stocks, Orders, Portfolio, KYC, Accounting |
 | `db-ticketing` | PostgreSQL (ticketing) | Tickets, Labels, Comments |
 
 **Key Exports**:
 ```typescript
-// db-unlisted-stox
+// db-unlistedstock
 export { PrismaClient } from './generated/prisma';
 export { ADMIN_PERMISSIONS } from './constants/admin-permissions';
 
@@ -491,7 +491,7 @@ sequenceDiagram
 | `apps/stocks-service/src/orders/orders.service.ts` | **Critical** | Order placement, validation |
 | `apps/stocks-service/src/kyc/kyc.service.ts` | **Critical** | KYC verification |
 | `apps/payments-service/src/payments/payment.service.ts` | **Critical** | Payment processing |
-| `packages/db-unlisted-stox/prisma/schema.prisma` | **Critical** | Data model |
+| `packages/db-unlistedstock/prisma/schema.prisma` | **Critical** | Data model |
 
 #### Medium Priority
 | File | Risk Level | Reason |
@@ -740,7 +740,7 @@ erDiagram
 
 | File | Purpose |
 |------|---------|
-| `packages/db-unlisted-stox/prisma/schema.prisma` | Database schema (1400+ lines) |
+| `packages/db-unlistedstock/prisma/schema.prisma` | Database schema (1400+ lines) |
 | `apps/web/lib/api-client.ts` | HTTP client (230+ lines) |
 | `nginx.conf` | Reverse proxy config (320+ lines) |
 | `apps/web/next.config.js` | Next.js config (340+ lines) |

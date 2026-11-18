@@ -121,7 +121,7 @@ docker network inspect smc-staging-network >/dev/null 2>&1 || docker network cre
 
 # 1. Migrations (server-side, has DB network access)
 # run per Prisma package that has migrations, e.g.:
-# docker run --rm --network smc-staging-network --env-file .env ghcr.io/unlistedstox/stocks-service:$TAG pnpm --filter db-unlisted-stox exec prisma migrate deploy
+# docker run --rm --network smc-staging-network --env-file .env ghcr.io/unlistedstox/stocks-service:$TAG pnpm --filter db-unlistedstock exec prisma migrate deploy
 # repeat for ticketing DB package
 
 # 2. Pull + up

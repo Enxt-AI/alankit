@@ -1,4 +1,4 @@
-﻿# Phase 5: Authentication & Dashboard Implementation - Fixes Documentation
+# Phase 5: Authentication & Dashboard Implementation - Fixes Documentation
 
 ## Overview
 This document comprehensively details all issues discovered and fixes implemented during Phase 5 dashboard implementation, authentication flow refinement, and session management.
@@ -1860,7 +1860,7 @@ if (role === 'CONTENT_MANAGER' && permissions.length === 0) {
 
 **Files Updated:**
 - `apps/stocks-service/src/content/content.service.ts` - Updated `createNews()`, `createBlog()`, `updateNews()`, `updateBlog()` methods
-- Import changed from `@prisma/client` to `db-unlisted-stox` for proper workspace dependency
+- Import changed from `@prisma/client` to `db-unlistedstock` for proper workspace dependency
 
 **Testing Verification:**
 -  Build passes with updated imports

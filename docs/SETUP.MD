@@ -34,7 +34,7 @@ Run these commands on your host machine to push the Prisma schema to the Postgre
 # 1. Sync main database
 $env:DATABASE_URL="postgresql://postgres:postgres@localhost:5432/unlisted_stox_db"
 $env:DIRECT_DATABASE_URL="postgresql://postgres:postgres@localhost:5432/unlisted_stox_db"
-pnpm --filter db-unlisted-stox exec prisma db push
+pnpm --filter db-unlistedstock exec prisma db push
 
 # 2. Sync ticketing database
 $env:DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ticketing_system"
@@ -64,10 +64,10 @@ Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 $env:DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/unlisted_stox_db"
 $env:DIRECT_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/unlisted_stox_db"
 
-pnpm --filter db-unlisted-stox exec prisma db push
+pnpm --filter db-unlistedstock exec prisma db push
 
 # Seed main database
-pnpm --filter db-unlisted-stox exec npx ts-node src/seed.ts
+pnpm --filter db-unlistedstock exec npx ts-node src/seed.ts
 ```
 
 #### Push Schema & Seed Ticketing Database

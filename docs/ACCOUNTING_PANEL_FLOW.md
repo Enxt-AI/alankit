@@ -70,7 +70,7 @@ Cashfree settles to bank → Settlement Voucher (auto-approved)
 
 ## 3. Database Models (Prisma)
 
-Schema: `packages/db-unlisted-stox/prisma/schema.prisma`
+Schema: `packages/db-unlistedstock/prisma/schema.prisma`
 
 ### Core Models
 

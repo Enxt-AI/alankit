@@ -18,7 +18,7 @@
 
 Apply migration `20261007000000_integration_reliability` before starting the new workers. Coordinate deployment of payments-service and stocks-service: old voucher allocators must not continue writing after the new counter is seeded. Take the normal database backup and pause voucher-writing traffic during this migration/deployment. The PAN and receipt expression indexes are ordinary index builds; plan their lock time for a large production database.
 
-Build the shared db-unlisted-stox, redis-service, and email-service packages before the services. Run Prisma generation as part of the normal build. No live migration or deployment is performed by this change.
+Build the shared db-unlistedstock, redis-service, and email-service packages before the services. Run Prisma generation as part of the normal build. No live migration or deployment is performed by this change.
 
 Use persistent Redis with a no-eviction policy for Bull. The repository's local cache Redis eviction configuration is not a production queue durability guarantee. All replicas using the same provider credentials must share the limiter Redis. Defaults are admission limits, not measured provider capacities. Include any other applications sharing those credentials when budgeting quotas.
 

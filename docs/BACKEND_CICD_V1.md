@@ -61,7 +61,7 @@ High-level rules:
 - `apps/payments-service/**` affects `payments-service`
 - `apps/stocks-service/**` affects `stocks-service`
 - `apps/ticketing-service/**` affects `ticketing-service`
-- `packages/db-unlisted-stox/**`, `packages/cookie-crypto/**`, `packages/typescript-config/**`, root workspace files, and deploy assets affect all backend services
+- `packages/db-unlistedstock/**`, `packages/cookie-crypto/**`, `packages/typescript-config/**`, root workspace files, and deploy assets affect all backend services
 - `packages/db-ticketing/**`, `packages/shared-types/**`, and `packages/stats-types/**` affect `ticketing-service`
 - `packages/redis-service/**` affects `auth-service` and `stocks-service`
 - `packages/email-service/**` affects `payments-service`, `stocks-service`, and `ticketing-service`

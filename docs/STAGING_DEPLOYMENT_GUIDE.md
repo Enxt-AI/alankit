@@ -233,7 +233,7 @@ After migration completion, verify the databases:
 ssh -i ~/.ssh/your-key.pem ec2-user@YOUR_EC2_IP
 
 # Check if Prisma clients are generated
-ls -la packages/db-unlisted-stox/generated/
+ls -la packages/db-unlistedstock/generated/
 ls -la packages/db-ticketing/generated/
 
 # Test database connectivity (from EC2)

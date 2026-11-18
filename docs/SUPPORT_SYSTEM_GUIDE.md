@@ -44,7 +44,7 @@ This guide provides comprehensive documentation for the Agent-Facing Support Sys
 ### Databases
 
 - **`db-ticketing`**: Tickets, comments, attachments, labels, ticket history
-- **`db-unlisted-stox`**: Admin records with SUPPORT_AGENT role, availability, and active ticket counts
+- **`db-unlistedstock`**: Admin records with SUPPORT_AGENT role, availability, and active ticket counts
 
 ### Frontend
 
@@ -180,9 +180,9 @@ EMAIL_FROM=support@yourdomain.com
 
 ### Prerequisites
 
-1. Run `pnpm db:seed` in `packages/db-unlisted-stox` (creates 2 support agents)
+1. Run `pnpm db:seed` in `packages/db-unlistedstock` (creates 2 support agents)
 2. Start all services: `pnpm dev` (or individually: auth-service, stocks-service, ticketing-service, web)
-3. Verify databases: `db-unlisted-stox` (admins), `db-ticketing` (tickets)
+3. Verify databases: `db-unlistedstock` (admins), `db-ticketing` (tickets)
 
 ### Test Scenarios
 
@@ -355,4 +355,4 @@ EMAIL_FROM=support@yourdomain.com
 - `PHASE5_AUTHENTICATION_FIXES.md` - Auth implementation details
 - `apps/ticketing-service/README.md` - Service-specific setup
 - `packages/db-ticketing/prisma/schema.prisma` - Ticket database schema
-- `packages/db-unlisted-stox/prisma/schema.prisma` - Admin database schema
+- `packages/db-unlistedstock/prisma/schema.prisma` - Admin database schema

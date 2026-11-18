@@ -6,7 +6,7 @@
 Building monorepo applications in Docker presents unique challenges that standard single-repository Docker builds don't encounter. The primary issue is workspace dependency resolution - when packages within the monorepo reference each other using protocols like `workspace:*`, Docker's layer caching and build context limitations can cause builds to fail or become inefficient.
 
 ### Why Standard Docker Builds Fail with Workspace Dependencies
-Traditional Docker builds copy the entire project directory into the build context, but workspace dependencies like `"@smc/db-unlisted-stox": "workspace:*"` don't resolve to actual file paths during the build process. This leads to:
+Traditional Docker builds copy the entire project directory into the build context, but workspace dependencies like `"@smc/db-unlistedstock": "workspace:*"` don't resolve to actual file paths during the build process. This leads to:
 - Build failures when Docker tries to install dependencies
 - Inefficient layer caching due to changing workspace references
 - Difficulty in optimizing build contexts
@@ -19,7 +19,7 @@ The solution implemented in this monorepo uses `pnpm deploy` to resolve workspac
 ### Workspace Packages
 The monorepo contains several shared packages that services depend on:
 
-- **`packages/db-unlisted-stox`**: Prisma schema and client for the main application database
+- **`packages/db-unlistedstock`**: Prisma schema and client for the main application database
 - **`packages/db-ticketing`**: Prisma schema and client for the support ticketing database
 - **`packages/redis-service`**: Redis connection and caching utilities
 - **`packages/email-service`**: Email sending utilities using SendGrid
@@ -35,7 +35,7 @@ Three NestJS microservices that depend on the workspace packages:
 ### Dependency Graph
 ```mermaid
 graph TD
-    A[auth-service] --> B[db-unlisted-stox]
+    A[auth-service] --> B[db-unlistedstock]
     A --> C[redis-service]
     A --> D[email-service]
     A --> E[shared-types]
@@ -61,7 +61,7 @@ In `package.json`, dependencies can reference other packages in the monorepo usi
 ```json
 {
   "dependencies": {
-    "@smc/db-unlisted-stox": "workspace:*",
+    "@smc/db-unlistedstock": "workspace:*",
     "@smc/redis-service": "workspace:*"
   }
 }
@@ -74,7 +74,7 @@ This tells pnpm to resolve the dependency from within the monorepo workspace rat
 {
   "name": "@smc/auth-service",
   "dependencies": {
-    "@smc/db-unlisted-stox": "workspace:*",
+    "@smc/db-unlistedstock": "workspace:*",
     "@smc/redis-service": "workspace:*",
     "@smc/email-service": "workspace:*",
     "@smc/shared-types": "workspace:*"
@@ -102,7 +102,7 @@ RUN npm install -g pnpm@9.0.0
 COPY pnpm-lock.yaml package.json pnpm-workspace.yaml turbo.json ./
 
 # Copy package directories
-COPY packages/db-unlisted-stox/package.json packages/db-unlisted-stox/
+COPY packages/db-unlistedstock/package.json packages/db-unlistedstock/
 COPY packages/db-ticketing/package.json packages/db-ticketing/
 COPY packages/redis-service/package.json packages/redis-service/
 COPY packages/email-service/package.json packages/email-service/
@@ -121,7 +121,7 @@ RUN pnpm install --frozen-lockfile
 #### Copying Required Packages and Service Code
 ```dockerfile
 # Copy package source code
-COPY packages/db-unlisted-stox packages/db-unlisted-stox/
+COPY packages/db-unlistedstock packages/db-unlistedstock/
 COPY packages/db-ticketing packages/db-ticketing/
 COPY packages/redis-service packages/redis-service/
 COPY packages/email-service packages/email-service/
@@ -134,7 +134,7 @@ COPY apps/auth-service apps/auth-service/
 #### Prisma Client Generation
 ```dockerfile
 # Generate Prisma clients (must happen before building)
-RUN cd packages/db-unlisted-stox && npx prisma generate
+RUN cd packages/db-unlistedstock && npx prisma generate
 RUN cd packages/db-ticketing && npx prisma generate
 ```
 
@@ -142,7 +142,7 @@ RUN cd packages/db-ticketing && npx prisma generate
 ```dockerfile
 # Build packages first (in dependency order)
 RUN pnpm --filter @smc/shared-types build
-RUN pnpm --filter @smc/db-unlisted-stox build
+RUN pnpm --filter @smc/db-unlistedstock build
 RUN pnpm --filter @smc/db-ticketing build
 RUN pnpm --filter @smc/redis-service build
 RUN pnpm --filter @smc/email-service build
@@ -189,7 +189,7 @@ RUN pnpm deploy --filter=@smc/auth-service --prod /app/deploy
 /app/deploy/
 ├── node_modules/          # Resolved production dependencies
 ├── packages/
-│   ├── db-unlisted-stox/  # Built package with actual files
+│   ├── db-unlistedstock/  # Built package with actual files
 │   ├── redis-service/     # Built package with actual files
 │   └── ...                # Other resolved packages
 ├── dist/                  # Compiled service application
@@ -311,7 +311,7 @@ RUN cat /app/deploy/package.json
 ### Verifying Prisma Client Generation
 ```bash
 # Check if Prisma clients were generated
-RUN ls -la packages/db-unlisted-stox/generated/
+RUN ls -la packages/db-unlistedstock/generated/
 RUN ls -la packages/db-ticketing/generated/
 ```
 
@@ -321,7 +321,7 @@ The deployed `package.json` should have resolved workspace dependencies:
 ```json
 {
   "dependencies": {
-    "@smc/db-unlisted-stox": "file:../packages/db-unlisted-stox",
+    "@smc/db-unlistedstock": "file:../packages/db-unlistedstock",
     "@smc/redis-service": "file:../packages/redis-service"
   }
 }
@@ -411,7 +411,7 @@ RUN npm install -g pnpm@9.0.0
 
 ### Always Generate Prisma Clients Before Building
 ```dockerfile
-RUN cd packages/db-unlisted-stox && npx prisma generate
+RUN cd packages/db-unlistedstock && npx prisma generate
 RUN cd packages/db-ticketing && npx prisma generate
 ```
 - Required for TypeScript compilation

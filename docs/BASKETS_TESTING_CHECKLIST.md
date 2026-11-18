@@ -4,7 +4,7 @@
 
 ### 1. Database Migration
 ```bash
-cd packages/db-unlisted-stox
+cd packages/db-unlistedstock
 pnpm prisma migrate deploy
 ```
 

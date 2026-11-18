@@ -56,7 +56,7 @@ Successfully implemented a comprehensive admin panel for reviewing and managing 
 - `manage_kyc` - Permission to approve/reject KYC submissions
 
 **Modified Files:**
-- [packages/db-unlisted-stox/src/constants/admin-permissions.ts](packages/db-unlisted-stox/src/constants/admin-permissions.ts)
+- [packages/db-unlistedstock/src/constants/admin-permissions.ts](packages/db-unlistedstock/src/constants/admin-permissions.ts)
 - [apps/web/types/admin.ts](apps/web/types/admin.ts)
 
 ## Frontend Changes
@@ -213,7 +213,7 @@ Sent via `EmailService.sendKycRejectedEmail()`:
 2. [apps/auth-service/src/auth/auth.service.ts](apps/auth-service/src/auth/auth.service.ts) - Added 3 new methods
 3. [apps/stocks-service/src/kyc/kyc.controller.ts](apps/stocks-service/src/kyc/kyc.controller.ts) - Enhanced admin endpoints
 4. [apps/stocks-service/src/kyc/kyc.service.ts](apps/stocks-service/src/kyc/kyc.service.ts) - Added audit logging
-5. [packages/db-unlisted-stox/src/constants/admin-permissions.ts](packages/db-unlisted-stox/src/constants/admin-permissions.ts) - Added 2 permissions
+5. [packages/db-unlistedstock/src/constants/admin-permissions.ts](packages/db-unlistedstock/src/constants/admin-permissions.ts) - Added 2 permissions
 6. [apps/web/types/admin.ts](apps/web/types/admin.ts) - Added 2 permission types
 7. [apps/web/lib/admin-api.ts](apps/web/lib/admin-api.ts) - Added 4 API functions
 8. [apps/web/components/admin/sidebar.tsx](apps/web/components/admin/sidebar.tsx) - Added Users menu item
