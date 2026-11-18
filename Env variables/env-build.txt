@@ -3,7 +3,7 @@
 # ==============================================================================
 # These variables are passed as `--build-arg` / `ENV` during `docker build` in
 # GitHub Actions CI pipelines.
-# - Backend services only need dummy/placeholder `DATABASE_URL` & `DIRECT_DATABASE_URL`
+# - Backend services only need a dummy/placeholder `DATABASE_URL`
 #   so `prisma generate` succeeds without connecting to a live database.
 # - Frontend Next.js services (`web`, `panels`, `rm-distributors`) inline
 #   `next.config.*` rewrites and `NEXT_PUBLIC_*` variables into the static
@@ -13,7 +13,6 @@
 ## 1. Backend Services Build-Time Variables (`auth-service`, `payments-service`, `stocks-service`, `ticketing-service`)
 NAME                                        REQUIRED    DEFAULT / CI BUILD VALUE                                    SERVICES USING IT                                                       DESCRIPTION
 DATABASE_URL                                Yes         postgresql://placeholder:placeholder@localhost:5432/db      auth-service, payments-service, stocks-service, ticketing-service       Required by `prisma.config.ts` and `schema.prisma` during `prisma generate` at image build time. A placeholder URI works.
-DIRECT_DATABASE_URL                         Yes         postgresql://placeholder:placeholder@localhost:5432/db      auth-service, payments-service, stocks-service, ticketing-service       Referenced in `datasource.directUrl` in `packages/db-unlisted-stox/prisma/schema.prisma`; required during `prisma generate`. A placeholder URI works.
 TICKETING_DATABASE_URL                      Optional    postgresql://placeholder:placeholder@localhost:5432/db      ticketing-service                                                       Declared as `ARG`/`ENV` in `apps/ticketing-service/Dockerfile` builder stage alongside `DATABASE_URL`.
 PUPPETEER_SKIP_CHROMIUM_DOWNLOAD            Optional    true (Already defaulted in Dockerfile)                      stocks-service                                                          Skips downloading bundled Chromium during `pnpm install` in `stocks-service` (uses Alpine `/usr/bin/chromium-browser`).
 PUPPETEER_SKIP_DOWNLOAD                     Optional    true (Already defaulted in Dockerfile)                      stocks-service                                                          Skips Puppeteer browser binary download during `pnpm install` in `stocks-service`.

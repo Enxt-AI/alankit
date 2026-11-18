@@ -115,9 +115,9 @@ Reference [ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md) for complete environment 
 
 **Database Configuration:**
 ```
-DATABASE_URL=postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres?pgbouncer=true&connection_limit=1
-ADMIN_DATABASE_URL=postgresql://postgres:[ADMIN_PASSWORD]@[HOST]:5432/postgres?pgbouncer=true&connection_limit=1
-TICKETING_DATABASE_URL=postgresql://postgres:[TICKETING_PASSWORD]@[HOST]:5432/postgres?pgbouncer=true&connection_limit=1
+DATABASE_URL=postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres
+ADMIN_DATABASE_URL=postgresql://postgres:[ADMIN_PASSWORD]@[HOST]:5432/postgres
+TICKETING_DATABASE_URL=postgresql://postgres:[TICKETING_PASSWORD]@[HOST]:5432/postgres
 ```
 
 **Redis Configuration:**

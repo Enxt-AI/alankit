@@ -71,15 +71,14 @@ openssl rand -base64 32
 
 **Environment Variables:**
 ```
-DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres?pgbouncer=true&connection_limit=1
-ADMIN_DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres?pgbouncer=true&connection_limit=1
-TICKETING_DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres?pgbouncer=true&connection_limit=1
+DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+ADMIN_DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
+TICKETING_DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
 ```
 
 **Configuration Tips:**
 - Enable **Row Level Security (RLS)** for data protection
 - Configure **IP allowlist** if needed for additional security
-- Use connection pooling (PgBouncer) for production performance
 
 **Cost:** Free tier includes 500MB database, 2GB bandwidth
 
