@@ -27,8 +27,8 @@ The staging Compose file runs the same stocks-service image with a different
 command for `esign-worker`. No public port or fixed container name is needed.
 
 ```sh
-docker compose -f docker-compose.staging.yml up -d --build stocks-service esign-worker
-docker compose -f docker-compose.staging.yml logs -f esign-worker
+docker compose --env-file .env.staging -f docker-compose.staging.yml up -d --build stocks-service esign-worker
+docker compose --env-file .env.staging -f docker-compose.staging.yml logs -f esign-worker
 ```
 
 `ESIGN_CONCURRENCY` defaults to **1** and accepts integers from 1 to 32.
@@ -42,7 +42,7 @@ and confirming Digitap's quota. Each worker logs queue wait, processing duration
 and Node RSS (which excludes Chromium child processes).
 
 ```sh
-docker compose -f docker-compose.staging.yml up -d --scale esign-worker=2 esign-worker
+docker compose --env-file .env.staging -f docker-compose.staging.yml up -d --scale esign-worker=2 esign-worker
 ```
 
 The custom `scripts/cd/staging.sh` deployment uses `docker run`, not Compose, and

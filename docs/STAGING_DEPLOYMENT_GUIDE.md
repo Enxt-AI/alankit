@@ -268,12 +268,12 @@ ssh -i ~/.ssh/your-key.pem ec2-user@YOUR_EC2_IP
 cd ~/smc-unlisted-stox
 
 # Check Docker container status
-docker-compose -f docker-compose.staging.yml ps
+docker-compose --env-file .env.staging -f docker-compose.staging.yml ps
 
 # View service logs
-docker-compose -f docker-compose.staging.yml logs -f auth-service
-docker-compose -f docker-compose.staging.yml logs -f stocks-service
-docker-compose -f docker-compose.staging.yml logs -f ticketing-service
+docker-compose --env-file .env.staging -f docker-compose.staging.yml logs -f auth-service
+docker-compose --env-file .env.staging -f docker-compose.staging.yml logs -f stocks-service
+docker-compose --env-file .env.staging -f docker-compose.staging.yml logs -f ticketing-service
 ```
 
 ### Health Check Verification
@@ -317,7 +317,7 @@ After deployment, test the complete flow:
 
 ### Comprehensive Verification Checklist
 - [ ] EC2 instance is running and accessible via SSH
-- [ ] Docker containers are running: `docker-compose -f docker-compose.staging.yml ps`
+- [ ] Docker containers are running: `docker-compose --env-file .env.staging -f docker-compose.staging.yml ps`
 - [ ] All services respond to health checks
 - [ ] Nginx reverse proxy routes correctly
 - [ ] Database connections work from all services
@@ -358,7 +358,7 @@ curl -I -H "Origin: https://your-vercel-domain.vercel.app" \
 docker stats
 
 # Monitor logs for errors
-docker-compose -f docker-compose.staging.yml logs --tail=100 -f
+docker-compose --env-file .env.staging -f docker-compose.staging.yml logs --tail=100 -f
 
 # Verify container health checks
 docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
@@ -399,7 +399,7 @@ docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
 ### Log Locations and Access
 ```bash
 # Docker container logs
-docker-compose -f docker-compose.staging.yml logs SERVICE_NAME
+docker-compose --env-file .env.staging -f docker-compose.staging.yml logs SERVICE_NAME
 
 # Nginx access logs
 tail -f /var/log/nginx/access.log
@@ -408,23 +408,23 @@ tail -f /var/log/nginx/access.log
 tail -f /var/log/nginx/error.log
 
 # Application logs (inside containers)
-docker-compose -f docker-compose.staging.yml exec SERVICE_NAME tail -f /app/logs/app.log
+docker-compose --env-file .env.staging -f docker-compose.staging.yml exec SERVICE_NAME tail -f /app/logs/app.log
 ```
 
 ### Using Docker Compose for Debugging
 ```bash
 # View all logs
-docker-compose -f docker-compose.staging.yml logs -f
+docker-compose --env-file .env.staging -f docker-compose.staging.yml logs -f
 
 # View specific service logs
-docker-compose -f docker-compose.staging.yml logs -f auth-service
+docker-compose --env-file .env.staging -f docker-compose.staging.yml logs -f auth-service
 
 # Restart specific service
-docker-compose -f docker-compose.staging.yml restart auth-service
+docker-compose --env-file .env.staging -f docker-compose.staging.yml restart auth-service
 
 # Rebuild specific service
-docker-compose -f docker-compose.staging.yml build auth-service
-docker-compose -f docker-compose.staging.yml up -d auth-service
+docker-compose --env-file .env.staging -f docker-compose.staging.yml build auth-service
+docker-compose --env-file .env.staging -f docker-compose.staging.yml up -d auth-service
 ```
 
 ## Rollback Procedures
@@ -435,12 +435,12 @@ docker-compose -f docker-compose.staging.yml up -d auth-service
 docker images
 
 # Rollback to specific image tag
-docker-compose -f docker-compose.staging.yml pull  # Pull latest images
-docker-compose -f docker-compose.staging.yml up -d --no-build  # Use existing images
+docker-compose --env-file .env.staging -f docker-compose.staging.yml pull  # Pull latest images
+docker-compose --env-file .env.staging -f docker-compose.staging.yml up -d --no-build  # Use existing images
 
 # Or specify exact image version
-docker-compose -f docker-compose.staging.yml up -d --scale auth-service=0
-docker-compose -f docker-compose.staging.yml up -d auth-service
+docker-compose --env-file .env.staging -f docker-compose.staging.yml up -d --scale auth-service=0
+docker-compose --env-file .env.staging -f docker-compose.staging.yml up -d auth-service
 ```
 
 ### Git-Based Rollback

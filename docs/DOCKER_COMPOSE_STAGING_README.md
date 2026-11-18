@@ -28,26 +28,26 @@ The staging deployment consists of:
 
 ### Build Images
 ```bash
-docker-compose -f docker-compose.staging.yml build
+docker-compose --env-file .env.staging -f docker-compose.staging.yml build
 ```
 
 ### Start Services
 ```bash
-docker-compose -f docker-compose.staging.yml up -d
+docker-compose --env-file .env.staging -f docker-compose.staging.yml up -d
 ```
 
 ### View Logs
 ```bash
 # All services
-docker-compose -f docker-compose.staging.yml logs -f
+docker-compose --env-file .env.staging -f docker-compose.staging.yml logs -f
 
 # Specific service
-docker-compose -f docker-compose.staging.yml logs -f auth-service
+docker-compose --env-file .env.staging -f docker-compose.staging.yml logs -f auth-service
 ```
 
 ### Stop Services
 ```bash
-docker-compose -f docker-compose.staging.yml down
+docker-compose --env-file .env.staging -f docker-compose.staging.yml down
 ```
 
 ### Health Checks
@@ -87,7 +87,7 @@ docker stats --no-stream
 
 ### Container Health
 ```bash
-docker-compose -f docker-compose.staging.yml ps
+docker-compose --env-file .env.staging -f docker-compose.staging.yml ps
 ```
 
 ## Troubleshooting
@@ -108,11 +108,11 @@ docker-compose -f docker-compose.staging.yml ps
 
 ### Network Issues
 - Check network creation: `docker network ls | grep staging`
-- Inspect service connectivity: `docker-compose -f docker-compose.staging.yml exec nginx ping auth-service`
+- Inspect service connectivity: `docker-compose --env-file .env.staging -f docker-compose.staging.yml exec nginx ping auth-service`
 
 ### Health Check Failures
-- Check service logs: `docker-compose -f docker-compose.staging.yml logs [service-name]`
-- Verify endpoints are responding: `docker-compose -f docker-compose.staging.yml exec [service-name] curl http://localhost:[port]/api/health`
+- Check service logs: `docker-compose --env-file .env.staging -f docker-compose.staging.yml logs [service-name]`
+- Verify endpoints are responding: `docker-compose --env-file .env.staging -f docker-compose.staging.yml exec [service-name] curl http://localhost:[port]/api/health`
 
 ## Service Details
 
@@ -133,12 +133,12 @@ docker-compose -f docker-compose.staging.yml ps
 
 ### Remove Containers and Networks
 ```bash
-docker-compose -f docker-compose.staging.yml down
+docker-compose --env-file .env.staging -f docker-compose.staging.yml down
 ```
 
 ### Remove Images and Volumes
 ```bash
-docker-compose -f docker-compose.staging.yml down -v --rmi all
+docker-compose --env-file .env.staging -f docker-compose.staging.yml down -v --rmi all
 ```
 
 ### Complete Cleanup

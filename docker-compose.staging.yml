@@ -47,18 +47,18 @@ services:
     image: smc-auth-service:staging
     container_name: smc-auth-staging
     env_file:
-      - .env
+      - .env.staging
     environment:
-      - NODE_ENV=production
-      - PORT=${AUTH_SERVICE_PORT:-3002}
-      - ALLOW_CONSOLE_OTP_FALLBACK=${ALLOW_CONSOLE_OTP_FALLBACK:-false}
-      - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=200
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${AUTH_SERVICE_PORT}
+      ALLOW_CONSOLE_OTP_FALLBACK: ${ALLOW_CONSOLE_OTP_FALLBACK}
+      NODE_OPTIONS: ${AUTH_NODE_OPTIONS}
     restart: unless-stopped
     networks:
       - staging-network
     mem_limit: 250m
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3002/api/health || exit 1"]
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:${AUTH_SERVICE_PORT}/api/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -79,21 +79,17 @@ services:
     image: smc-stocks-service:staging
     container_name: smc-stocks-staging
     env_file:
-      - .env
+      - .env.staging
     environment:
-      - NODE_ENV=production
-      - PORT=${STOCKS_SERVICE_PORT:-3003}
-      - CASHFREE_CLIENT_ID=
-      - CASHFREE_CLIENT_SECRET=
-      - CASHFREE_ENVIRONMENT=
-      # Leave room outside the JS heap for PDF buffers and native allocations.
-      - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=${STOCKS_HEAP_MB:-512}
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${STOCKS_SERVICE_PORT}
+      NODE_OPTIONS: ${STOCKS_NODE_OPTIONS}
     restart: unless-stopped
     networks:
       - staging-network
-    mem_limit: ${STOCKS_MEMORY:-1g}
+    mem_limit: ${STOCKS_MEMORY}
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3003/api/health || exit 1"]
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:${STOCKS_SERVICE_PORT}/api/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -114,16 +110,16 @@ services:
     image: smc-esign-worker:staging
     command: ["node", "dist/esign-worker.js"]
     env_file:
-      - .env
+      - .env.staging
     environment:
-      - NODE_ENV=production
-      - ESIGN_CONCURRENCY=${ESIGN_CONCURRENCY:-1}
-      - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=256
+      NODE_ENV: ${NODE_ENV}
+      ESIGN_CONCURRENCY: ${ESIGN_CONCURRENCY}
+      NODE_OPTIONS: ${ESIGN_NODE_OPTIONS}
     restart: unless-stopped
     stop_grace_period: 120s
     networks:
       - staging-network
-    mem_limit: ${ESIGN_WORKER_MEMORY:-768m}
+    mem_limit: ${ESIGN_WORKER_MEMORY}
     logging:
       driver: json-file
       options:
@@ -141,18 +137,18 @@ services:
     image: smc-ticketing-service:staging
     container_name: smc-ticketing-staging
     env_file:
-      - .env
+      - .env.staging
     environment:
-      - NODE_ENV=production
-      - PORT=${TICKETING_SERVICE_PORT:-3001}
-      - DATABASE_URL=${TICKETING_DATABASE_URL}
-      - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=200
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${TICKETING_SERVICE_PORT}
+      DATABASE_URL: ${TICKETING_DATABASE_URL}
+      NODE_OPTIONS: ${TICKETING_NODE_OPTIONS}
     restart: unless-stopped
     networks:
       - staging-network
     mem_limit: 250m
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3001/api/health || exit 1"]
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:${TICKETING_SERVICE_PORT}/api/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -173,17 +169,17 @@ services:
     image: smc-payments-service:staging
     container_name: smc-payments-staging
     env_file:
-      - .env
+      - .env.staging
     environment:
-      - NODE_ENV=production
-      - PORT=${PAYMENTS_SERVICE_PORT:-3004}
-      - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=200
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${PAYMENTS_SERVICE_PORT}
+      NODE_OPTIONS: ${PAYMENTS_NODE_OPTIONS}
     restart: unless-stopped
     networks:
       - staging-network
     mem_limit: 250m
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3004/api/health || exit 1"]
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:${PAYMENTS_SERVICE_PORT}/api/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -202,12 +198,12 @@ services:
     image: smc-storage-service:staging
     container_name: smc-storage-staging
     env_file:
-      - .env
+      - .env.staging
     environment:
-      - NODE_ENV=production
-      - PORT=3005
-      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://10.0.2.100:9000}
-      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:-http://10.0.2.100:9000}
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${STORAGE_SERVICE_PORT}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
     develop:
       watch:
         - action: rebuild
@@ -224,7 +220,7 @@ services:
     networks:
       - staging-network
     healthcheck:
-      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:3005/api/health || exit 1"]
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:${STORAGE_SERVICE_PORT}/api/health || exit 1"]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -242,9 +238,9 @@ services:
     container_name: smc-postgres-staging
     restart: unless-stopped
     environment:
-      - POSTGRES_USER=postgres
-      - POSTGRES_PASSWORD=postgres
-      - POSTGRES_DB=ticketing_system
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
     ports:
       - "5432:5432"
     volumes:
@@ -253,7 +249,7 @@ services:
     networks:
       - staging-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
       interval: 5s
       timeout: 5s
       retries: 5
@@ -265,25 +261,25 @@ services:
       dockerfile: apps/web/Dockerfile
       network: host
       args:
-        NEXT_PUBLIC_GTM_ID: ${NEXT_PUBLIC_GTM_ID:-}
-        NEXT_PUBLIC_META_PIXEL_ID: ${NEXT_PUBLIC_META_PIXEL_ID:-}
-        BACKEND_ORIGIN: ${BACKEND_ORIGIN:-http://smc-nginx-staging:90}
+        NEXT_PUBLIC_GTM_ID: ${NEXT_PUBLIC_GTM_ID}
+        NEXT_PUBLIC_META_PIXEL_ID: ${NEXT_PUBLIC_META_PIXEL_ID}
+        BACKEND_ORIGIN: ${BACKEND_ORIGIN}
     ports:
       - "3000:3000"
     env_file:
       - apps/web/.env
     environment:
-      - NODE_OPTIONS=--dns-result-order=ipv4first
-      - BACKEND_ORIGIN=${BACKEND_ORIGIN:-http://smc-nginx-staging:90}
+      NODE_OPTIONS: ${WEB_NODE_OPTIONS}
+      BACKEND_ORIGIN: ${BACKEND_ORIGIN}
       # Next.js profile/signout handlers run at runtime; use the internal service
       # instead of depending on the public gateway used by BACKEND_ORIGIN.
-      - AUTH_SERVICE_URL=http://auth-service:${AUTH_SERVICE_PORT:-3002}
-      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://10.0.2.100:9000}
-      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:-http://10.0.2.100:9000}
-      - NEXT_PUBLIC_GTM_ID=${NEXT_PUBLIC_GTM_ID:-}
-      - GTM_ID=${GTM_ID:-}
-      - SMARTPING_API_KEY=${SMARTPING_API_KEY}
-      - RESEND_FROM_EMAIL=${RESEND_FROM_EMAIL:-Unlistedstox <no-reply@unlistedstox.com>}
+      AUTH_SERVICE_URL: ${AUTH_SERVICE_URL}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
+      NEXT_PUBLIC_GTM_ID: ${NEXT_PUBLIC_GTM_ID}
+      GTM_ID: ${GTM_ID}
+      SMARTPING_API_KEY: ${SMARTPING_API_KEY}
+      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
     restart: unless-stopped
     networks:
       - staging-network
@@ -295,16 +291,16 @@ services:
       dockerfile: apps/panels/Dockerfile
       network: host
       args:
-        BACKEND_ORIGIN: ${BACKEND_ORIGIN:-http://smc-nginx-staging:90}
+        BACKEND_ORIGIN: ${BACKEND_ORIGIN}
     ports:
       - "4000:4000"
     env_file:
       - apps/panels/.env
     environment:
-      - NODE_OPTIONS=--dns-result-order=ipv4first
-      - BACKEND_ORIGIN=${BACKEND_ORIGIN:-http://smc-nginx-staging:90}
-      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://10.0.2.100:9000}
-      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:-http://10.0.2.100:9000}
+      NODE_OPTIONS: ${PANELS_NODE_OPTIONS}
+      BACKEND_ORIGIN: ${BACKEND_ORIGIN}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
     restart: unless-stopped
     networks:
       - staging-network
@@ -316,16 +312,16 @@ services:
       dockerfile: apps/rm-distributors/Dockerfile
       network: host
       args:
-        BACKEND_ORIGIN: ${BACKEND_ORIGIN:-http://smc-nginx-staging:90}
+        BACKEND_ORIGIN: ${BACKEND_ORIGIN}
     ports:
       - "8000:8000"
     env_file:
       - apps/rm-distributors/.env
     environment:
-      - NODE_OPTIONS=--dns-result-order=ipv4first
-      - BACKEND_ORIGIN=${BACKEND_ORIGIN:-http://smc-nginx-staging:90}
-      - MINIO_ENDPOINT=${MINIO_ENDPOINT:-http://10.0.2.100:9000}
-      - MINIO_PUBLIC_URL=${MINIO_PUBLIC_URL:-http://10.0.2.100:9000}
+      NODE_OPTIONS: ${RM_DISTRIBUTORS_NODE_OPTIONS}
+      BACKEND_ORIGIN: ${BACKEND_ORIGIN}
+      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
+      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
     restart: unless-stopped
     networks:
       - staging-network

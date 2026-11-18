@@ -248,7 +248,7 @@ EMAIL_MOCK_MODE=false
 4. Upload `.env.staging` to your EC2 instance (repository root)
 5. Set Vercel environment variables in the dashboard
 6. Run database migrations (see migration documentation)
-7. Deploy using `docker-compose -f docker-compose.staging.yml up -d`
+7. Deploy using `docker-compose --env-file .env.staging -f docker-compose.staging.yml up -d`
 
 ## Section 12: Security Best Practices
 
