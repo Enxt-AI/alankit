@@ -18,7 +18,7 @@ export interface SmsResult {
 }
 
 /**
- * SmsService handles all outbound SMS delivery via the SMC SMS Gateway.
+ * SmsService handles outbound OTP delivery via the VoiceSMS gateway.
  */
 const service = 'auth-service';
 const ctx = 'SmsService';
@@ -28,31 +28,24 @@ export class SmsService {
   private readonly logger = new PinoNestLogger(service, ctx);
 
   private readonly gatewayUrl: string;
-  private readonly username: string;
-  private readonly password: string;
+  private readonly ukey: string;
   private readonly senderId: string;
-  private readonly peId: string;
   private readonly templateId: string;
 
   constructor(
     private readonly httpService: HttpService,
     @InjectQueue('sms') private readonly smsQueue: any,
   ) {
-    this.gatewayUrl =
-      process.env.SMS_GATEWAY_URL ||
-      'https://web.smsgw.in/smsapi/httpapi.jsp';
-    this.username = process.env.SMS_GATEWAY_USERNAME || '';
-    this.password = process.env.SMS_GATEWAY_PASSWORD || '';
-    this.senderId = process.env.SMS_SENDER_ID || '';
-    this.peId = process.env.SMS_PE_ID || '';
-    this.templateId = process.env.SMS_TEMPLATE_ID || '';
+    this.gatewayUrl = process.env.VOICESMS_GATEWAY_URL ||
+      'http://125.16.147.178/VoicenSMS/webresources/CreateSMSCampaignGet';
+    this.ukey = process.env.VOICESMS_UKEY || '';
+    this.senderId = process.env.VOICESMS_SENDER_ID || 'ALKIMG';
+    this.templateId = process.env.VOICESMS_TEMPLATE_ID || '0';
 
 
-    if (!this.username || !this.password || !this.senderId || !this.peId || !this.templateId) {
+    if (!this.ukey || !this.senderId || !this.templateId) {
       this.logger.warn(
-        'SMS Gateway configuration is incomplete. ' +
-        'Ensure SMS_GATEWAY_USERNAME, SMS_GATEWAY_PASSWORD, SMS_SENDER_ID, ' +
-        'SMS_PE_ID, and SMS_TEMPLATE_ID are set in the environment.',
+        'VoiceSMS configuration is incomplete. Ensure VOICESMS_UKEY is set in the environment.',
       );
     }
   }
@@ -82,13 +75,10 @@ export class SmsService {
   }
 
   /**
-   * Synchronously send an OTP SMS with automatic retries via SMC SMS Gateway.
+   * Synchronously send an OTP SMS with automatic retries via VoiceSMS.
    */
   async sendOtpSmsSync(phone: string, otp: string): Promise<SmsResult> {
-    // DO NOT EDIT: must match the DLT-registered template (SMS_TEMPLATE_ID) character for character.
-    // Any change makes telecom operators silently drop the SMS even though the gateway returns an ack.
-    // To change the wording, register a new template on DLT first and update SMS_TEMPLATE_ID.
-    const message = `UnlistedStox Login OTP: ${otp}. Valid for 10 minutes only. Never share your OTP.`;
+    const message = `Dear User, ${otp} is the OTP for login. Team Alankit.`;
     const maxAttempts = 3;
     let attempt = 0;
     let lastError: any = null;
@@ -110,9 +100,9 @@ export class SmsService {
 
     while (attempt < maxAttempts) {
       attempt++;
-      this.logger.log(`Attempt ${attempt} of ${maxAttempts} to send SMS to ${maskedPhone} via primary gateway`);
+      this.logger.log(`Attempt ${attempt} of ${maxAttempts} to send SMS to ${maskedPhone} via VoiceSMS`);
       try {
-        const result = await this.sendViaPrimaryGateway(phone, message);
+        const result = await this.sendViaVoiceSmsGateway(phone, message);
         if (result.success) {
           // Success: reset failures
           try {
@@ -123,15 +113,15 @@ export class SmsService {
 
         // Fast-fail: If credit is exhausted, skip attempts immediately
         if (result.errorCode === '015') {
-          this.logger.warn(`Primary gateway credit exhausted (code 015) for ${maskedPhone}. Skipping primary retries.`);
-          lastError = new Error('SMC Gateway: Insufficient credit.');
+          this.logger.warn(`VoiceSMS credit exhausted (code 015) for ${maskedPhone}. Skipping retries.`);
+          lastError = new Error('VoiceSMS: Insufficient credit.');
           break;
         }
 
-        lastError = new Error(`Primary gateway business error: ${result.errorCode} - ${result.errorDesc}`);
+        lastError = new Error(`VoiceSMS business error: ${result.errorCode} - ${result.errorDesc}`);
       } catch (err: any) {
         lastError = err;
-        this.logger.warn(`Primary gateway attempt ${attempt} failed with network error for ${maskedPhone}: ${err.message}`);
+        this.logger.warn(`VoiceSMS attempt ${attempt} failed for ${maskedPhone}: ${err.message}`);
       }
 
       if (attempt < maxAttempts) {
@@ -139,7 +129,7 @@ export class SmsService {
       }
     }
 
-    // Primary gateway failed: record failure and increment counter
+    // VoiceSMS failed: record failure and increment counter
     try {
       const failures = await redis.incr('circuit:sms:primary:failures');
       if (failures === 1) {
@@ -160,30 +150,30 @@ export class SmsService {
   }
 
   /**
-   * Internal helper to make the HTTP request to the SMC SMS Gateway.
+   * Internal helper to make the HTTP request to the VoiceSMS gateway.
    */
-  private async sendViaPrimaryGateway(phone: string, message: string): Promise<SmsResult> {
+  private async sendViaVoiceSmsGateway(phone: string, message: string): Promise<SmsResult> {
     const params = new URLSearchParams({
-      username: this.username,
-      password: this.password,
-      from: this.senderId,
-      to: phone,
-      text: message,
-      pe_id: this.peId,
-      template_id: this.templateId,
-      responsetype: 'json',
+      ukey: this.ukey,
+      msisdn: phone,
+      language: '0',
+      credittype: '7',
+      senderid: this.senderId,
+      templateid: this.templateId,
+      message,
+      filetype: '2',
     });
 
     const url = `${this.gatewayUrl}?${params.toString()}`;
 
     const response = await firstValueFrom(
-      this.httpService.get(url),
+      this.httpService.get(url, { timeout: 10000 }),
     );
 
     const data = response.data;
 
     if (typeof data === 'string') {
-      return this.parseXmlResponse(data, phone);
+      return this.parseVoiceSmsResponse(data);
     }
 
     if (data?.data?.ackid || data?.data?.ack_id) {
@@ -197,9 +187,10 @@ export class SmsService {
       };
     }
 
-    if (data?.Error) {
-      const errorCode = data.Error.ErrorCode || 'UNKNOWN';
-      const errorDesc = data.Error.ErrorDesc || 'Unknown gateway error';
+    if (data?.Error || data?.error) {
+      const error = data.Error || data.error;
+      const errorCode = error.ErrorCode || error.errorCode || error.code || 'UNKNOWN';
+      const errorDesc = error.ErrorDesc || error.errorDesc || error.message || 'Unknown gateway error';
       return {
         success: false,
         errorCode,
@@ -207,11 +198,38 @@ export class SmsService {
       };
     }
 
-    return {
-      success: false,
-      errorCode: 'UNEXPECTED',
-      errorDesc: 'Unexpected response from SMS gateway',
-    };
+    const ackid = data?.ackid || data?.ack_id || data?.campaignid || data?.campaign_id || data?.requestid || data?.id;
+    if (ackid || data?.success === true || String(data?.status || '').toLowerCase() === 'success') {
+      return { success: true, ackid: ackid ? String(ackid) : undefined };
+    }
+    return { success: false, errorCode: 'UNEXPECTED', errorDesc: 'Unexpected response from VoiceSMS gateway' };
+  }
+
+  private parseVoiceSmsResponse(response: string): SmsResult {
+    const trimmed = response.trim();
+    if (!trimmed) return { success: false, errorCode: 'EMPTY', errorDesc: 'Empty response from VoiceSMS gateway' };
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (parsed?.Error || parsed?.error) {
+        const error = parsed.Error || parsed.error;
+        return {
+          success: false,
+          errorCode: error.ErrorCode || error.errorCode || error.code || 'UNKNOWN',
+          errorDesc: error.ErrorDesc || error.errorDesc || error.message || 'VoiceSMS rejected the request',
+        };
+      }
+      const ackid = parsed?.ackid || parsed?.ack_id || parsed?.campaignid || parsed?.campaign_id || parsed?.requestid || parsed?.id;
+      if (ackid || parsed?.success === true || String(parsed?.status || '').toLowerCase() === 'success') {
+        return { success: true, ackid: ackid ? String(ackid) : trimmed };
+      }
+      return { success: false, errorCode: 'UNEXPECTED', errorDesc: 'VoiceSMS returned an unrecognized response' };
+    } catch {
+      if (/<ack_id>|<ackid>/i.test(trimmed)) return this.parseXmlResponse(trimmed, '');
+      if (/error|failed|invalid|insufficient/i.test(trimmed)) {
+        return { success: false, errorCode: 'REJECTED', errorDesc: trimmed.slice(0, 200) };
+      }
+      return { success: true, ackid: trimmed.slice(0, 200) };
+    }
   }
 
   /**

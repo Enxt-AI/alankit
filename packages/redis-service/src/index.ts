@@ -1,15 +1,10 @@
 import Redis from 'ioredis';
 
-const REDIS_TLS = (process.env.REDIS_TLS || '').toLowerCase() === 'true';
+if (!process.env.REDIS_URL) {
+  throw new Error('REDIS_URL is required');
+}
 
-const redis = process.env.REDIS_URL
-  ? new Redis(process.env.REDIS_URL)
-  : new Redis({
-      host: process.env.REDIS_HOST || 'localhost',
-      port: parseInt(process.env.REDIS_PORT || '6379'),
-      password: process.env.REDIS_PASSWORD || undefined,
-      ...(REDIS_TLS ? { tls: {} } : {}),
-    });
+const redis = new Redis(process.env.REDIS_URL);
 
 // Prevent noisy "Unhandled error event" logs from ioredis.
 redis.on('error', (err) => {

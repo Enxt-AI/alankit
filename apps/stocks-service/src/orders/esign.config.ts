@@ -9,12 +9,5 @@ export function positiveInteger(config: ConfigService, key: string, fallback: nu
 }
 
 export function esignRedisOptions(config: ConfigService) {
-  const url = config.get<string>('REDIS_URL');
-  if (url) return url;
-  return {
-    host: config.get('REDIS_HOST', 'localhost'),
-    port: Number(config.get('REDIS_PORT', 6379)),
-    password: config.get<string>('REDIS_PASSWORD'),
-    ...(String(config.get('REDIS_TLS', 'false')) === 'true' ? { tls: {} } : {}),
-  };
+  return config.getOrThrow<string>('REDIS_URL');
 }

@@ -9,14 +9,12 @@ NAME                            REQUIRED    FALLBACK                        WHER
 PORT                            Optional    3002                            src/main.ts                                                             Port the Fastify NestJS HTTP server listens on.
 COOKIE_DOMAIN                   Optional    undefined (e.g. .unlistedstox.com in prod)  src/auth/auth.controller.ts                                 Sets the `domain` attribute on all auth and signup cookies so cookies work across subdomains if required.
 
-## 2. SMS Delivery (SMC Gateway)
+## 2. SMS Delivery (VoiceSMS Gateway)
 NAME                            REQUIRED    FALLBACK                        WHERE USED                                                              DESCRIPTION
-SMS_GATEWAY_URL                 Optional    https://web.smsgw.in/smsapi/httpapi.jsp    src/sms/sms.service.ts                                       HTTP endpoint for the primary SMC SMS gateway.
-SMS_GATEWAY_USERNAME            Yes         ''                              src/sms/sms.service.ts                                                  SMC SMS Gateway account username.
-SMS_GATEWAY_PASSWORD            Yes         ''                              src/sms/sms.service.ts                                                  SMC SMS Gateway account password.
-SMS_SENDER_ID                   Yes         ''                              src/sms/sms.service.ts                                                  DLT-registered 6-character Sender ID (`from` query param).
-SMS_PE_ID                       Yes         ''                              src/sms/sms.service.ts                                                  DLT Principal Entity ID (`pe_id` query param).
-SMS_TEMPLATE_ID                 Yes         ''                              src/sms/sms.service.ts                                                  DLT Template ID (`template_id` query param) for login OTP message.
+VOICESMS_GATEWAY_URL             Optional    http://125.16.147.178/VoicenSMS/webresources/CreateSMSCampaignGet    src/sms/sms.service.ts    VoiceSMS CreateSMSCampaignGet endpoint.
+VOICESMS_UKEY                    Yes         ''                              src/sms/sms.service.ts                                                  VoiceSMS account key. Keep the value in the deployment secret store.
+VOICESMS_SENDER_ID               Optional    ALKIMG                          src/sms/sms.service.ts                                                  Sender ID used for OTP delivery.
+VOICESMS_TEMPLATE_ID             Optional    0                               src/sms/sms.service.ts                                                  VoiceSMS template ID for login OTP messages.
 
 ## 3. Rate Limiting, Throttling & Dev/Testing Overrides
 NAME                            REQUIRED    FALLBACK                        WHERE USED                                                              DESCRIPTION
