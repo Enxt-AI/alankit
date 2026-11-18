@@ -179,14 +179,6 @@ check_local_prerequisites() {
 migrate_unlisted_stox_db() {
     print_info "Migrating unlisted-stox database..."
 
-    # Prisma Migrate should use a direct (non-pgbouncer) connection when available.
-    # This avoids failures/hangs when DATABASE_URL points at Supabase transaction pooler.
-    local ORIGINAL_DATABASE_URL="${DATABASE_URL:-}"
-    if [ -n "${DIRECT_URL:-}" ]; then
-        export DATABASE_URL="$DIRECT_URL"
-        print_info "Using DIRECT_URL for unlisted-stox migrations"
-    fi
-
     # Change to db-unlisted-stox directory
     cd "$REPO_ROOT/packages/db-unlisted-stox"
 

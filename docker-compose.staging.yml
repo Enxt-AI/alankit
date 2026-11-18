@@ -53,10 +53,6 @@ services:
       - PORT=${AUTH_SERVICE_PORT:-3002}
       - ALLOW_CONSOLE_OTP_FALLBACK=${ALLOW_CONSOLE_OTP_FALLBACK:-false}
       - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=200
-    depends_on:
-      pgbouncer:
-        condition: service_healthy
-        required: false
     restart: unless-stopped
     networks:
       - staging-network
@@ -89,10 +85,6 @@ services:
       - PORT=${STOCKS_SERVICE_PORT:-3003}
       # Leave room outside the JS heap for PDF buffers and native allocations.
       - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=${STOCKS_HEAP_MB:-512}
-    depends_on:
-      pgbouncer:
-        condition: service_healthy
-        required: false
     restart: unless-stopped
     networks:
       - staging-network
@@ -124,10 +116,6 @@ services:
       - NODE_ENV=production
       - ESIGN_CONCURRENCY=${ESIGN_CONCURRENCY:-1}
       - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=256
-    depends_on:
-      pgbouncer:
-        condition: service_healthy
-        required: false
     restart: unless-stopped
     stop_grace_period: 120s
     networks:
@@ -156,10 +144,6 @@ services:
       - PORT=${TICKETING_SERVICE_PORT:-3001}
       - DATABASE_URL=${TICKETING_DATABASE_URL}
       - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=200
-    depends_on:
-      pgbouncer:
-        condition: service_healthy
-        required: false
     restart: unless-stopped
     networks:
       - staging-network
@@ -191,10 +175,6 @@ services:
       - NODE_ENV=production
       - PORT=${PAYMENTS_SERVICE_PORT:-3004}
       - NODE_OPTIONS=--dns-result-order=ipv4first --max-old-space-size=200
-    depends_on:
-      pgbouncer:
-        condition: service_healthy
-        required: false
     restart: unless-stopped
     networks:
       - staging-network
@@ -247,32 +227,6 @@ services:
       retries: 3
       start_period: 40s
 
-  pgbouncer:
-    image: edoburu/pgbouncer:latest
-    container_name: smc-pgbouncer-staging
-    environment:
-      # Pool both databases so services that route through PgBouncer
-      # (auth/storage -> unlisted_stox_db, ticketing -> ticketing_system)
-      # can all resolve their database. edoburu/pgbouncer uses DATABASE_URLS
-      # (plural) for a comma-separated list of connection URLs.
-      - DATABASE_URLS=${DIRECT_DATABASE_URL},${TICKETING_DATABASE_URL}
-      - POOL_MODE=transaction
-      - MAX_CLIENT_CONN=1000
-      - DEFAULT_POOL_SIZE=20
-      - RESERVE_POOL_SIZE=5
-      - SERVER_IDLE_TIMEOUT=600
-      - AUTH_TYPE=scram-sha-256
-      - IGNORE_STARTUP_PARAMETERS=extra_float_digits,options
-    ports:
-      - "6432:5432"
-    depends_on:
-      postgres:
-        condition: service_healthy
-        required: false
-    restart: unless-stopped
-    networks:
-      - staging-network
-    mem_limit: 64m
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -h 127.0.0.1 -p 5432 || exit 1"]
       interval: 10s

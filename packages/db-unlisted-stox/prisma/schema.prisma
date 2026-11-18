@@ -11,10 +11,7 @@ generator client {
 
 datasource db {
   provider  = "postgresql"
-  url       = env("DATABASE_URL") // Runtime: PgBouncer (port 6432)
-  // directUrl is provided conditionally via prisma.config.ts (only when
-  // DIRECT_DATABASE_URL is set), so `prisma generate` works in environments
-  // (e.g. Docker builds) where a direct connection isn't available.
+  url       = env("DATABASE_URL")
 }
 
 // ============================================

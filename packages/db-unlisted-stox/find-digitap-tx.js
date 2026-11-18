@@ -41,15 +41,7 @@ const envCandidates = [
 envCandidates.forEach(loadEnv);
 
 // ── 2. Resolve Active Database URL ─────────────────────────────────────────
-// Prefer DIRECT_DATABASE_URL if present, otherwise DATABASE_URL
-let activeDbUrl = process.env.DIRECT_DATABASE_URL || process.env.DATABASE_URL;
-
-// If running directly on the host (outside container), resolve 'pgbouncer' to '127.0.0.1'
-if (!fs.existsSync('/.dockerenv')) {
-  if (activeDbUrl && activeDbUrl.includes('@pgbouncer')) {
-    activeDbUrl = activeDbUrl.replace('@pgbouncer:', '@127.0.0.1:');
-  }
-}
+let activeDbUrl = process.env.DATABASE_URL;
 
 let PrismaClient;
 let PrismaModule;
