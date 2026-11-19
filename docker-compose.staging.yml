@@ -140,7 +140,7 @@ services:
     environment:
       NODE_ENV: ${NODE_ENV}
       PORT: ${TICKETING_SERVICE_PORT}
-      DATABASE_URL: ${TICKETING_DATABASE_URL}
+      TICKETING_DATABASE_URL: ${TICKETING_DATABASE_URL}
       NODE_OPTIONS: ${TICKETING_NODE_OPTIONS}
     restart: unless-stopped
     networks:

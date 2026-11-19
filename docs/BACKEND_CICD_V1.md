@@ -140,7 +140,6 @@ This allows the rollout path to move off the old manual model without reusing th
 The deploy workflow expects these secrets:
 
 - `STAGING_DATABASE_URL`
-- `STAGING_ADMIN_DATABASE_URL`
 - `STAGING_TICKETING_DATABASE_URL`
 - `STAGING_EC2_HOST`
 - `STAGING_EC2_USER`

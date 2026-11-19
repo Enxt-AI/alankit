@@ -110,7 +110,7 @@ async function bootstrap() {
   await app.listen(PORT, '0.0.0.0');
 
   logger.info({ event: 'service.start' }, `Ticketing Service is running on port ${PORT}/api`);
-  logger.info({ event: 'database.connect' }, `Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not Configured'}`);
+  logger.info({ event: 'database.connect' }, `Database: ${process.env.TICKETING_DATABASE_URL ? 'Connected' : 'Not Configured'}`);
 }
 
 bootstrap();

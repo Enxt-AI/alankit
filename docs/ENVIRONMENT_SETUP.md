@@ -66,13 +66,12 @@ openssl rand -base64 32
 2. Navigate to **Project Settings → Database**
 3. Copy the **Connection string** (use "Session mode" for application connections)
 4. Create two databases if not already created:
-   - `unlisted_stox_db` (for auth and stocks services)
+   - `stocks` (for auth, stocks, and ticketing admin data)
    - `ticketing_system` (for ticketing service)
 
 **Environment Variables:**
 ```
 DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
-ADMIN_DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
 TICKETING_DATABASE_URL=postgresql://postgres.[project-ref]:[password]@aws-0-[region].pooler.supabase.com:5432/postgres
 ```
 
@@ -298,8 +297,7 @@ EMAIL_MOCK_MODE=false
 | `PORT` | Auth/Stocks/Ticketing | Yes | Service port | `3002`/`3003`/`3001` |
 | `JWT_SECRET` | All backend | Yes | JWT signing secret | `base64-string` |
 | `COOKIE_SECRET` | Auth, Stocks | Yes | Cookie signing secret | `base64-string` |
-| `DATABASE_URL` | Auth, Stocks | Yes | Main database connection | `postgresql://...` |
-| `ADMIN_DATABASE_URL` | Ticketing | Yes | Admin database access | `postgresql://...` |
+| `DATABASE_URL` | Auth, Stocks, Ticketing admin | Yes | Shared stocks/admin database connection | `postgresql://...` |
 | `TICKETING_DATABASE_URL` | Ticketing | Yes | Ticketing database | `postgresql://...` |
 | `REDIS_HOST` | All backend | Yes | Redis endpoint | `xxx.upstash.io` |
 | `REDIS_PORT` | All backend | Yes | Redis port | `6379` |

@@ -10,12 +10,12 @@ export class AdminPrismaService
   private readonly logger = new PinoNestLogger('ticketing-service', 'AdminPrismaService');
 
   /**
-   * Connects to unlisted_stox_db (separate from ticketing_system)
+   * Connects to stocks (separate from ticketing_system)
    * for Admin/User/Stock models used in ticket assignment.
-   * Uses ADMIN_DATABASE_URL (fallback: DATABASE_URL).
+   * Uses the shared DATABASE_URL.
    */
   constructor() {
-    const dbUrl = process.env.ADMIN_DATABASE_URL || process.env.DATABASE_URL;
+    const dbUrl = process.env.DATABASE_URL;
     const isDev =
       process.env.NODE_ENV === 'development' ||
       process.env.NODE_ENV === 'local';
@@ -30,11 +30,6 @@ export class AdminPrismaService
       log: logConfig,
     });
 
-    if (!process.env.ADMIN_DATABASE_URL && process.env.DATABASE_URL) {
-      this.logger.warn(
-        '⚠️ ADMIN_DATABASE_URL not set, falling back to DATABASE_URL. This may point to ticketing_system DB instead of unlisted_stox_db.',
-      );
-    }
     this.logger.log('AdminPrisma DB:', dbUrl?.replace(/:[^:@]+@/, ':****@'));
   }
 

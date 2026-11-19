@@ -2,9 +2,8 @@
 # KUBERNETES SERVICE-SPECIFIC RUN-TIME SECRET: ticketing-service (env-ticketing-service.txt)
 # ==============================================================================
 # IMPORTANT: Mount `env-global.txt` FIRST and `env-ticketing-service.txt` SECOND
-# in the K8s Deployment so `DATABASE_URL` here (pointing to `ticketing_system`)
-# overrides the `DATABASE_URL` in `env-global.txt` (which points to `unlisted_stox_db`),
-# while `ADMIN_DATABASE_URL` points to `unlisted_stox_db`.
+# in the K8s Deployment. `DATABASE_URL` remains the shared `stocks` database URL,
+# while `TICKETING_DATABASE_URL` points to `ticketing_system`.
 # ==============================================================================
 
 ## 1. Server & Node Runtime (`ticketing-service` specific)
@@ -12,10 +11,10 @@ NAME                                REQUIRED    FALLBACK                        
 PORT                                Optional    3001                            src/main.ts                                                             Port the Fastify NestJS HTTP server listens on.
 NODE_OPTIONS                        Optional    --max-old-space-size=200        apps/ticketing-service/Dockerfile                                       Node.js V8 heap memory limit configured in the Docker production image.
 
-## 2. Dual Database Connections (`ticketing_system` + `unlisted_stox_db`)
+## 2. Dual Database Connections (`ticketing_system` + `stocks`)
 NAME                                REQUIRED    FALLBACK                        WHERE USED                                                              DESCRIPTION
-DATABASE_URL                        Yes         None (Overrides env-global.txt) src/prisma/prisma.service.ts, src/main.ts, packages/db-ticketing/prisma/schema.prisma    Primary PostgreSQL runtime connection string for the Ticketing database (`ticketing_system`). MUST override `DATABASE_URL` from `env-global.txt`.
-ADMIN_DATABASE_URL                  Yes         DATABASE_URL                    src/prisma/admin-prisma.service.ts                                      PostgreSQL runtime connection string for the main `unlisted_stox_db` database used by `AdminPrismaService` to query `Admin` (support agents) and `User` records.
+DATABASE_URL                        Yes         env-global.txt                  src/prisma/admin-prisma.service.ts                                      PostgreSQL connection string for the shared `stocks` database used by `AdminPrismaService`.
+TICKETING_DATABASE_URL              Yes         None                            src/prisma/prisma.service.ts, src/main.ts, packages/db-ticketing/prisma/schema.prisma    PostgreSQL runtime connection string for the `ticketing_system` database.
 
 ## 3. Ticket Assignment & Cron Schedulers
 NAME                                REQUIRED    FALLBACK                        WHERE USED                                                              DESCRIPTION

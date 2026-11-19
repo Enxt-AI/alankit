@@ -149,7 +149,7 @@ Authorization: Bearer <token>
 
 ```env
 # Database
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/unlisted_stox_db"
+DATABASE_URL="postgresql://postgres:postgres@localhost:5432/stocks"
 
 # Server
 PORT=3002

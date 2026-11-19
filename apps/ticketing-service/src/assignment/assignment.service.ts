@@ -250,7 +250,7 @@ export class AssignmentService {
     );
     this.logger.error(`[INFO] Troubleshooting:`);
     this.logger.error(
-      `1. Verify ADMIN_DATABASE_URL is set in .env (should point to unlisted_stox_db)`,
+      `1. Verify DATABASE_URL is set in .env (should point to stocks)`,
     );
     this.logger.error(`2. Run: cd packages/db-unlistedstock && pnpm db:seed`);
     this.logger.error(`3. Check AdminPrismaService connection logs on startup`);

@@ -32,18 +32,19 @@ Run these commands on your host machine to push the Prisma schema to the Postgre
 
 ```powershell
 # 1. Sync main database
-$env:DATABASE_URL="postgresql://postgres:postgres@localhost:5432/unlisted_stox_db"
-$env:DIRECT_DATABASE_URL="postgresql://postgres:postgres@localhost:5432/unlisted_stox_db"
+$env:DATABASE_URL="postgresql://postgres:postgres@localhost:5432/stocks"
+$env:DIRECT_DATABASE_URL="postgresql://postgres:postgres@localhost:5432/stocks"
 pnpm --filter db-unlistedstock exec prisma db push
 
 # 2. Sync ticketing database
-$env:DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ticketing_system"
-$env:DIRECT_DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ticketing_system"
+$env:TICKETING_DATABASE_URL="postgresql://postgres:postgres@localhost:5432/ticketing_system"
+
 pnpm --filter db-ticketing exec prisma db push
 
 # 3. CLEANUP (CRITICAL)
 # Clear the environment variables from your shell session
 Remove-Item Env:\DATABASE_URL
+Remove-Item Env:\TICKETING_DATABASE_URL
 Remove-Item Env:\DIRECT_DATABASE_URL
 ```
 
@@ -61,8 +62,8 @@ Point your local Prisma CLI to `localhost:5432` to push schema and seed data:
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
-$env:DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/unlisted_stox_db"
-$env:DIRECT_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/unlisted_stox_db"
+$env:DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/stocks"
+$env:DIRECT_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/stocks"
 
 pnpm --filter db-unlistedstock exec prisma db push
 
@@ -72,15 +73,13 @@ pnpm --filter db-unlistedstock exec npx ts-node src/seed.ts
 
 #### Push Schema & Seed Ticketing Database
 ```powershell
-$env:DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/ticketing_system"
-$env:DIRECT_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/ticketing_system"
+$env:TICKETING_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/ticketing_system"
 
 pnpm --filter db-ticketing exec prisma db push
 pnpm --filter db-ticketing exec prisma db seed
 
 # CLEANUP (CRITICAL)
-Remove-Item Env:\DATABASE_URL
-Remove-Item Env:\DIRECT_DATABASE_URL
+Remove-Item Env:\TICKETING_DATABASE_URL
 ```
 
 ---

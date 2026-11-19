@@ -116,7 +116,6 @@ Reference [ENVIRONMENT_SETUP.md](ENVIRONMENT_SETUP.md) for complete environment 
 **Database Configuration:**
 ```
 DATABASE_URL=postgresql://postgres:[PASSWORD]@[HOST]:5432/postgres
-ADMIN_DATABASE_URL=postgresql://postgres:[ADMIN_PASSWORD]@[HOST]:5432/postgres
 TICKETING_DATABASE_URL=postgresql://postgres:[TICKETING_PASSWORD]@[HOST]:5432/postgres
 ```
 
@@ -242,7 +241,7 @@ docker run --rm -it --network host postgres:15 psql "postgresql://postgres:PASSW
 
 ### Troubleshooting Database Issues
 - **Connection refused**: Check Supabase IP allowlist includes your EC2 IP
-- **Migration failures**: Verify DATABASE_URL format and credentials
+- **Migration failures**: Verify the service's `DATABASE_URL` or `TICKETING_DATABASE_URL` format and credentials
 - **Prisma client errors**: Ensure migrations ran successfully before deployment
 
 ## Phase 5: Backend Deployment
