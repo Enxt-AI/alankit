@@ -1,6 +1,7 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PinoNestLogger } from '@smc/logger';
 import { PrismaClient } from 'db-unlistedstock';
+import type { User } from 'db-unlistedstock';
 
 @Injectable()
 export class AdminPrismaService
@@ -54,8 +55,8 @@ export class AdminPrismaService
    * @param userId - User ID to fetch
    * @returns User object or null if not found
    */
-  async getUserById(userId: string) {
-    return await this.user.findUnique({
+  async getUserById(userId: string): Promise<User | null> {
+    return this.user.findUnique({
       where: { id: userId },
     });
   }
