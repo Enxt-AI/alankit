@@ -1,4 +1,5 @@
 import { allocateVoucherNumber } from 'db-unlistedstock';
+import type { Prisma } from 'db-unlistedstock';
 import {
   Injectable,
   NotFoundException,
@@ -15,6 +16,14 @@ import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
 import { PinoNestLogger } from '@smc/logger';
 import { Cron, CronExpression } from '@nestjs/schedule';
+
+type AdminSyncCashfreeStatusResponse = {
+  success: true;
+  message: string;
+  order: Prisma.OrderGetPayload<{
+    include: { user: true; stock: true; basket: true };
+  }>;
+};
 
 @Injectable()
 export class PaymentService {
@@ -341,7 +350,11 @@ export class PaymentService {
   /**
    * Admin endpoint to actively sync an order's payment status directly from Cashfree
    */
-  async adminSyncCashfreeStatus(orderId: string, adminId: string, adminEmail: string) {
+  async adminSyncCashfreeStatus(
+    orderId: string,
+    adminId: string,
+    adminEmail: string,
+  ): Promise<AdminSyncCashfreeStatusResponse> {
     let order = await this.prisma.order.findUnique({
       where: { id: orderId },
       include: { user: true, stock: true },

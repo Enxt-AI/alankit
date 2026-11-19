@@ -5,8 +5,9 @@ This document provides instructions for deploying the SMC Unlisted Stox applicat
 ## Architecture Overview
 
 The staging deployment consists of:
-- **3 NestJS microservices**: auth-service, stocks-service, ticketing-service
-- **3 frontend services**: web, panels, and RM/distributors
+- **5 backend services**: auth, stocks, ticketing, payments, and storage
+- **1 e-sign worker**
+- **No frontend services**: web, panels, and RM/distributors are not included
 - **1 Nginx reverse proxy**: Routes requests to appropriate services
 - **Internal Docker network**: `staging-network` for service communication
 - **Memory constraints**: 250MB per service on EC2 t2.micro (1GB RAM total)
@@ -59,14 +60,12 @@ curl http://localhost/health
 # Expected: Gateway OK
 ```
 
-### Frontend URLs
+### URLs
 
 Replace `<server-ip>` with the server's IP address:
 
-- Web: `http://<server-ip>/`
-- Panels: `http://<server-ip>/panels/`
-- RM/distributors: `http://<server-ip>/distributors/`
 - APIs: `http://<server-ip>/api/...`
+- The root URL and frontend paths return 404 because no frontend is included in this staging stack.
 
 #### Individual Service Health Checks
 ```bash
@@ -132,9 +131,9 @@ docker-compose --env-file .env.staging -f docker-compose.staging.yml ps
 | auth-service | 3002 (internal) | 250MB | `/api/health` | Authentication |
 | stocks-service | 3003 (internal) | 250MB | `/api/health` | Stock management |
 | ticketing-service | 3001 (internal) | 250MB | `/api/health` | Support tickets |
-| web | 3000 (internal) | — | `/` | Main frontend |
-| panels | 4000 (internal) | — | `/panels/` | Admin and operations frontend |
-| rm-distributors | 8000 (internal) | — | `/distributors/` | RM and distributor frontend |
+| payments-service | 3004 (internal) | 250MB | `/api/health` | Payments |
+| storage-service | 3005 (internal) | 250MB | `/api/health` | File storage |
+| esign-worker | internal | — | — | E-sign background worker |
 
 ## Logs Location
 

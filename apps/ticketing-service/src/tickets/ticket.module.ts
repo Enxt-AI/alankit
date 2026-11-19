@@ -5,7 +5,7 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { AttachmentsModule } from '../attachments/attachments.module';
 import { TicketHistoryModule } from '../ticket-history/ticket-history.module';
 import { AssignmentModule } from '../assignment/assignment.module';
-import { NotificationModule } from 'src/notification/notification.module';
+import { NotificationModule } from '../notification/notification.module';
 import { AuthModule } from '../auth/auth.module';
 
 @Module({

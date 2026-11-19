@@ -7,7 +7,7 @@ import {
 
 } from '@nestjs/common';
 import { PinoNestLogger } from '@smc/logger';
-import { PrismaService } from 'src/prisma/prisma.service';
+import { PrismaService } from '../prisma/prisma.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { QueryTicketDto } from './dto/query-ticket.dto';
 import { UpdateTicketDto } from './dto/update-ticket.dto';

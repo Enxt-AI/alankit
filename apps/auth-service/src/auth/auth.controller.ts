@@ -23,6 +23,7 @@ import {
 import { ConfigService } from '@nestjs/config';
 import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import type { FastifyReply, FastifyRequest } from 'fastify';
+import type { Prisma } from 'db-unlistedstock';
 import { encryptToken, OBFUSCATED_COOKIE_NAMES, ORIGINAL_COOKIE_NAMES, PANEL_ROLE_CONFIG } from 'cookie-crypto';
 import { AuthService } from './auth.service';
 import { RequestOtpDto } from './dto/request-otp.dto';
@@ -76,6 +77,36 @@ function maskEmail(email: string | undefined | null): string {
   if (name.length <= 2) return `${name}***@${domain}`;
   return `${name.substring(0, 1)}***${name.substring(name.length - 1)}@${domain}`;
 }
+
+type ProfileResponse =
+  | {
+      id: string;
+      email: string;
+      fullName: string | null;
+      phone: string;
+      kycStatus: string;
+      kycData: unknown;
+      dematStatus: string;
+      dematData: unknown;
+      dematDocuments: unknown;
+      bankStatus: string;
+      bankData: unknown;
+      needsEmail: boolean;
+      kycDocuments: unknown;
+      createdAt: Date;
+      updatedAt: Date;
+      type: 'USER';
+    }
+  | {
+      id: string;
+      email: string;
+      fullName: string;
+      role: string;
+      permissions: string[];
+      createdAt: Date;
+      updatedAt: Date;
+      type: 'ADMIN';
+    };
 
 /**
  * Removes highly sensitive keys (passwords, tokens) and masks PII (email, phone, JSON).
@@ -401,7 +432,7 @@ export class AuthController {
   @Get('profile')
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
-  async getProfile(@Req() req: any) {
+  async getProfile(@Req() req: any): Promise<ProfileResponse> {
     const userId: string | undefined = req.user?.userId;
     if (userId) {
       const user = await this.authService.getUserById(userId);
@@ -1141,7 +1172,7 @@ export class AuthController {
   @Get('admin/audit-logs')
   @HttpCode(200)
   @UseGuards(JwtAuthGuard, SuperAdminGuard)
-  async getAuditLogs() {
+  async getAuditLogs(): Promise<Prisma.AuditLogGetPayload<{}>[]> {
     try {
       const logs = await this.authService.getAllAuditLogs();
       return logs;

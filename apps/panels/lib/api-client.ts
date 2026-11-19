@@ -160,7 +160,7 @@ const responseErrorInterceptor = (error: AxiosError) => {
     // Network error - no response received (usually DNS / BACKEND_ORIGIN misconfigured)
     const attemptedUrl = `${error.config?.baseURL || ""}${error.config?.url || ""}`;
     const backendOrigin = typeof window !== "undefined" ? "check apps/panels/.env.local BACKEND_ORIGIN" : "";
-    console.error(`Network error - no response received for ${attemptedUrl || error.config?.url} (${error.message}). ${backendOrigin} - Is backend reachable? BACKEND_ORIGIN=http://smc-nginx-staging only works inside Docker; for pnpm dev on host use http://localhost`);
+    console.error(`Network error - no response received for ${attemptedUrl || error.config?.url} (${error.message}). ${backendOrigin} - Is backend reachable? BACKEND_ORIGIN=http://nginx only works inside Docker; for pnpm dev on host use http://localhost`);
   } else {
     // Request setup error
     console.error("Error:", error.message);

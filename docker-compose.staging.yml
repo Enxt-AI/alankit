@@ -4,7 +4,7 @@
 services:
   nginx:
     image: fabiocicerchia/nginx-lua:1.25.3-alpine
-    container_name: smc-nginx-staging
+    container_name: nginx-staging
     extra_hosts:
       - "host-gateway:host-gateway"   
     ports:
@@ -18,14 +18,11 @@ services:
       - ticketing-service
       - payments-service
       - storage-service
-      - web
-      - panels
-      - rm-distributors
     restart: unless-stopped
     networks:
       staging-network:
         aliases:
-          - smc-nginx-staging
+          - nginx-staging
           - nginx
     mem_limit: 100m
     healthcheck:
@@ -47,8 +44,8 @@ services:
       network: host
       args:
         DATABASE_URL: ${DATABASE_URL}
-    image: smc-auth-service:staging
-    container_name: smc-auth-staging
+    image: auth-service:staging
+    container_name: auth-staging
     env_file:
       - .env.staging
     environment:
@@ -79,8 +76,8 @@ services:
       network: host
       args:
         DATABASE_URL: ${DATABASE_URL}
-    image: smc-stocks-service:staging
-    container_name: smc-stocks-staging
+    image: stocks-service:staging
+    container_name: stocks-staging
     env_file:
       - .env.staging
     environment:
@@ -109,7 +106,7 @@ services:
       network: host
       args:
         DATABASE_URL: ${DATABASE_URL}
-    image: smc-esign-worker:staging
+    image: esign-worker:staging
     command: ["node", "dist/esign-worker.js"]
     env_file:
       - .env.staging
@@ -136,8 +133,8 @@ services:
       args:
         DATABASE_URL: ${DATABASE_URL}
         TICKETING_DATABASE_URL: ${TICKETING_DATABASE_URL}
-    image: smc-ticketing-service:staging
-    container_name: smc-ticketing-staging
+    image: ticketing-service:staging
+    container_name: ticketing-staging
     env_file:
       - .env.staging
     environment:
@@ -168,8 +165,8 @@ services:
       network: host
       args:
         DATABASE_URL: ${DATABASE_URL}
-    image: smc-payments-service:staging
-    container_name: smc-payments-staging
+    image: payments-service:staging
+    container_name: payments-staging
     env_file:
       - .env.staging
     environment:
@@ -197,8 +194,8 @@ services:
       context: .
       dockerfile: apps/storage-service/Dockerfile
       network: host
-    image: smc-storage-service:staging
-    container_name: smc-storage-staging
+    image: storage-service:staging
+    container_name: storage-staging
     env_file:
       - .env.staging
     environment:
@@ -237,7 +234,7 @@ services:
     profiles:
       - local-db
     image: postgres:15-alpine
-    container_name: smc-postgres-staging
+    container_name: postgres-staging
     restart: unless-stopped
     environment:
       POSTGRES_USER: ${POSTGRES_USER}
@@ -252,75 +249,6 @@ services:
       interval: 5s
       timeout: 5s
       retries: 5
-
-  web:
-    container_name: smc-web
-    build:
-      context: .
-      dockerfile: apps/web/Dockerfile
-      network: host
-      args:
-        NEXT_PUBLIC_GTM_ID: ${NEXT_PUBLIC_GTM_ID}
-        NEXT_PUBLIC_META_PIXEL_ID: ${NEXT_PUBLIC_META_PIXEL_ID}
-        BACKEND_ORIGIN: ${BACKEND_ORIGIN}
-    env_file:
-      - apps/web/.env
-    environment:
-      NODE_OPTIONS: ${WEB_NODE_OPTIONS}
-      BACKEND_ORIGIN: ${BACKEND_ORIGIN}
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
-      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
-      NEXT_PUBLIC_GTM_ID: ${NEXT_PUBLIC_GTM_ID}
-      GTM_ID: ${GTM_ID}
-      SMARTPING_API_KEY: ${SMARTPING_API_KEY}
-      RESEND_FROM_EMAIL: ${RESEND_FROM_EMAIL}
-    restart: unless-stopped
-    networks:
-      - staging-network
-
-  panels:
-    container_name: smc-panels
-    build:
-      context: .
-      dockerfile: apps/panels/Dockerfile
-      network: host
-      args:
-        BACKEND_ORIGIN: ${BACKEND_ORIGIN}
-        NEXT_BASE_PATH: /panels
-        NEXT_PUBLIC_BASE_PATH: /panels
-    env_file:
-      - apps/panels/.env
-    environment:
-      NODE_OPTIONS: ${PANELS_NODE_OPTIONS}
-      BACKEND_ORIGIN: ${BACKEND_ORIGIN}
-      NEXT_PUBLIC_BASE_PATH: /panels
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
-      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
-    restart: unless-stopped
-    networks:
-      - staging-network
-
-  rm-distributors:
-    container_name: smc-rm-distributors
-    build:
-      context: .
-      dockerfile: apps/rm-distributors/Dockerfile
-      network: host
-      args:
-        BACKEND_ORIGIN: ${BACKEND_ORIGIN}
-        NEXT_BASE_PATH: /distributors
-        NEXT_PUBLIC_BASE_PATH: /distributors
-    env_file:
-      - apps/rm-distributors/.env
-    environment:
-      NODE_OPTIONS: ${RM_DISTRIBUTORS_NODE_OPTIONS}
-      BACKEND_ORIGIN: ${BACKEND_ORIGIN}
-      NEXT_PUBLIC_BASE_PATH: /distributors
-      MINIO_ENDPOINT: ${MINIO_ENDPOINT}
-      MINIO_PUBLIC_URL: ${MINIO_PUBLIC_URL}
-    restart: unless-stopped
-    networks:
-      - staging-network
 
 networks:
   staging-network:

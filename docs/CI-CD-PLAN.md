@@ -148,7 +148,7 @@ docker image prune -af --filter "until=168h" || true
 | GitHub → push job | `GITHUB_TOKEN` (automatic) | Needs `packages: write` permission |
 | Server `~/.docker/config.json` | `ghcr.io` auth | `docker login ghcr.io -u <bot> -p $GHCR_PULL_TOKEN` once |
 | Server `/opt/smc/.env` (or repo root `.env`, never committed) | All runtime secrets | Copy from `.env.staging.example`: `JWT_SECRET, COOKIE_SECRET, COOKIE_ENCRYPTION_KEY, DATABASE_URL, TICKETING_DATABASE_URL, REDIS_*, TWILIO_*, SMS_GATEWAY_*, GOOGLE_*, SENDGRID_*, CASHFREE_*, MINIO_*`, ports |
-| Server `apps/{web,panels,rm-distributors}/.env` | Frontend runtime | `BACKEND_ORIGIN=http://smc-nginx-staging:90`, `MINIO_*` |
+| Server `apps/{web,panels,rm-distributors}/.env` | Frontend runtime | `BACKEND_ORIGIN=http://nginx`, `MINIO_*` |
 | CI build-args (non-secret) | `NEXT_PUBLIC_GTM_ID`, `NEXT_PUBLIC_*` | Repo variables, baked at build time |
 
 Rotation owner: server `.env` edited over SSH-after-VPN by backend lead. CI secrets rotated in GitHub UI.

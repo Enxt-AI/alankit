@@ -25,9 +25,9 @@ function getCandidateBaseUrls(): string[] {
     add("http://10.0.2.100:9000");
 
     // NGINX backend proxy (accessible on Docker staging network)
-    const backendOrigin = process.env.BACKEND_ORIGIN || "http://smc-nginx-staging:90";
+    const backendOrigin = process.env.BACKEND_ORIGIN || "http://nginx";
     add(`${backendOrigin.replace(/\/+$/, "")}/storage`);
-    add("http://smc-nginx-staging:90/storage");
+    add("http://nginx/storage");
     add("http://nginx:90/storage");
 
     // Docker internal container hostnames

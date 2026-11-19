@@ -1,11 +1,39 @@
 import { Injectable } from '@nestjs/common';
+import type { Prisma } from 'db-unlistedstock';
 import { PrismaService } from '../prisma/prisma.service';
+
+interface VoucherTransaction {
+  id: string;
+  source: 'voucher';
+  voucherId: string;
+  voucherNumber: string;
+  voucherType: string;
+  entryType: string;
+  amount: number;
+  narration: string;
+  referenceNumber: string | null;
+  scriptName: string | null;
+  isin: string | null;
+  qty: number | null;
+  rate: number | null;
+  date: Date;
+  createdAt: Date;
+  metadata: unknown;
+  entryMetadata: unknown;
+}
+
+interface UserTransactionsResponse {
+  orders: Prisma.OrderGetPayload<{
+    include: { stock: true; basket: true };
+  }>[];
+  voucherTransactions: VoucherTransaction[];
+}
 
 @Injectable()
 export class TransactionsService {
   constructor(private readonly prisma: PrismaService) {}
 
-  async findAll(userId: string) {
+  async findAll(userId: string): Promise<UserTransactionsResponse> {
     // 1. Fetch orders (existing behaviour)
     const orders = await this.prisma.order.findMany({
       where: { userId },
@@ -21,7 +49,7 @@ export class TransactionsService {
       where: { userId, type: 'USER' },
     });
 
-    let voucherTransactions: any[] = [];
+    let voucherTransactions: VoucherTransaction[] = [];
 
     if (userLedger) {
       // 3. Query VoucherEntry records linked to user's ledger

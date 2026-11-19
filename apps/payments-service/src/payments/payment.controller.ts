@@ -159,7 +159,7 @@ export class PaymentController {
   async adminSyncCashfreeStatus(
     @Param('orderId') orderId: string,
     @Req() req: any,
-  ) {
+  ): Promise<Awaited<ReturnType<PaymentService['adminSyncCashfreeStatus']>>> {
     const adminId = req.admin?.id;
     const adminEmail = req.admin?.email;
     return await this.paymentService.adminSyncCashfreeStatus(

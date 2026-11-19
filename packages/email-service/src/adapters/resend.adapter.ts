@@ -9,20 +9,27 @@ import {
 @Injectable()
 export class ResendEmailProvider implements EmailProvider {
   readonly providerName = 'resend';
-  private readonly resend: Resend;
+  private resend?: Resend;
   private readonly logger = new Logger(ResendEmailProvider.name);
 
   constructor() {
-    const apiKey = process.env.RESEND_API_KEY;
-    if (!apiKey) {
+    if (!process.env.RESEND_API_KEY) {
       this.logger.warn(
-        'RESEND_API_KEY is not set. Email delivery will likely fail.',
+        'RESEND_API_KEY is not set. Resend email delivery is unavailable.',
       );
     }
-    this.resend = new Resend(apiKey);
   }
 
   async send(options: SendEmailOptions): Promise<SendEmailResult> {
+    const apiKey = process.env.RESEND_API_KEY;
+    if (!apiKey) {
+      return {
+        success: false,
+        error: new Error('RESEND_API_KEY is not set'),
+      };
+    }
+
+    this.resend ??= new Resend(apiKey);
     const { data, error } = await this.resend.emails.send(
       {
         from: options.from,

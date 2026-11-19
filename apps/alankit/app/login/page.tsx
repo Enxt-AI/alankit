@@ -161,54 +161,54 @@ export default function LoginPage() {
     "Your account is ready.";
 
   return (
-    <div className="flex h-screen max-h-screen overflow-hidden bg-white">
-      <aside className="relative hidden overflow-hidden border-r border-emerald-50 bg-[#f4faf7] p-6 lg:flex lg:w-[45%] lg:flex-col xl:w-[40%] xl:p-8 2xl:p-10">
+    <div className="flex min-h-screen bg-white font-sans">
+      <aside className="relative hidden overflow-hidden border-r border-slate-100 bg-[#fafafa] p-6 lg:flex lg:w-[45%] lg:flex-col xl:w-[40%] xl:p-8 2xl:p-10">
         <div className="mx-auto flex h-full w-full max-w-lg flex-col justify-between">
           <Link href="/" className="flex w-fit items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-green-600 text-sm font-bold text-white">A</span>
-            <span className="text-lg font-semibold text-[#1A2530]">Alankit</span>
+            <span className="flex size-10 items-center justify-center rounded-xl bg-[#4F46E5] text-sm font-medium text-white">A</span>
+            <span className="text-lg font-semibold text-zinc-900">Alankit</span>
           </Link>
 
           <div className="my-auto py-4">
-            <h1 className="text-[30px] font-extrabold leading-[1.16] tracking-tight text-[#1A2530] xl:text-[34px]">
+            <h1 className="text-[30px] font-medium leading-[1.16] tracking-tight text-zinc-900 xl:text-[34px]">
               Invest in <br />
-              <span className="text-green-600">Pre-IPO &amp; Unlisted</span><br />
+              <span className="text-[#4F46E5]">Pre-IPO &amp; Unlisted</span><br />
               Shares
             </h1>
-            <p className="mb-6 mt-3 max-w-sm text-[13px] leading-relaxed text-slate-500 xl:text-[14px]">
+            <p className="mb-6 mt-3 max-w-sm text-[13px] leading-relaxed text-zinc-500 xl:text-[14px]">
               Join investors accessing carefully selected pre-IPO and unlisted investment opportunities.
             </p>
 
-            <div className="relative flex h-44 items-center justify-center overflow-hidden rounded-3xl bg-gradient-to-br from-green-100/80 via-white to-emerald-50">
-              <div className="absolute size-40 rounded-full border-[24px] border-green-600/10" />
+            <div className="relative flex h-44 items-center justify-center overflow-hidden rounded-2xl border border-zinc-200 bg-white">
+              <div className="absolute size-40 rounded-full border-[24px] border-[#4F46E5]/10" />
               <div className="relative flex items-center gap-3">
-                <div className="flex size-16 items-center justify-center rounded-2xl bg-white shadow-lg shadow-green-900/10">
-                  <Zap className="size-8 text-green-600" />
+                <div className="flex size-16 items-center justify-center rounded-2xl bg-white shadow-none">
+                  <Zap className="size-8 text-[#4F46E5]" />
                 </div>
                 <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-green-700">Alankit</p>
-                  <p className="mt-1 text-sm font-bold text-[#1A2530]">Investment access</p>
+                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#4338CA]">Alankit</p>
+                  <p className="mt-1 text-sm font-medium text-zinc-900">Investment access</p>
                 </div>
               </div>
             </div>
 
             <div className="mt-5 space-y-2.5">
               <div className="flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-100/60 bg-white shadow-md">
-                  <ShieldCheck className="size-5 text-green-600" />
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-100/60 bg-white shadow-none">
+                  <ShieldCheck className="size-5 text-[#4F46E5]" />
                 </div>
                 <div>
-                  <h3 className="text-[13px] font-bold leading-snug text-[#1A2530]">Institutional Grade Security</h3>
-                  <p className="text-[11px] leading-normal text-slate-500">Your investments and data are protected.</p>
+                  <h3 className="text-[13px] font-medium leading-snug text-zinc-900">Institutional Grade Security</h3>
+                  <p className="text-xs leading-normal text-zinc-500">Your investments and data are protected.</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-100/60 bg-white shadow-md">
-                  <Zap className="size-5 text-green-600" />
+                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-100/60 bg-white shadow-none">
+                  <Zap className="size-5 text-[#4F46E5]" />
                 </div>
                 <div>
-                  <h3 className="text-[13px] font-bold leading-snug text-[#1A2530]">Lightning Fast Execution</h3>
-                  <p className="text-[11px] leading-normal text-slate-500">Experience seamless transaction processing.</p>
+                  <h3 className="text-[13px] font-medium leading-snug text-zinc-900">Lightning Fast Execution</h3>
+                  <p className="text-xs leading-normal text-zinc-500">Experience seamless transaction processing.</p>
                 </div>
               </div>
             </div>
@@ -217,20 +217,20 @@ export default function LoginPage() {
         </div>
       </aside>
 
-      <main className="relative flex h-full flex-1 flex-col justify-between overflow-hidden bg-white p-4 sm:p-6 lg:p-8">
-        <Link href="/" className="absolute right-6 top-6 hidden items-center gap-2 text-sm font-semibold text-green-600 transition-colors hover:text-green-700 md:flex">
+      <main className="relative flex min-h-screen flex-1 flex-col justify-between bg-white p-4 sm:p-6 lg:p-8">
+        <Link href="/" className="absolute right-6 top-6 hidden items-center gap-2 text-sm font-semibold text-[#4F46E5] transition-colors hover:text-[#4338CA] md:flex">
           <Home className="size-4" />Back to Home
         </Link>
 
-        <div className="mx-auto flex h-full w-full max-w-[400px] flex-col justify-between py-2">
+        <div className="mx-auto flex flex-1 w-full max-w-[400px] flex-col justify-between py-2">
           <div className="my-auto w-full">
             <Link href="/" className="mb-5 flex items-center justify-center gap-2 lg:hidden">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-green-600 text-xs font-bold text-white">A</span>
-              <span className="font-semibold text-[#1A2530]">Alankit</span>
+              <span className="flex size-8 items-center justify-center rounded-lg bg-[#4F46E5] text-xs font-medium text-white">A</span>
+              <span className="font-semibold text-zinc-900">Alankit</span>
             </Link>
 
             {step !== "phone" && step !== "complete" && (
-              <button type="button" onClick={goBack} className="mb-5 inline-flex items-center gap-1.5 text-sm text-slate-400 transition-colors hover:text-slate-700">
+              <button type="button" onClick={goBack} className="mb-5 inline-flex items-center gap-1.5 text-sm text-zinc-500 transition-colors hover:text-slate-700">
                 <ArrowLeft className="size-4" />Back
               </button>
             )}
@@ -243,8 +243,8 @@ export default function LoginPage() {
                   const active = index === current;
                   return (
                     <div key={label} className={`flex-1`}>
-                      <div className={`h-1.5 rounded-full ${active ? "bg-green-600" : complete ? "bg-green-300" : "bg-slate-100"}`} />
-                      <p className={`mt-2 text-[11px] font-medium ${active ? "text-green-700" : complete ? "text-green-600" : "text-slate-400"}`}>{label}</p>
+                      <div className={`h-1.5 rounded-full ${active ? "bg-[#4F46E5]" : complete ? "bg-indigo-200" : "bg-slate-100"}`} />
+                      <p className={`mt-2 text-xs font-medium ${active ? "text-[#4338CA]" : complete ? "text-[#4F46E5]" : "text-zinc-500"}`}>{label}</p>
                     </div>
                   );
                 })}
@@ -253,13 +253,13 @@ export default function LoginPage() {
 
             {step === "complete" ? (
               <div className="text-center sm:text-left">
-                <span className="mx-auto flex size-12 items-center justify-center rounded-[16px] border border-green-100 bg-green-50 text-green-600 sm:mx-0">
+                <span className="mx-auto flex size-12 items-center justify-center rounded-[16px] border border-indigo-100 bg-indigo-50 text-[#4F46E5] sm:mx-0">
                   <Check className="size-6" />
                 </span>
-                <p className="mt-5 text-sm font-semibold text-green-600">You&apos;re signed in</p>
-                <h1 className="mt-2 text-[24px] font-black tracking-tight text-[#1A2530] sm:text-[28px]">Welcome{name ? `, ${name}` : " back"}</h1>
-                <p className="mt-2 text-[13px] leading-relaxed text-slate-500 sm:text-[14px]">Your account is ready. Continue to your portfolio and orders.</p>
-                <Link href="/dashboard" className="mt-8 inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-green-600 text-[17px] font-bold text-white shadow-lg shadow-green-600/20 transition-all hover:-translate-y-0.5 hover:bg-green-700">
+                <p className="mt-5 text-sm font-semibold text-[#4F46E5]">You&apos;re signed in</p>
+                <h1 className="mt-2 text-[24px] font-medium tracking-tight text-zinc-900 sm:text-[28px]">Welcome{name ? `, ${name}` : " back"}</h1>
+                <p className="mt-2 text-[13px] leading-relaxed text-zinc-500 sm:text-[14px]">Your account is ready. Continue to your portfolio and orders.</p>
+                <Link href="/dashboard" className="mt-8 inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all hover:bg-[#4338CA]">
                   Continue to dashboard <ArrowRight className="size-[18px]" />
                 </Link>
               </div>
@@ -268,19 +268,19 @@ export default function LoginPage() {
                 {step !== "phone-otp" && step !== "email-otp" && (
                   <div className="mb-4 space-y-2 text-center sm:text-left">
                     {step === "phone" && (
-                      <span className="mx-auto mb-3 flex size-12 items-center justify-center rounded-[16px] border-[1.5px] border-green-600 bg-green-50/50 sm:mx-0">
-                        <User className="size-5 text-green-600" strokeWidth={2.5} />
+                      <span className="mx-auto mb-3 flex size-12 items-center justify-center rounded-[16px] border border-zinc-200 bg-indigo-50/50 sm:mx-0">
+                        <User className="size-5 text-[#4F46E5]" strokeWidth={2.5} />
                       </span>
                     )}
-                    <h1 className="text-[24px] font-black tracking-tight text-[#1A2530] sm:text-[28px]">{stepTitle}</h1>
-                    <p className="text-[13px] leading-relaxed text-slate-500 sm:text-[14px]">{stepDescription}</p>
+                    <h1 className="text-[24px] font-medium tracking-tight text-zinc-900 sm:text-[28px]">{stepTitle}</h1>
+                    <p className="text-[13px] leading-relaxed text-zinc-500 sm:text-[14px]">{stepDescription}</p>
                   </div>
                 )}
 
                 {step === "phone" && (
                   <form onSubmit={submitPhone} className="space-y-5">
                     <div className="space-y-2">
-                      <label htmlFor="phone" className="ml-1 text-[13px] font-bold text-slate-700">Phone Number</label>
+                      <label htmlFor="phone" className="ml-1 text-[13px] font-medium text-slate-700">Phone Number</label>
                       <div className="relative flex items-center">
                         <span className="pointer-events-none absolute left-4 flex items-center text-[15px] font-semibold text-slate-700">+91 <span className="mx-2 h-5 w-px bg-slate-200" /></span>
                         <input
@@ -298,11 +298,11 @@ export default function LoginPage() {
                             setNotice("");
                           }}
                           placeholder="98765 43210"
-                          className="h-14 w-full rounded-xl border border-green-500 bg-white pl-24 pr-4 text-[17px] text-slate-800 shadow-sm outline-none transition-all placeholder:text-slate-300 focus:border-green-600 focus:ring-4 focus:ring-green-500/10"
+                          className="h-14 w-full rounded-xl border border-zinc-200 bg-white pl-24 pr-4 text-[17px] text-slate-800 shadow-sm outline-none transition-all placeholder:text-slate-300 focus:border-[#4F46E5] focus:ring-4 focus:ring-[#4F46E5]/10"
                         />
                       </div>
                     </div>
-                    <button type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-green-600 text-[17px] font-bold text-white shadow-lg shadow-green-600/20 transition-all hover:-translate-y-0.5 hover:bg-green-700">
+                    <button type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all hover:bg-[#4338CA]">
                       Continue <ArrowRight className="size-[18px]" />
                     </button>
                   </form>
@@ -311,15 +311,15 @@ export default function LoginPage() {
                 {isOtpStep && (
                   <form onSubmit={step === "phone-otp" ? verifyPhone : verifyEmail} className="space-y-5">
                     <div className="space-y-1 text-center">
-                      <span className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-green-50">
-                        <ShieldCheck className="size-5 text-green-600" />
+                      <span className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-indigo-50">
+                        <ShieldCheck className="size-5 text-[#4F46E5]" />
                       </span>
-                      <h1 className="text-xl font-bold text-slate-900">{step === "phone-otp" ? "Enter OTP" : "Verify Email"}</h1>
-                      <p className="flex flex-wrap items-center justify-center gap-1 text-sm text-slate-500">
+                      <h1 className="text-xl font-medium text-slate-900">{step === "phone-otp" ? "Enter OTP" : "Verify Email"}</h1>
+                      <p className="flex flex-wrap items-center justify-center gap-1 text-sm text-zinc-500">
                         <span>We&apos;ve sent a 6-digit code to</span>
                         <span className="font-semibold text-slate-800">{step === "phone-otp" ? `+91 ${phone}` : email}</span>
-                        {step === "phone-otp" && <button type="button" onClick={() => setStep("phone")} className="ml-1 text-xs font-semibold text-green-600 hover:underline">(Edit)</button>}
-                        {step === "email-otp" && <button type="button" onClick={() => setStep("email")} className="ml-1 text-xs font-semibold text-green-600 hover:underline">(Edit)</button>}
+                        {step === "phone-otp" && <button type="button" onClick={() => setStep("phone")} className="ml-1 text-xs font-semibold text-[#4F46E5] hover:underline">(Edit)</button>}
+                        {step === "email-otp" && <button type="button" onClick={() => setStep("email")} className="ml-1 text-xs font-semibold text-[#4F46E5] hover:underline">(Edit)</button>}
                       </p>
                     </div>
 
@@ -336,11 +336,11 @@ export default function LoginPage() {
                           onChange={(event) => updateOtp(index, event.target.value)}
                           onKeyDown={(event) => handleOtpKeyDown(index, event)}
                           aria-label={`OTP digit ${index + 1}`}
-                          className="h-12 w-11 rounded-xl border border-slate-200 text-center text-lg font-bold text-slate-900 outline-none transition-all focus:border-green-600 focus:ring-4 focus:ring-green-500/10 sm:w-12"
+                          className="h-12 w-11 rounded-xl border border-slate-200 text-center text-lg font-medium text-slate-900 outline-none transition-all focus:border-[#4F46E5] focus:ring-4 focus:ring-[#4F46E5]/10 sm:w-12"
                         />
                       ))}
                     </div>
-                    <button type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-green-600 text-[17px] font-bold text-white shadow-lg shadow-green-600/20 transition-all hover:-translate-y-0.5 hover:bg-green-700">
+                    <button type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all hover:bg-[#4338CA]">
                       Verify code <ArrowRight className="size-[18px]" />
                     </button>
                   </form>
@@ -351,11 +351,11 @@ export default function LoginPage() {
                     <div className="space-y-2">
                       <label htmlFor="email" className="ml-1 text-sm font-semibold text-slate-700">Email Address</label>
                       <div className="relative">
-                        <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-slate-400" />
-                        <input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={(event) => { setEmail(event.target.value); setNotice(""); }} placeholder="you@example.com" className="h-14 w-full rounded-xl border border-slate-200 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:border-green-600 focus:ring-4 focus:ring-green-500/10" />
+                        <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
+                        <input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={(event) => { setEmail(event.target.value); setNotice(""); }} placeholder="you@example.com" className="h-14 w-full rounded-xl border border-slate-200 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:border-[#4F46E5] focus:ring-4 focus:ring-[#4F46E5]/10" />
                       </div>
                     </div>
-                    <button type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-green-600 text-[17px] font-bold text-white shadow-lg shadow-green-600/20 transition-all hover:-translate-y-0.5 hover:bg-green-700">
+                    <button type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all hover:bg-[#4338CA]">
                       Continue <ArrowRight className="size-[18px]" />
                     </button>
                   </form>
@@ -365,9 +365,9 @@ export default function LoginPage() {
                   <form onSubmit={completeRegistration} className="space-y-5">
                     <div className="space-y-2">
                       <label htmlFor="name" className="ml-1 text-sm font-semibold text-slate-700">Your Name</label>
-                      <input id="name" name="name" type="text" autoComplete="name" required value={name} onChange={(event) => { setName(event.target.value); setNotice(""); }} placeholder="Enter your full name" className="h-14 w-full rounded-xl border border-slate-200 px-4 text-sm text-slate-900 outline-none transition-all focus:border-green-600 focus:ring-4 focus:ring-green-500/10" />
+                      <input id="name" name="name" type="text" autoComplete="name" required value={name} onChange={(event) => { setName(event.target.value); setNotice(""); }} placeholder="Enter your full name" className="h-14 w-full rounded-xl border border-slate-200 px-4 text-sm text-slate-900 outline-none transition-all focus:border-[#4F46E5] focus:ring-4 focus:ring-[#4F46E5]/10" />
                     </div>
-                    <button type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-green-600 text-[17px] font-bold text-white shadow-lg shadow-green-600/20 transition-all hover:-translate-y-0.5 hover:bg-green-700">
+                    <button type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all hover:bg-[#4338CA]">
                       Complete and sign in <ArrowRight className="size-[18px]" />
                     </button>
                   </form>
@@ -378,8 +378,8 @@ export default function LoginPage() {
                 )}
 
                 {step === "phone" && (
-                  <p className="mt-7 text-xs leading-relaxed text-slate-400">
-                    By continuing, you agree to our <Link href="/support" className="font-medium text-green-600 hover:text-green-700">Terms and Privacy Policy</Link>.
+                  <p className="mt-7 text-xs leading-relaxed text-zinc-500">
+                    By continuing, you agree to our <Link href="/support" className="font-medium text-[#4F46E5] hover:text-[#4338CA]">Terms and Privacy Policy</Link>.
                   </p>
                 )}
               </>
@@ -387,7 +387,7 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="hidden items-center justify-center gap-2 text-[11px] text-slate-400 lg:flex">
+        <div className="hidden items-center justify-center gap-2 text-xs text-zinc-500 lg:flex">
           <LockKeyhole className="size-3.5" />Secure sign-in experience
         </div>
       </main>

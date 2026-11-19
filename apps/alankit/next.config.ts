@@ -1,7 +1,8 @@
 import type { NextConfig } from "next";
 
+const backendOrigin = process.env.BACKEND_ORIGIN?.trim().replace(/\/$/, "");
+
 const nextConfig: NextConfig = {
-  /* config options here */
   experimental: {
     agentFeedback: true,
   },
@@ -14,6 +15,18 @@ const nextConfig: NextConfig = {
         as: "*.css",
       },
     },
+  },
+  async rewrites() {
+    if (!backendOrigin) {
+      throw new Error("BACKEND_ORIGIN environment variable is required");
+    }
+
+    return [
+      {
+        source: "/api/:path*",
+        destination: `${backendOrigin}/api/:path*`,
+      },
+    ];
   },
 };
 
