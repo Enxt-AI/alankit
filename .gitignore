@@ -73,3 +73,21 @@ logo.webp
 .playwright-mcp
 unlisted_backup.dump
 .dump
+
+.claude
+
+# AI assistant config files
+.codebuddy/
+.cursorrules
+.gemini/
+.github/
+.kiro/
+.mcp.json
+.qoder/
+.windsurfrules
+AGENTS.md
+CLAUDE.md
+CODEBUDDY.md
+GEMINI.md
+QODER.md
+opencode.jsonc
