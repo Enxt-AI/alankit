@@ -10,6 +10,7 @@ import { BullModule } from '@nestjs/bull';
 import { EmailModule } from 'email-service';
 import { ConfigService } from '@nestjs/config';
 import { GlobalJwtAuthGuard } from './auth/guards/global-jwt-auth.guard';
+import { getBullRedisOptions } from './redis/bull-redis-options';
 
 /**
  * AppModule is the root module of the application
@@ -35,7 +36,7 @@ import { GlobalJwtAuthGuard } from './auth/guards/global-jwt-auth.guard';
     BullModule.forRootAsync({
       inject: [ConfigService],
       useFactory: (config: ConfigService) => ({
-        redis: config.getOrThrow('REDIS_URL'),
+        redis: getBullRedisOptions(config.getOrThrow('REDIS_URL')),
       }),
     }),
     EmailModule,

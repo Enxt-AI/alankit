@@ -93,7 +93,7 @@ function getCandidateBaseUrls(): string[] {
   // 2. Production / Staging candidates
   if (process.env.NODE_ENV === "production") {
     // Direct MinIO staging host IP
-    add("http://10.0.2.100:9000");
+    add("http://192.168.1.6:9000");
 
     // NGINX backend proxy (accessible on Docker staging network)
     const backendOrigin = process.env.BACKEND_ORIGIN || "http://nginx";
@@ -117,7 +117,7 @@ function getCandidateBaseUrls(): string[] {
     // 3. Local Development candidates
     add("http://127.0.0.1:9000");
     add("http://localhost:9000");
-    add("http://10.0.2.100:9000");
+    add("http://192.168.1.6:9000");
     add("http://127.0.0.1:3005/storage");
     add("http://localhost:3005/storage");
     const backendOrigin = process.env.BACKEND_ORIGIN;

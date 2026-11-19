@@ -71,7 +71,7 @@ export class PaymentService {
     );
 
     // Dynamic frontend URL — no need for a separate CASHFREE_RETURN_URL env var.
-    // Works automatically: local dev (localhost:3000), staging (10.0.2.100), prod (unlistedstox.com)
+    // Works automatically: local dev (localhost:3000), staging (192.168.1.6), prod (unlistedstox.com)
     this.frontendUrl = this.configService.get<string>(
       'FRONTEND_URL',
       'http://localhost:3000',

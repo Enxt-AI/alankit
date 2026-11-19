@@ -118,6 +118,7 @@ docker-compose --env-file .env.staging -f docker-compose.staging.yml ps
 ### Network Issues
 - Check network creation: `docker network ls | grep staging`
 - Inspect service connectivity: `docker-compose --env-file .env.staging -f docker-compose.staging.yml exec nginx ping auth-service`
+- Nginx resolves backend container names dynamically; restarting a backend should not require an Nginx reload.
 
 ### Health Check Failures
 - Check service logs: `docker-compose --env-file .env.staging -f docker-compose.staging.yml logs [service-name]`

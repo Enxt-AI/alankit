@@ -45,7 +45,7 @@ All five public settings are optional overrides, not secrets. No payment-provide
 
 The encryption key is not validated at startup by Panels. The storage route has a separate missing-key branch that accepts a three-segment cookie without decryption; despite its development comment, that branch is not restricted by NODE_ENV. Set the correct key in production. This is a source finding, not a claim that the storage route validates a session against the backend.
 
-Storage fallback order begins with MINIO_ENDPOINT and MINIO_PUBLIC_URL. Production then tries the hard-coded `http://10.0.2.100:9000`, the configured/default gateway, and other Docker/local hosts. A previously successful candidate is prioritized on later requests. Setting BACKEND_ORIGIN alone does not make it the first storage candidate.
+Storage fallback order begins with MINIO_ENDPOINT and MINIO_PUBLIC_URL. Production then tries the local MinIO host at `http://192.168.1.6:9000`, the configured/default gateway, and other Docker/local hosts. A previously successful candidate is prioritized on later requests. Setting BACKEND_ORIGIN alone does not make it the first storage candidate.
 
 ## Additional deployment/tooling settings
 
