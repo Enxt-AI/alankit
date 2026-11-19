@@ -16,6 +16,10 @@ export class AdminPrismaService
    */
   constructor() {
     const dbUrl = process.env.DATABASE_URL;
+    if (!dbUrl?.trim()) {
+      throw new Error('DATABASE_URL is required for AdminPrismaService.');
+    }
+
     const isDev =
       process.env.NODE_ENV === 'development' ||
       process.env.NODE_ENV === 'local';
@@ -30,7 +34,7 @@ export class AdminPrismaService
       log: logConfig,
     });
 
-    this.logger.log('AdminPrisma DB:', dbUrl?.replace(/:[^:@]+@/, ':****@'));
+    this.logger.log('AdminPrisma DB:', dbUrl.replace(/:[^:@]+@/, ':****@'));
   }
 
   async onModuleInit() {
@@ -45,7 +49,7 @@ export class AdminPrismaService
   }
 
   /**
-   * Get user details by ID from db-unlistedstock database
+   * Get user details by ID from the stocks database
    * Used for notification purposes
    * @param userId - User ID to fetch
    * @returns User object or null if not found
