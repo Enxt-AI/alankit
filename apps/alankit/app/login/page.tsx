@@ -1,6 +1,6 @@
 "use client";
 
-import { useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react";
+import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react";
 import Link from "next/link";
 import {
   ArrowLeft,
@@ -14,8 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 
-const ACCOUNT_STORAGE_KEY = "alankit-prototype-accounts";
-type PrototypeAccount = { phone: string; email: string; name: string };
+import { authRequest, refreshSession } from "@/lib/auth";
 type LoginStep = "phone" | "phone-otp" | "email" | "email-otp" | "name" | "complete";
 
 export default function LoginPage() {
@@ -27,90 +26,84 @@ export default function LoginPage() {
   const [notice, setNotice] = useState("");
   const otpRefs = useRef<(HTMLInputElement | null)[]>([]);
 
-  function readAccounts(): PrototypeAccount[] {
-    try {
-      const saved = window.localStorage.getItem(ACCOUNT_STORAGE_KEY);
-      const parsed: unknown = saved ? JSON.parse(saved) : [];
-      if (!Array.isArray(parsed)) return [];
-      return parsed.filter(
-        (account): account is PrototypeAccount =>
-          typeof account?.phone === "string" &&
-          typeof account?.email === "string" &&
-          typeof account?.name === "string",
-      );
-    } catch {
-      return [];
-    }
-  }
+  const [busy, setBusy] = useState(false);
+  const [cooldown, setCooldown] = useState(0);
+  useEffect(() => {
+    let active = true;
+    void authRequest("signup/status").then((pending) => {
+      if (!active) return;
+      if (pending.phone) setPhone(pending.phone);
+      if (pending.email) setEmail(pending.email);
+      if (pending.step === "name" || pending.step === "email") setStep(pending.step);
+    }).catch(() => {});
+    return () => { active = false; };
+  }, []);
+  useEffect(() => {
+    if (!cooldown) return;
+    const timer = setTimeout(() => setCooldown(cooldown - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [cooldown]);
 
+  async function run(action: () => Promise<void>) {
+    if (busy) return;
+    setBusy(true); setNotice("");
+    try { await action(); }
+    catch (error) { setNotice(error instanceof Error ? error.message : "Please try again."); }
+    finally { setBusy(false); }
+  }
+  async function finishLogin() {
+    if (!await refreshSession()) throw new Error("Unable to confirm your session. Please sign in again.");
+    const returnUrl = new URLSearchParams(window.location.search).get("returnUrl");
+    window.location.assign(returnUrl?.startsWith("/") && !returnUrl.startsWith("//") ? returnUrl : "/");
+  }
   function submitPhone(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const normalizedPhone = phone.replace(/\D/g, "").slice(-10);
-    if (!/^[6-9]\d{9}$/.test(normalizedPhone)) {
-      setNotice("Enter a valid 10-digit Indian mobile number.");
-      return;
-    }
-    setPhone(normalizedPhone);
-    setOtp(["", "", "", "", "", ""]);
-    setNotice("");
-    setStep("phone-otp");
+    void run(async () => {
+      if (!/^[6-9]\d{9}$/.test(phone) || /^(\d)\1{9}$/.test(phone)) throw new Error("Enter a valid 10-digit Indian mobile number.");
+      const result = await authRequest("phone/otp/request", { phone });
+      setOtp(["", "", "", "", "", ""]); setStep("phone-otp");
+      setCooldown(result.cooldownRemainingSeconds || 60);
+      if (result.smsSent === false) setNotice(result.message || "SMS delivery is unavailable. Please try again.");
+    });
   }
-
   function verifyPhone(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!/^\d{6}$/.test(otp.join(""))) {
-      setNotice("Enter the 6-digit code to continue.");
-      return;
-    }
-    const existingAccount = readAccounts().find((account) => account.phone === phone);
-    if (existingAccount) {
-      setName(existingAccount.name);
-      setStep("complete");
-    } else {
-      setOtp(["", "", "", "", "", ""]);
-      setNotice("");
-      setStep("email");
-    }
+    void run(async () => {
+      if (!/^\d{6}$/.test(otp.join(""))) throw new Error("Enter the 6-digit code.");
+      const result = await authRequest("phone/otp/verify", { phone, otp: otp.join("") });
+      if (result.needsEmail) { setOtp(["", "", "", "", "", ""]); setStep("email"); }
+      else await finishLogin();
+    });
   }
-
   function submitEmail(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim())) {
-      setNotice("Enter a valid email address.");
-      return;
-    }
-    setEmail(email.trim());
-    setOtp(["", "", "", "", "", ""]);
-    setNotice("");
-    setStep("email-otp");
+    void run(async () => {
+      await authRequest("email/otp/request", { email: email.trim(), phone });
+      setEmail(email.trim()); setOtp(["", "", "", "", "", ""]); setStep("email-otp"); setCooldown(60);
+    });
   }
-
   function verifyEmail(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (!/^\d{6}$/.test(otp.join(""))) {
-      setNotice("Enter the 6-digit code to continue.");
-      return;
-    }
-    setOtp(["", "", "", "", "", ""]);
-    setNotice("");
-    setStep("name");
+    void run(async () => {
+      if (!/^\d{6}$/.test(otp.join(""))) throw new Error("Enter the 6-digit code.");
+      const result = await authRequest("email/otp/verify", { email, phone, otp: otp.join("") });
+      if (result.needsName) setStep("name"); else await finishLogin();
+    });
   }
-
   function completeRegistration(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (name.trim().length < 2) {
-      setNotice("Enter your full name.");
-      return;
-    }
-    const account = { phone, email, name: name.trim() };
-    const accounts = readAccounts().filter((saved) => saved.phone !== phone);
-    try {
-      window.localStorage.setItem(ACCOUNT_STORAGE_KEY, JSON.stringify([...accounts, account]));
-    } catch {
-      // Keep the UI flow usable when browser storage is unavailable.
-    }
-    setNotice("");
-    setStep("complete");
+    void run(async () => {
+      if (!/^[a-zA-Z][a-zA-Z\s]{2,99}$/.test(name.trim())) throw new Error("Enter your full name using 3-100 letters and spaces.");
+      await authRequest("signup/complete", { fullName: name.trim() });
+      await finishLogin();
+    });
+  }
+  function resendOtp() {
+    void run(async () => {
+      const result = await authRequest(step === "phone-otp" ? "phone/otp/request" : "email/otp/request", step === "phone-otp" ? { phone } : { email, phone });
+      setCooldown(result.cooldownRemainingSeconds || 60); setOtp(["", "", "", "", "", ""]);
+      setNotice(result.message || "A new code has been requested.");
+    });
   }
 
   function updateOtp(index: number, value: string) {
@@ -259,7 +252,7 @@ export default function LoginPage() {
                 <p className="mt-5 text-sm font-semibold text-[#4F46E5]">You&apos;re signed in</p>
                 <h1 className="mt-2 text-[24px] font-medium tracking-tight text-zinc-900 sm:text-[28px]">Welcome{name ? `, ${name}` : " back"}</h1>
                 <p className="mt-2 text-[13px] leading-relaxed text-zinc-500 sm:text-[14px]">Your account is ready. Continue to your portfolio and orders.</p>
-                <Link href="/dashboard" className="mt-8 inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all hover:bg-[#4338CA]">
+                <Link href="/dashboard" className="mt-8 inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#4338CA]">
                   Continue to dashboard <ArrowRight className="size-[18px]" />
                 </Link>
               </div>
@@ -302,8 +295,8 @@ export default function LoginPage() {
                         />
                       </div>
                     </div>
-                    <button type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all hover:bg-[#4338CA]">
-                      Continue <ArrowRight className="size-[18px]" />
+                    <button aria-busy={busy} disabled={busy} type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#4338CA]">
+                      {busy ? "Sending code..." : "Continue"} <ArrowRight className="size-[18px]" />
                     </button>
                   </form>
                 )}
@@ -340,8 +333,11 @@ export default function LoginPage() {
                         />
                       ))}
                     </div>
-                    <button type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all hover:bg-[#4338CA]">
-                      Verify code <ArrowRight className="size-[18px]" />
+                    <button aria-busy={busy} disabled={busy} type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#4338CA]">
+                      {busy ? "Verifying..." : "Verify code"} <ArrowRight className="size-[18px]" />
+                    </button>
+                    <button type="button" disabled={busy || cooldown > 0} onClick={resendOtp} className="w-full text-sm text-[#4F46E5] disabled:text-zinc-400">
+                      {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
                     </button>
                   </form>
                 )}
@@ -355,8 +351,8 @@ export default function LoginPage() {
                         <input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={(event) => { setEmail(event.target.value); setNotice(""); }} placeholder="you@example.com" className="h-14 w-full rounded-xl border border-slate-200 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:border-[#4F46E5] focus:ring-4 focus:ring-[#4F46E5]/10" />
                       </div>
                     </div>
-                    <button type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all hover:bg-[#4338CA]">
-                      Continue <ArrowRight className="size-[18px]" />
+                    <button aria-busy={busy} disabled={busy} type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#4338CA]">
+                      {busy ? "Sending code..." : "Continue"} <ArrowRight className="size-[18px]" />
                     </button>
                   </form>
                 )}
@@ -367,7 +363,7 @@ export default function LoginPage() {
                       <label htmlFor="name" className="ml-1 text-sm font-semibold text-slate-700">Your Name</label>
                       <input id="name" name="name" type="text" autoComplete="name" required value={name} onChange={(event) => { setName(event.target.value); setNotice(""); }} placeholder="Enter your full name" className="h-14 w-full rounded-xl border border-slate-200 px-4 text-sm text-slate-900 outline-none transition-all focus:border-[#4F46E5] focus:ring-4 focus:ring-[#4F46E5]/10" />
                     </div>
-                    <button type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all hover:bg-[#4338CA]">
+                    <button aria-busy={busy} disabled={busy} type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#4338CA]">
                       Complete and sign in <ArrowRight className="size-[18px]" />
                     </button>
                   </form>

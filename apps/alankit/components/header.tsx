@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useAuthSession } from "@/lib/auth";
 import { usePathname } from "next/navigation";
 import { Bell, ChevronDown, Menu, User, X } from "lucide-react";
 
@@ -19,6 +20,7 @@ const navItems: NavItem[] = [
 ];
 
 export function Header() {
+  const isAuthenticated = useAuthSession();
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [openDropdown, setOpenDropdown] = useState<string | null>(null);
@@ -103,8 +105,9 @@ export function Header() {
           })}
         </nav>
 
-        {/* Right Control: Profile Link + Single Unified Sign In Button */}
+        {/* Account controls depend on the current session. */}
         <div className="hidden md:flex items-center gap-3">
+          {isAuthenticated && <>
           <Link
             href="/notifications"
             title="Notifications"
@@ -120,10 +123,11 @@ export function Header() {
             <User className="size-4 text-[#4F46E5]" />
             <span>Profile</span>
           </Link>
+          </>}
 
-          <Link href="/login" className="inline-flex h-10 items-center justify-center rounded-lg bg-[#4F46E5] px-5 text-sm font-medium text-white transition-colors hover:bg-[#4338CA]">
+          {!isAuthenticated && <Link href="/login" className="inline-flex h-10 items-center justify-center rounded-lg bg-[#4F46E5] px-5 text-sm font-medium text-white transition-colors hover:bg-[#4338CA]">
             Sign In
-          </Link>
+          </Link>}
         </div>
 
         {/* Mobile Menu Button */}
@@ -169,6 +173,7 @@ export function Header() {
           </nav>
 
           <div className="mt-4 flex flex-col gap-2.5 border-t border-zinc-100 pt-4">
+            {isAuthenticated && <>
             <Link
               href="/notifications"
               onClick={() => setMobileMenuOpen(false)}
@@ -186,9 +191,10 @@ export function Header() {
               <User className="size-4 text-[#4F46E5]" />
               <span>Profile</span>
             </Link>
-            <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-[#4F46E5] text-sm font-medium text-white transition-colors hover:bg-[#4338CA]">
+            </>}
+            {!isAuthenticated && <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-[#4F46E5] text-sm font-medium text-white transition-colors hover:bg-[#4338CA]">
               Sign In
-            </Link>
+            </Link>}
           </div>
         </div>
       )}
