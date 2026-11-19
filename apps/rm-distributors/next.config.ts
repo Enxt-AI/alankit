@@ -2,6 +2,7 @@ import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
   output: "standalone",
+  basePath: process.env.NEXT_BASE_PATH || undefined,
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
   // BACKEND_ORIGIN is used only server-side (rewrites). Not exposed to the browser

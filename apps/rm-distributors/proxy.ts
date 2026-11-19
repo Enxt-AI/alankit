@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { decryptTokenSafe, OBFUSCATED_COOKIE_NAMES } from "cookie-crypto";
+import { stripBasePath, withBasePath } from "./lib/base-path";
 
 /**
  * Force Node.js runtime so we can use the 'node:crypto' module
@@ -81,7 +82,7 @@ function getToken(request: NextRequest, tokenNames: string[]): string | null {
 // ============================================
 
 export default async function proxy(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+  const pathname = stripBasePath(request.nextUrl.pathname);
 
   // Handle explicit cookie clear
   if (pathname.includes("/login") && request.nextUrl.searchParams.get("clear") === "true") {
@@ -119,8 +120,8 @@ export default async function proxy(request: NextRequest) {
     if (c) {
       const token = getToken(request, c.tokenNames);
       if (token) {
-        const url = request.nextUrl.clone();
-        url.pathname = c.dashboardPath;
+        const url = new URL(request.url);
+        url.pathname = withBasePath(c.dashboardPath);
         return NextResponse.redirect(url);
       }
     }
@@ -134,8 +135,8 @@ export default async function proxy(request: NextRequest) {
 
     // No token -> Redirect to Login
     if (!token) {
-      const url = request.nextUrl.clone();
-      url.pathname = config.loginPath;
+      const url = new URL(request.url);
+      url.pathname = withBasePath(config.loginPath);
       return NextResponse.redirect(url);
     }
 

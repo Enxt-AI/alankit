@@ -6,6 +6,7 @@ This document provides instructions for deploying the SMC Unlisted Stox applicat
 
 The staging deployment consists of:
 - **3 NestJS microservices**: auth-service, stocks-service, ticketing-service
+- **3 frontend services**: web, panels, and RM/distributors
 - **1 Nginx reverse proxy**: Routes requests to appropriate services
 - **Internal Docker network**: `staging-network` for service communication
 - **Memory constraints**: 250MB per service on EC2 t2.micro (1GB RAM total)
@@ -15,7 +16,7 @@ The staging deployment consists of:
 - Docker 24.0+
 - Docker Compose 2.20+
 - At least 1GB RAM available
-- Ports 80, 3001, 3002, 3003 available (or modify docker-compose.staging.yml)
+- Public TCP port 80 available. Application and database ports stay internal to Docker.
 
 ## Environment Setup
 
@@ -55,8 +56,17 @@ docker-compose --env-file .env.staging -f docker-compose.staging.yml down
 #### Nginx Health Check
 ```bash
 curl http://localhost/health
-# Expected: OK
+# Expected: Gateway OK
 ```
+
+### Frontend URLs
+
+Replace `<server-ip>` with the server's IP address:
+
+- Web: `http://<server-ip>/`
+- Panels: `http://<server-ip>/panels/`
+- RM/distributors: `http://<server-ip>/distributors/`
+- APIs: `http://<server-ip>/api/...`
 
 #### Individual Service Health Checks
 ```bash
@@ -116,12 +126,15 @@ docker-compose --env-file .env.staging -f docker-compose.staging.yml ps
 
 ## Service Details
 
-| Service | Port | Memory | Health Endpoint | Description |
-|---------|------|--------|-----------------|-------------|
-| nginx | 80 | 100MB | `/health` | Reverse proxy |
-| auth-service | 3002 | 250MB | `/api/health` | Authentication |
-| stocks-service | 3003 | 250MB | `/api/health` | Stock management |
-| ticketing-service | 3001 | 250MB | `/api/health` | Support tickets |
+| Service | Container Port | Memory | Health Endpoint | Description |
+|---------|---------------|--------|-----------------|-------------|
+| nginx | 80 (only public port) | 100MB | `/health` | Reverse proxy |
+| auth-service | 3002 (internal) | 250MB | `/api/health` | Authentication |
+| stocks-service | 3003 (internal) | 250MB | `/api/health` | Stock management |
+| ticketing-service | 3001 (internal) | 250MB | `/api/health` | Support tickets |
+| web | 3000 (internal) | — | `/` | Main frontend |
+| panels | 4000 (internal) | — | `/panels/` | Admin and operations frontend |
+| rm-distributors | 8000 (internal) | — | `/distributors/` | RM and distributor frontend |
 
 ## Logs Location
 
@@ -152,6 +165,7 @@ docker system prune -a --volumes
 - Nginx configured with security headers
 - Internal network isolates services
 - No external database ports exposed
+- This HTTP-only setup disables Secure cookies so login can work. Traffic is unencrypted; use HTTPS before handling real credentials or deploying publicly.
 
 ## Performance Optimization
 

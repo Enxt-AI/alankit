@@ -1,12 +1,13 @@
 import { getAuthHeaders } from "./auth-headers";
+import { stripBasePath, withBasePath } from "./base-path";
 
 /**
- * Cross-origin requests only send the origin as Referer (strict-origin-when-cross-origin),
- * so the backend can't infer the panel from the page path. Send it explicitly.
+ * Requests use the same host, so the backend can't infer the panel from the page path.
+ * Send it explicitly.
  */
 function getPanelContextHeader(): Record<string, string> {
   if (typeof window === "undefined") return {};
-  const path = window.location.pathname;
+  const path = stripBasePath(window.location.pathname);
   if (path.startsWith("/distributor")) return { "x-panel-context": "distributor" };
   if (path.startsWith("/branch")) return { "x-panel-context": "branch" };
   if (path.startsWith("/rm")) return { "x-panel-context": "rm" };
@@ -15,8 +16,7 @@ function getPanelContextHeader(): Record<string, string> {
 
 /**
  * Authenticated fetch wrapper.
- * All requests go through the same-origin Next.js rewrite proxy
- * (distributors.unlistedstox.com → api.unlistedstox.com) so cookies are always sent.
+ * Requests use the same host so browser cookies are sent with the API calls.
  */
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
   const mergedInit: RequestInit = {
@@ -33,13 +33,13 @@ export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Pr
 
   if (response.status === 401 && typeof window !== "undefined") {
     // Determine the current portal base path
-    const path = window.location.pathname;
+    const path = stripBasePath(window.location.pathname);
     let loginUrl = "/login/rm?clear=true";
     if (path.startsWith("/distributor")) loginUrl = "/login/distributor?clear=true";
     else if (path.startsWith("/branch")) loginUrl = "/login/branch?clear=true";
     
     // Redirect to login and clear cookies
-    window.location.href = loginUrl;
+    window.location.href = withBasePath(loginUrl);
     
     throw new Error("Session expired (401 Unauthorized)");
   }

@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { getAuthHeaders } from "@/lib/auth-headers";
+import { stripBasePath, withBasePath } from "@/lib/base-path";
 
 /**
  * useIdleTimeout — Frontend idle detection hook for RM/Distributor/Branch panels.
@@ -17,7 +18,7 @@ import { getAuthHeaders } from "@/lib/auth-headers";
  * @param timeoutMs - Idle timeout in milliseconds (default: 10 minutes = 600,000ms)
  */
 export function useIdleTimeout(timeoutMs: number = 10 * 60 * 1000) {
-  const pathname = usePathname();
+  const pathname = stripBasePath(usePathname());
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const lastActivityRef = useRef<number>(Date.now());
 
@@ -28,7 +29,7 @@ export function useIdleTimeout(timeoutMs: number = 10 * 60 * 1000) {
       localStorage.removeItem("userType");
     }
 
-    const currentPath = pathname || (typeof window !== "undefined" ? window.location.pathname : "");
+    const currentPath = pathname || (typeof window !== "undefined" ? stripBasePath(window.location.pathname) : "");
     let loginPath = "/login/rm";
     let logoutEndpoint = "/api/auth/rm/logout";
 
@@ -51,7 +52,7 @@ export function useIdleTimeout(timeoutMs: number = 10 * 60 * 1000) {
     }
 
     if (typeof window !== "undefined") {
-      window.location.href = `${loginPath}?clear=true&reason=idle`;
+      window.location.href = withBasePath(`${loginPath}?clear=true&reason=idle`);
     }
   }, [pathname]);
 
@@ -124,7 +125,7 @@ export function useIdleTimeout(timeoutMs: number = 10 * 60 * 1000) {
     // Verify backend session via lightweight call
     const verifySession = async () => {
       let endpoint = "/api/auth/rm/verify";
-      const currentPath = pathname || (typeof window !== "undefined" ? window.location.pathname : "");
+      const currentPath = pathname || (typeof window !== "undefined" ? stripBasePath(window.location.pathname) : "");
       const userType = typeof window !== "undefined" ? localStorage.getItem("userType") : null;
       if (userType === "distributor" || currentPath.startsWith("/distributor")) {
         endpoint = "/api/auth/distributor/verify";

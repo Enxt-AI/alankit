@@ -5,6 +5,7 @@ import { ChevronDown, ChevronUp } from "lucide-react";
 import type { DateRange } from "react-day-picker";
 
 import { cn } from "@/lib/utils";
+import { withBasePath } from "@/lib/base-path";
 import { Button } from "@/components/ui/button";
 import { Calendar } from "@/components/ui/calendar";
 import {
@@ -296,7 +297,7 @@ export function DatePicker({
           <div className="bg-[#FEFCE8] text-[#854D0E] text-[11px] font-medium py-2.5 px-6 border-t border-[#FEF08A]/70 flex items-center justify-center gap-1">
             <span>
               Orders older than <strong className="font-semibold text-[#713F12]">1st April 2025</strong> can only be accessed through{" "}
-              <a href="/operation/reports" className="underline font-semibold text-[#713F12] hover:text-[#451A03]">
+              <a href={withBasePath('/operation/reports')} className="underline font-semibold text-[#713F12] hover:text-[#451A03]">
                 Reports page
               </a>
               .

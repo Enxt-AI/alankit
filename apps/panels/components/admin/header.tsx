@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { Menu, LogOut, PanelLeftClose, PanelLeftOpen, Shield } from 'lucide-react';
 import { notify } from '@/components/ui/floating-notification';
+import { withBasePath } from '@/lib/base-path';
 
 import { useAuthStore } from '@/store/auth-store';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
@@ -34,7 +35,7 @@ export default function AdminHeader({ onMenuClick, collapsed, onToggleCollapse }
     await adminLogout();
     // Force a full page reload through Next.js middleware to explicitly clear 
     // HTTP-only cookies and wipe sensitive data from memory caches.
-    window.location.href = '/admin/login?clear=true';
+    window.location.href = withBasePath('/admin/login?clear=true');
   };
 
   const getInitials = (name: string) => {

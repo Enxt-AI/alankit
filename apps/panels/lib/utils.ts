@@ -69,7 +69,8 @@ export function getStorageUrl(url: string | null | undefined): string {
     try {
       const parsed = new URL(url);
       const isFirstParty = parsed.hostname === "unlistedstox.com" ||
-        parsed.hostname.endsWith(".unlistedstox.com");
+        parsed.hostname.endsWith(".unlistedstox.com") ||
+        (typeof window !== "undefined" && parsed.hostname === window.location.hostname);
       if (isFirstParty && parsed.pathname.startsWith("/storage/")) {
         url = `${parsed.pathname}${parsed.search}${parsed.hash}`;
       }

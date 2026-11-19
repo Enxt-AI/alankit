@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 import { OBFUSCATED_COOKIE_NAMES, ORIGINAL_COOKIE_NAMES, PANEL_ROLE_CONFIG } from "cookie-crypto/constants";
+import { stripBasePath, withBasePath } from "./lib/base-path";
 
 // ============================================
 // TYPES & CONFIGURATION
@@ -191,11 +192,13 @@ function isWorkspaceRoot(pathname: string, pathPrefix: string): boolean {
 // ============================================
 
 export default async function proxy(request: NextRequest) {
-  const pathname = request.nextUrl.pathname;
+  const pathname = stripBasePath(request.nextUrl.pathname);
 
   // If visiting /desktop-required, redirect back to /admin
   if (pathname === "/desktop-required") {
-    return NextResponse.redirect(new URL("/admin", request.url));
+    const url = new URL(request.url);
+    url.pathname = withBasePath("/admin");
+    return NextResponse.redirect(url);
   }
 
   // Find matching config
@@ -247,14 +250,14 @@ export default async function proxy(request: NextRequest) {
   // Workspace root handling (e.g. /admin, /cms, /rm, /support, /marketing)
   // These root routes often don't have an index page; redirect deterministically.
   if (isWorkspaceRoot(pathname, config.pathPrefix)) {
-    const url = request.nextUrl.clone();
+    const url = new URL(request.url);
 
     if (!token) {
-      url.pathname = config.Path;
+      url.pathname = withBasePath(config.Path);
       return NextResponse.redirect(url);
     }
 
-    url.pathname = config.dashboardPath;
+    url.pathname = withBasePath(config.dashboardPath);
     return NextResponse.redirect(url);
   }
 
@@ -262,8 +265,8 @@ export default async function proxy(request: NextRequest) {
   // If user is already logged in and tries to access  page, redirect to dashboard
   if (pathname === config.Path) {
     if (token) {
-      const url = request.nextUrl.clone();
-      url.pathname = config.dashboardPath;
+      const url = new URL(request.url);
+      url.pathname = withBasePath(config.dashboardPath);
       return NextResponse.redirect(url);
     }
     // Allow access to login page if not authenticated
@@ -273,8 +276,8 @@ export default async function proxy(request: NextRequest) {
   // Protected Routes Handling
   // If no token or expired, redirect to 
   if (!token) {
-    const url = request.nextUrl.clone();
-    url.pathname = config.Path;
+    const url = new URL(request.url);
+    url.pathname = withBasePath(config.Path);
     // Add returnUrl for better UX? existing code didn't have it, keeping it simple for now
     return NextResponse.redirect(url);
   }

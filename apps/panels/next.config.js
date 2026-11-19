@@ -12,6 +12,7 @@ const require = createRequire(import.meta.url);
 
 const nextConfig = {
   output: 'standalone',
+  basePath: process.env.NEXT_BASE_PATH || undefined,
   poweredByHeader: false,
   productionBrowserSourceMaps: false,
   webpack: (config) => {

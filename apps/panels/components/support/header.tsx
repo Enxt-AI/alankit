@@ -5,6 +5,7 @@ import { useRouter, usePathname } from 'next/navigation';
 import { useAuthStore } from '@/store/auth-store';
 import { useSupportAuth } from '@/hooks/use-support-auth';
 import { Button } from '@/components/ui/button';
+import { withBasePath } from '@/lib/base-path';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -43,7 +44,7 @@ export function SupportHeader({ onMenuClick, collapsed, onToggleCollapse }: Supp
 
   const handleLogout = async () => {
     await supportLogout();
-    window.location.href = '/support/login?clear=true';
+    window.location.href = withBasePath('/support/login?clear=true');
   };
 
   const getInitials = (fullName: string) => {

@@ -7,6 +7,7 @@ import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/com
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
+import { withBasePath } from "@/lib/base-path";
 
 /** POST JSON to the auth-service (proxied via next.config rewrites) and normalise errors */
 async function postJson(url: string, body: Record<string, unknown>) {
@@ -128,7 +129,7 @@ function ChangePasswordForm() {
         resetToken,
       });
       alert("Password updated successfully! You can now log in.");
-      window.location.href = backLink;
+      window.location.href = withBasePath(backLink);
     } catch (err: any) {
       setError(err.message || "Failed to update password");
     } finally {

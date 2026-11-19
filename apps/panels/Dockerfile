@@ -37,7 +37,11 @@ COPY apps/panels/ apps/panels/
 
 # Build the panels application using Turborepo to ensure workspace dependencies are handled
 ARG BACKEND_ORIGIN
+ARG NEXT_BASE_PATH
+ARG NEXT_PUBLIC_BASE_PATH
 ENV BACKEND_ORIGIN=$BACKEND_ORIGIN
+ENV NEXT_BASE_PATH=$NEXT_BASE_PATH
+ENV NEXT_PUBLIC_BASE_PATH=$NEXT_PUBLIC_BASE_PATH
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN npx turbo run build --filter=panels
 

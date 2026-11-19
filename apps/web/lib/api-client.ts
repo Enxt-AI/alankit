@@ -10,7 +10,7 @@ import { sanitizeErrorMessage } from "./error-utils";
 // API Client — Production-Ready
 //
 // Architecture:
-//   SSR  → calls microservices directly (no Next.js proxy double-hop)
+//   SSR  → uses BACKEND_ORIGIN when configured, otherwise direct service URLs
 //   CSR  → uses relative "/api" paths so HttpOnly cookies travel same-origin
 //          and Next.js rewrites forward to the correct backend
 //
@@ -32,7 +32,7 @@ const isServer = typeof window === "undefined";
 
 /** Default direct-access ports for local & container environments. */
 const SERVICE_DEFAULTS = {
-  auth: process.env.AUTH_SERVICE_URL ? `${process.env.AUTH_SERVICE_URL.replace(/\/$/, '')}/api` : "http://auth-service:3002/api",
+  auth: "http://auth-service:3002/api",
   stocks: process.env.STOCKS_SERVICE_URL ? `${process.env.STOCKS_SERVICE_URL.replace(/\/$/, '')}/api` : "http://stocks-service:3003/api",
 } as const;
 
@@ -43,12 +43,11 @@ function resolveBaseURL(
   const raw = (envValue || "").trim();
 
   if (isServer) {
-    // Absolute URL already set (Docker / staging) — use as-is.
-    if (raw && !raw.startsWith("/")) return raw;
-
-    // BACKEND_ORIGIN is an optional single gateway in front of all services.
     const gateway = (process.env.BACKEND_ORIGIN || "").trim().replace(/\/$/, "");
-    if (gateway) return gateway + (raw || "/api");
+    if (gateway) return gateway + (raw.startsWith("/") ? raw : "/api");
+
+    // Absolute URL is a local service-specific override when no gateway is configured.
+    if (raw && !raw.startsWith("/")) return raw;
 
     // No gateway, no absolute URL → hit each microservice directly by port.
     return SERVICE_DEFAULTS[service];

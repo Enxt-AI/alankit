@@ -4,6 +4,7 @@ import { LogOut, Search, User, ChevronDown } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { SidebarTrigger } from "@/components/ui/sidebar";
+import { stripBasePath, withBasePath } from "@/lib/base-path";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -21,11 +22,11 @@ export function Header() {
 
   const handleLogout = () => {
     localStorage.removeItem("userType");
-    const currentPath = window.location.pathname;
+    const currentPath = stripBasePath(window.location.pathname);
     let loginPath = "/login/rm";
     if (currentPath.startsWith("/branch")) loginPath = "/login/branch";
     if (currentPath.startsWith("/distributor")) loginPath = "/login/distributor";
-    window.location.href = `${loginPath}?clear=true`;
+    window.location.href = withBasePath(`${loginPath}?clear=true`);
   };
 
   return (

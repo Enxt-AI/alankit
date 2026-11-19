@@ -17,6 +17,7 @@ import {
   type Ledger
 } from "@/lib/accounting-api";
 import { useAccountingAdmin } from "@/store/auth-store";
+import { withBasePath } from "@/lib/base-path";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 
@@ -139,7 +140,7 @@ export default function VoucherDetailPopup() {
   const handleEdit = () => {
     if (!voucher) return;
     if (window.opener && !window.opener.closed) {
-      window.opener.location.href = `/accounting/voucher-entry?edit=${voucher.id}`;
+      window.opener.location.href = withBasePath(`/accounting/voucher-entry?edit=${voucher.id}`);
       window.close();
     } else {
       router.push(`/accounting/voucher-entry?edit=${voucher.id}`);

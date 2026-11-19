@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Image from 'next/image';
+import { withBasePath } from '@/lib/base-path';
 
 export default function SplashScreen() {
   const [show, setShow] = useState(true);
@@ -36,7 +37,7 @@ export default function SplashScreen() {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white transition-opacity duration-500">
       <div className="relative h-64 w-64 max-w-[80vw]">
         <Image
-          src="/unlisted-stox-logo.gif"
+          src={withBasePath('/unlisted-stox-logo.gif')}
           alt="Loading..."
           fill
           className="object-contain"

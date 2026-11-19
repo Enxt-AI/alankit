@@ -10,6 +10,7 @@ import {
   DialogFooter,
 } from '@/components/ui/dialog';
 import { Button } from '@/components/ui/button';
+import { stripBasePath, withBasePath } from '@/lib/base-path';
 import { Badge } from '@/components/ui/badge';
 import {
   Ticket,
@@ -304,11 +305,11 @@ export function CouponDetailDialog({
           <div className="flex items-center gap-2">
             <Button
               onClick={() => {
-                const basePath = typeof window !== 'undefined' && window.location.pathname.startsWith('/marketing')
+                const basePath = typeof window !== 'undefined' && stripBasePath(window.location.pathname).startsWith('/marketing')
                   ? '/marketing'
                   : '/admin';
                 window.open(
-                  `${basePath}/promotions/sales-popup?id=${coupon.id}`,
+                  withBasePath(`${basePath}/promotions/sales-popup?id=${coupon.id}`),
                   `coupon_sales_${coupon.id}`,
                   'width=1200,height=900,status=no,menubar=no,resizable=yes,scrollbars=yes'
                 );

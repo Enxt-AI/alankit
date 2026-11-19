@@ -1,4 +1,5 @@
 import { stocksApi } from './api-client';
+import { stripBasePath } from './base-path';
 
 export interface CouponUser {
   id: string;
@@ -122,7 +123,7 @@ export interface CouponStock {
 export async function getAllCoupons(panelContext?: string): Promise<Coupon[]> {
   const isMarketing =
     panelContext === 'marketing' ||
-    (typeof window !== 'undefined' && window.location.pathname.startsWith('/marketing'));
+    (typeof window !== 'undefined' && stripBasePath(window.location.pathname).startsWith('/marketing'));
   const url = isMarketing
     ? '/stocks/coupons?scope=admin&adminOnly=true&panel=marketing'
     : '/stocks/coupons?scope=admin&adminOnly=true';

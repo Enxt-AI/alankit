@@ -10,6 +10,7 @@
 import { useEffect } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { withBasePath } from "@/lib/base-path";
 import { AlertTriangle, Home } from "lucide-react";
 
 interface ErrorProps {
@@ -65,7 +66,7 @@ export default function GlobalError({ error, reset }: ErrorProps) {
               Try Again
             </Button>
             <Button
-              onClick={() => window.location.href = '/'}
+              onClick={() => window.location.href = withBasePath('/')}
               variant="outline"
               className="gap-2"
             >

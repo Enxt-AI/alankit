@@ -20,11 +20,8 @@ function buildAuthProfileCandidates(): string[] {
     : 'http://127.0.0.1:3002';
   const candidates = new Set<string>();
   const rawCandidates = [
-    // Prefer the explicitly configured internal service over an external gateway.
-    // OTP rewrites can reach this service even when the public gateway is down.
-    (process.env.AUTH_SERVICE_URL || '').trim(),
+    // Use the shared gateway first; direct service URLs are only local fallbacks.
     (process.env.BACKEND_ORIGIN || '').trim(),
-    (process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || '').trim(),
     fallbackOrigin,
   ];
 

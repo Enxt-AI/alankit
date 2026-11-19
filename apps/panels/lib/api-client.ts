@@ -1,5 +1,6 @@
 import axios, { InternalAxiosRequestConfig, AxiosResponse, AxiosError } from "axios";
 import { sanitizeErrorMessage } from "./error-utils";
+import { stripBasePath, withBasePath } from "./base-path";
 
 /**
  * API Client Configuration
@@ -62,7 +63,7 @@ const stocksApi = axios.create({
 // Do not attach Bearer tokens from JS-accessible storage.
 const requestInterceptor = (config: InternalAxiosRequestConfig) => {
   if (typeof window !== 'undefined') {
-    const pathSegment = window.location.pathname.split('/')[1];
+    const pathSegment = stripBasePath(window.location.pathname).split('/')[1];
     if (pathSegment && ['admin', 'cms', 'marketing', 'accounting', 'operation', 'support'].includes(pathSegment)) {
       config.headers['X-Panel-Context'] = pathSegment;
     }
@@ -111,7 +112,7 @@ const responseErrorInterceptor = (error: AxiosError) => {
 
         // Handle session expiry or invalid credentials by cleaning up state and redirecting to login with clear=true
         if (typeof window !== 'undefined') {
-          const pathname = window.location.pathname;
+          const pathname = stripBasePath(window.location.pathname);
           if (!pathname.endsWith('/login')) {
             const prefix = pathname.split('/')[1] || 'admin';
             if (['admin', 'cms', 'marketing', 'accounting', 'operation', 'support'].includes(prefix)) {
@@ -128,7 +129,7 @@ const responseErrorInterceptor = (error: AxiosError) => {
                 // Best-effort store cleanup
               }
 
-              window.location.href = `/${prefix}/login?clear=true`;
+              window.location.href = withBasePath(`/${prefix}/login?clear=true`);
             }
           }
         }

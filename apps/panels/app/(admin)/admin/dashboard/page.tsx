@@ -11,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Skeleton } from "@/components/ui/skeleton";
+import { withBasePath } from "@/lib/base-path";
 import {
   LayoutDashboard,
   Users,
@@ -351,7 +352,7 @@ export default function AdminDashboardPage() {
                 </p>
                 <button
                   className="inline-flex items-center justify-center h-[40px] px-5 rounded-lg text-[13px] font-semibold text-white bg-[#16A34A] border-2 border-[#16A34A] hover:bg-white hover:text-[#0F172A] hover:border-[#16A34A] hover:shadow-[0_8px_20px_rgba(22,163,74,0.12)] active:scale-[0.98] transition-all duration-300 ease-in-out cursor-pointer"
-                  onClick={() => window.location.href = '/admin/admins'}
+                  onClick={() => window.location.href = withBasePath('/admin/admins')}
                 >
                   <UserPlus className="mr-2 h-4 w-4" />
                   Go to Admin Management

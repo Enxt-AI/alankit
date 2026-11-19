@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { OBFUSCATED_COOKIE_NAMES, ORIGINAL_COOKIE_NAMES } from "cookie-crypto/constants";
 import { decryptToken } from "cookie-crypto";
+import { withBasePath } from "@/lib/base-path";
 
 /**
  * Buckets containing sensitive customer PII or compliance documents
@@ -137,7 +138,7 @@ function getCandidateBaseUrls(): string[] {
 }
 
 /**
- * Resolves the public origin from reverse proxy headers or configured domains,
+ * Resolves the public origin from reverse proxy headers or the current request,
  * avoiding internal container IPs like 0.0.0.0:4000.
  */
 function getPublicOrigin(request: NextRequest): string {
@@ -153,11 +154,7 @@ function getPublicOrigin(request: NextRequest): string {
     return publicPanelsUrl.replace(/\/+$/, "");
   }
 
-  if (process.env.NODE_ENV === "production") {
-    return "https://panels.unlistedstox.com";
-  }
-
-  return `${forwardedProto}://${forwardedHost || "localhost:4000"}`;
+  return request.nextUrl.origin;
 }
 
 export async function GET(
@@ -178,10 +175,10 @@ export async function GET(
   // Enforce session authentication for sensitive buckets (Demat CMRs, KYC documents)
   if (isSensitive && !isSessionAuthenticated(request)) {
     const acceptHeader = request.headers.get("accept") || "";
-    // If opened directly in browser window/tab, redirect to operations login using the public domain
+    // If opened directly in a browser, redirect to operations login on the same host.
     if (acceptHeader.includes("text/html")) {
       const publicOrigin = getPublicOrigin(request);
-      const loginUrl = new URL("/operation/login", publicOrigin);
+      const loginUrl = new URL(withBasePath("/operation/login"), publicOrigin);
       loginUrl.searchParams.set("returnUrl", request.nextUrl.pathname);
       return NextResponse.redirect(loginUrl);
     }

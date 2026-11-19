@@ -14,9 +14,7 @@ function buildAuthSignoutCandidates(): string[] {
     : 'http://127.0.0.1:3002';
   const candidates = new Set<string>();
   const rawCandidates = [
-    (process.env.AUTH_SERVICE_URL || '').trim(),
     (process.env.BACKEND_ORIGIN || '').trim(),
-    (process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || '').trim(),
     fallbackOrigin,
   ];
 

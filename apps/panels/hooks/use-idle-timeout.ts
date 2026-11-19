@@ -3,6 +3,7 @@
 import { useEffect, useRef, useCallback } from "react";
 import { usePathname } from "next/navigation";
 import { useAuthStore } from "@/store/auth-store";
+import { withBasePath } from "@/lib/base-path";
 
 /**
  * useIdleTimeout — Frontend idle detection hook for admin panels.
@@ -68,7 +69,7 @@ export function useIdleTimeout(timeoutMs: number = 10 * 60 * 1000) {
     }
 
     if (typeof window !== "undefined") {
-      window.location.href = `/${prefix}/login?clear=true&reason=idle`;
+      window.location.href = withBasePath(`/${prefix}/login?clear=true&reason=idle`);
     }
   }, [prefix]);
 
