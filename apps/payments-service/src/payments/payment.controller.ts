@@ -10,6 +10,7 @@ import {
   Headers,
   HttpCode,
   UnauthorizedException,
+  Res,
 } from '@nestjs/common';
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
@@ -20,7 +21,7 @@ import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AdminJwtAuthGuard } from '../auth/guards/admin-jwt-auth.guard';
 import { AdminGuard } from '../auth/guards/admin.guard';
 import { Public } from '../auth/decorators/public.decorator';
-import { authenticateWebhook } from './webhook-auth';
+import { NdpsGateway } from './ndps.gateway';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
 
@@ -30,6 +31,7 @@ export class PaymentController {
     private paymentService: PaymentService,
     @InjectQueue('payment-webhooks') private readonly paymentQueue: Queue,
     private readonly config: ConfigService,
+    private readonly ndps: NdpsGateway,
   ) {}
 
   @Get('health')
@@ -50,37 +52,18 @@ export class PaymentController {
     }
   }
 
-  @Post('internal/cashfree/reconcile')
+  @Post('internal/ndps/reconcile')
   @Public()
-  async internalCashfreeReconcile(
-    @Body() body: { date?: string; executedBy?: string },
-    @Headers() headers: Record<string, string>,
-  ) {
+  async internalReconcile(@Body() body: { date?: string; executedBy?: string }, @Headers() headers: Record<string, string>) {
     this.assertInternalService(headers);
-    return this.paymentService.runCashfreeReconciliation(body?.date, body?.executedBy || 'ACCOUNTANT');
+    return this.paymentService.runNdpsReconciliation(body?.date, body?.executedBy || 'ACCOUNTANT');
   }
 
-  @Post('cashfree-settlement-webhook')
-  @HttpCode(200)
+  @Post('admin/:orderId/refund')
   @Public()
-  async handleCashfreeSettlementWebhook(
-    @Body() body: any,
-    @Headers() headers: Record<string, string>,
-    @Req() req: any,
-  ) {
-    const signature = headers['x-webhook-signature'] || headers['x-cashfree-signature'];
-    const timestamp = headers['x-webhook-timestamp'] || headers['x-cashfree-timestamp'];
-    const rawBody = req.rawBody;
-    const rawBodyBuffer = Buffer.isBuffer(rawBody) ? rawBody : Buffer.from(typeof rawBody === 'string' ? rawBody : JSON.stringify(body));
-    const jobId = authenticateWebhook(rawBodyBuffer, signature || '', timestamp || '',
-      this.config.get<string>('CASHFREE_CLIENT_SECRET', ''));
-    await this.paymentQueue.add('cashfree-event', {
-      body,
-      signature: signature || 'none',
-      timestamp: timestamp || new Date().toISOString(),
-      type: body?.type || body?.event,
-    }, { jobId });
-    return { status: 'Received' };
+  @UseGuards(AdminJwtAuthGuard, AdminGuard)
+  async refundOrder(@Param('orderId') orderId: string, @Req() req: any) {
+    return this.paymentService.refundOrder(orderId, req.admin.id);
   }
 
   @Post(':orderId/create')
@@ -97,35 +80,22 @@ export class PaymentController {
     return await this.paymentService.verifyPayment(dto, userId);
   }
 
-  @Post('webhook')
+  @Post('ndps/callback')
   @HttpCode(200)
   @Public()
-  async handleWebhook(
-    @Body() body: any,
-    @Headers() headers: Record<string, string>,
-    @Req() req: any,
-  ) {
-    const signature =
-      headers['x-webhook-signature'] ||
-      headers['x-cashfree-signature'] ||
-      headers['signature'];
-    const timestamp =
-      headers['x-webhook-timestamp'] ||
-      headers['x-cashfree-timestamp'] ||
-      headers['timestamp'];
-
-    const jobId = authenticateWebhook(req.rawBody, signature, timestamp,
-      this.config.get<string>('CASHFREE_CLIENT_SECRET', ''));
-    // Acknowledge only authenticated events successfully persisted to Redis.
-    await this.paymentQueue.add('cashfree-event', {
-      body,
-      signature: signature || 'none',
-      timestamp: timestamp || new Date().toISOString(),
-      type: body?.type || body?.event,
-    }, { jobId });
-    
-    // Immediately return 200 OK to the gateway
+  async handleWebhook(@Body() body: any) {
+    this.ndps.decodeResponse(body);
+    const jobId = crypto.createHash('sha256').update(body.encData).digest('hex');
+    await this.paymentQueue.add('ndps-event', { body }, { jobId });
     return { status: 'Received' };
+  }
+
+  @Post('ndps/return')
+  @Public()
+  async handleReturn(@Body() body: any, @Res() reply: any) {
+    const { orderId } = await this.paymentService.processWebhookPayload({ body });
+    const frontend = this.config.get<string>('FRONTEND_URL', 'http://localhost:3000').replace(/\/$/, '');
+    return reply.code(303).header('Location', `${frontend}/payment/result?orderId=${encodeURIComponent(orderId)}`).send();
   }
 
   @Get(':orderId')
@@ -153,16 +123,16 @@ export class PaymentController {
     );
   }
 
-  @Post('admin/:orderId/sync-cashfree')
+  @Post('admin/:orderId/sync-ndps')
   @Public()
   @UseGuards(AdminJwtAuthGuard, AdminGuard)
-  async adminSyncCashfreeStatus(
+  async adminSyncNdpsStatus(
     @Param('orderId') orderId: string,
     @Req() req: any,
-  ): Promise<Awaited<ReturnType<PaymentService['adminSyncCashfreeStatus']>>> {
+  ): Promise<Awaited<ReturnType<PaymentService['adminSyncNdpsStatus']>>> {
     const adminId = req.admin?.id;
     const adminEmail = req.admin?.email;
-    return await this.paymentService.adminSyncCashfreeStatus(
+    return await this.paymentService.adminSyncNdpsStatus(
       orderId,
       adminId,
       adminEmail,

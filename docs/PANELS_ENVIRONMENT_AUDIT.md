@@ -109,7 +109,7 @@ NODE_OPTIONS
 
 For the current gateway deployment, the main application choices are BACKEND_ORIGIN at build and runtime, public client overrides only where needed, and COOKIE_ENCRYPTION_KEY plus the intended storage endpoints at runtime. PANELS_URL is an optional runtime origin override. Docker/Turbo build plumbing must be added before externally provided build settings can take effect.
 
-No Panels reads were found for REVALIDATION_SECRET, DATABASE_URL, JWT_SECRET, RESEND_API_KEY, GTM_ID, NEXT_PUBLIC_GTM_ID, NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_SESSION_COOKIE_NAME, payment-service URL variables or payment-provider secret keys. Root configuration and installed dependencies alone do not make these Panels requirements. Cookie names come from shared constants.
+No Panels reads were found for REVALIDATION_SECRET, DATABASE_URL, JWT_SECRET, NETCORE_API_KEY, GTM_ID, NEXT_PUBLIC_GTM_ID, NEXT_PUBLIC_APP_URL, NEXT_PUBLIC_SESSION_COOKIE_NAME, payment-service URL variables or payment-provider secret keys. Root configuration and installed dependencies alone do not make these Panels requirements. Cookie names come from shared constants.
 
 Validation: complete file-content scan for direct/indirect environment access, inspection of actual consumers and relevant shared code, and inventory-to-report coverage check. No application/deployment configuration was changed; no production build or backend calls were performed.
 

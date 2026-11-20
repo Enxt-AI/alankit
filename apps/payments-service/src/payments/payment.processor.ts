@@ -17,7 +17,7 @@ export class PaymentWebhookProcessor {
     await this.paymentService.reconcileOrder(job.data.orderId);
   }
 
-  @Process({ name: 'cashfree-event', concurrency: 4 })
+  @Process({ name: 'ndps-event', concurrency: 4 })
   async handleWebhook(job: Job) {
     const eventType = job.data?.type || 'UNKNOWN';
     this.logger.log({ jobId: job.id, eventType }, `Processing webhook job ${job.id} of type: ${eventType}`);

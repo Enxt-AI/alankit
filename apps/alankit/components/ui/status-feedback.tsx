@@ -97,7 +97,7 @@ export function StatusFeedbackProvider({ children }: { children: ReactNode }) {
                     ? "bg-amber-50 text-amber-600"
                     : activePopup.code === "404"
                       ? "bg-rose-50 text-rose-600"
-                      : "bg-indigo-50 text-[#4F46E5]"
+                      : "bg-blue-50 text-[#2563EB]"
                 }`}
               >
                 {activePopup.code === "503" ? (
@@ -150,14 +150,14 @@ export function StatusFeedbackProvider({ children }: { children: ReactNode }) {
                 <Link
                   href={activePopup.actionHref}
                   onClick={closePopup}
-                  className="inline-flex h-9 items-center justify-center rounded-lg bg-[#4F46E5] px-4 text-xs font-medium text-white transition-colors hover:bg-[#4338CA]"
+                  className="inline-flex h-9 items-center justify-center rounded-lg bg-[#2563EB] px-4 text-xs font-medium text-white transition-colors hover:bg-[#1D4ED8]"
                 >
                   {activePopup.actionLabel || "Continue"}
                 </Link>
               ) : (
                 <Button
                   onClick={closePopup}
-                  className="h-9 rounded-lg bg-[#4F46E5] px-4 text-xs font-medium text-white hover:bg-[#4338CA] cursor-pointer"
+                  className="h-9 rounded-lg bg-[#2563EB] px-4 text-xs font-medium text-white hover:bg-[#1D4ED8] cursor-pointer"
                 >
                   {activePopup.actionLabel || "Got it"}
                 </Button>
@@ -242,7 +242,7 @@ export function StatusPageView({
 
       <div className="relative z-10 mx-auto max-w-lg">
         {/* Icon Badge */}
-        <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-indigo-50 text-[#4F46E5] shadow-2xs ring-1 ring-indigo-100">
+        <div className="mx-auto flex size-16 items-center justify-center rounded-2xl bg-blue-50 text-[#2563EB] shadow-2xs ring-1 ring-blue-100">
           {code === "404" && <Compass className="size-8" />}
           {code === "503" && <Wrench className="size-8" />}
           {code === "500" && <ServerCrash className="size-8" />}
@@ -281,7 +281,7 @@ export function StatusPageView({
 
           <Link
             href="/"
-            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-[#4F46E5] px-5 text-xs sm:text-sm font-medium text-white transition-colors hover:bg-[#4338CA]"
+            className="inline-flex h-10 items-center justify-center gap-1.5 rounded-lg bg-[#2563EB] px-5 text-xs sm:text-sm font-medium text-white transition-colors hover:bg-[#1D4ED8]"
           >
             <ArrowLeft className="size-3.5" />
             Back to Home
@@ -311,7 +311,7 @@ export function StatusPageView({
               <Link
                 key={item.ticker}
                 href={item.href}
-                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200/80 bg-zinc-50/70 px-3 py-1.5 text-xs text-zinc-700 transition-colors hover:border-indigo-200 hover:bg-indigo-50/50 hover:text-[#4F46E5]"
+                className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200/80 bg-zinc-50/70 px-3 py-1.5 text-xs text-zinc-700 transition-colors hover:border-blue-200 hover:bg-blue-50/50 hover:text-[#2563EB]"
               >
                 <span className="font-semibold">{item.ticker}</span>
                 <span className="text-zinc-400">•</span>

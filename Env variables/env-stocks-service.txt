@@ -50,5 +50,5 @@ PAYMENT_SERVICE_INTERNAL_TOKEN      Yes         <shared-random-token>           
 # - PAYMENT_SERVICE_INTERNAL_TOKEN
 # - MINIO_ENDPOINT, MINIO_ACCESS_KEY, MINIO_SECRET_KEY, STORAGE_SERVICE_URL
 # - REVALIDATION_SECRET
-# - RESEND_API_KEY, RESEND_FROM_EMAIL
+# - NETCORE_API_KEY, NETCORE_ENDPOINT, EMAIL_FROM
 # ------------------------------------------------------------------------------

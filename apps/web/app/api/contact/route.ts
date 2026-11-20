@@ -1,9 +1,25 @@
 import { NextResponse } from "next/server";
 import { contactFormSchema } from "@/app/(main)/contact-us/contact-schema";
 
-const SMART_PING_ENDPOINT =
-  process.env.SMARTPING_ENDPOINT ||
-  "https://1eqrmn.apiemail.smartping.io/email/4/messages";
+const NETCORE_ENDPOINT =
+  process.env.NETCORE_ENDPOINT ||
+  "https://emailapi.netcorecloud.net/v5/mail/send";
+
+/** Converts "Name <email@domain.com>" (or a bare address) into Netcore's address object. */
+function parseAddress(value: string): { email: string; name?: string } {
+  const raw = value.trim();
+  const match = raw.match(/^(?:"([^"]*)"|([^<>]*?))?\s*<([^<>]+)>$/);
+
+  if (match) {
+    const email = match[3]?.trim();
+    if (!email) return { email: raw };
+
+    const name = (match[1] ?? match[2] ?? "").trim();
+    return name ? { email, name } : { email };
+  }
+
+  return { email: raw };
+}
 
 export async function POST(req: Request) {
   try {
@@ -20,9 +36,9 @@ export async function POST(req: Request) {
 
     const { name, phone, email, subject, source, message } = result.data;
 
-    const apiKey = process.env.SMARTPING_API_KEY;
+    const apiKey = process.env.NETCORE_API_KEY;
     if (!apiKey) {
-      console.warn("[Contact Form] SMARTPING_API_KEY is not set. Simulating delivery.");
+      console.warn("[Contact Form] NETCORE_API_KEY is not set. Simulating delivery.");
       console.log("[Contact Form Received]", {
         name,
         email,
@@ -41,8 +57,7 @@ export async function POST(req: Request) {
 
     const supportEmail = process.env.CONTACT_SUPPORT_EMAIL || "support@unlistedstox.com";
     const fromEmail =
-      process.env.RESEND_FROM_EMAIL ||
-      "Unlistedstox <no-reply@unlistedstox.com>";
+      process.env.EMAIL_FROM || "Unlistedstox <no-reply@unlistedstox.com>";
 
     const htmlBody = `
         <h2>New Contact Request</h2>
@@ -55,33 +70,23 @@ export async function POST(req: Request) {
         <p>${message.replace(/\n/g, "<br/>")}</p>
       `;
 
-    const response = await fetch(SMART_PING_ENDPOINT, {
+    const response = await fetch(NETCORE_ENDPOINT, {
       method: "POST",
       headers: {
-        "Content-Type": "application/json",
-        Authorization: `App ${apiKey}`,
+        api_key: apiKey,
+        "content-type": "application/json",
       },
       body: JSON.stringify({
-        messages: [
-          {
-            sender: fromEmail,
-            destinations: [
-              {
-                to: [{ destination: supportEmail }],
-              },
-            ],
-            content: {
-              subject: `New Contact Form Submission: ${subject}`,
-              html: htmlBody,
-            },
-          },
-        ],
+        from: parseAddress(fromEmail),
+        subject: `New Contact Form Submission: ${subject}`,
+        content: [{ type: "html", value: htmlBody }],
+        personalizations: [{ to: [{ email: supportEmail }] }],
       }),
     });
 
-    if (response.status !== 200) {
+    if (!response.ok) {
       const data = await response.json().catch(() => null);
-      console.error(`[Contact Form] SmartPing API error ${response.status}:`, data);
+      console.error(`[Contact Form] Netcore API error ${response.status}:`, data);
       return NextResponse.json(
         { message: "Failed to send message" },
         { status: 500 }

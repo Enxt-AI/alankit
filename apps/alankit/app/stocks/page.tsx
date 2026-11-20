@@ -724,7 +724,7 @@ export default function StocksPage() {
                   title="Details List View"
                   className={`flex size-8 items-center justify-center rounded-lg border transition-all cursor-pointer ${
                     viewMode === "details"
-                      ? "border-[#4F46E5] bg-[#4F46E5] text-white shadow-2xs"
+                      ? "border-[#2563EB] bg-[#2563EB] text-white shadow-2xs"
                       : "border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900"
                   }`}
                 >
@@ -774,7 +774,7 @@ export default function StocksPage() {
                   title="Card Grid View"
                   className={`flex size-8 items-center justify-center rounded-lg border transition-all cursor-pointer ${
                     viewMode === "card"
-                      ? "border-[#4F46E5] bg-[#4F46E5] text-white shadow-2xs"
+                      ? "border-[#2563EB] bg-[#2563EB] text-white shadow-2xs"
                       : "border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900"
                   }`}
                 >
@@ -803,7 +803,7 @@ export default function StocksPage() {
                   title="Column View"
                   className={`flex size-8 items-center justify-center rounded-lg border transition-all cursor-pointer ${
                     viewMode === "col"
-                      ? "border-[#4F46E5] bg-[#4F46E5] text-white shadow-2xs"
+                      ? "border-[#2563EB] bg-[#2563EB] text-white shadow-2xs"
                       : "border-zinc-200 bg-white text-zinc-500 hover:border-zinc-300 hover:bg-zinc-50 hover:text-zinc-900"
                   }`}
                 >
@@ -821,14 +821,14 @@ export default function StocksPage() {
                 {/* Sidebar Header */}
                 <div className="flex items-center justify-between border-b border-zinc-100 pb-3.5">
                   <div className="flex items-center gap-2 text-sm font-medium text-zinc-900">
-                    <SlidersHorizontal className="size-4 text-[#4F46E5]" />
+                    <SlidersHorizontal className="size-4 text-[#2563EB]" />
                     <span>Filters</span>
                   </div>
                   {hasActiveFilters && (
                     <button
                       type="button"
                       onClick={resetFilters}
-                      className="text-xs font-medium text-[#4F46E5] hover:text-[#4338CA] cursor-pointer"
+                      className="text-xs font-medium text-[#2563EB] hover:text-[#1D4ED8] cursor-pointer"
                     >
                       Reset all
                     </button>
@@ -847,7 +847,7 @@ export default function StocksPage() {
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       placeholder="Symbol or company..."
-                      className="h-9 w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-7 text-xs text-zinc-900 placeholder:text-zinc-400 focus:border-[#4F46E5] focus:outline-none transition-colors"
+                      className="h-9 w-full rounded-lg border border-zinc-200 bg-white pl-9 pr-7 text-xs text-zinc-900 placeholder:text-zinc-400 focus:border-[#2563EB] focus:outline-none transition-colors"
                     />
                     {searchQuery && (
                       <button
@@ -868,7 +868,7 @@ export default function StocksPage() {
                     <span className="font-medium text-zinc-700">
                       Price Range
                     </span>
-                    <span className="font-semibold text-[#4F46E5] tabular-nums">
+                    <span className="font-semibold text-[#2563EB] tabular-nums">
                       Up to ₹{maxPrice.toLocaleString("en-IN")}
                     </span>
                   </div>
@@ -881,7 +881,7 @@ export default function StocksPage() {
                     value={maxPrice}
                     onChange={(e) => setMaxPrice(Number(e.target.value))}
                     aria-label="Maximum stock price filter"
-                    className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-zinc-200 accent-[#4F46E5]"
+                    className="h-1.5 w-full cursor-pointer appearance-none rounded-lg bg-zinc-200 accent-[#2563EB]"
                   />
 
                   <div className="mt-1.5 flex items-center justify-between text-[11px] text-zinc-400">
@@ -904,7 +904,7 @@ export default function StocksPage() {
                         onClick={() => setMaxPrice(preset.value)}
                         className={`rounded-md px-2 py-1 text-[11px] font-medium transition-colors cursor-pointer ${
                           maxPrice === preset.value
-                            ? "bg-indigo-50 text-[#4F46E5] ring-1 ring-[#4F46E5]/30"
+                            ? "bg-blue-50 text-[#2563EB] ring-1 ring-[#2563EB]/30"
                             : "bg-zinc-100/80 text-zinc-600 hover:bg-zinc-200/70"
                         }`}
                       >
@@ -931,7 +931,7 @@ export default function StocksPage() {
                         onClick={() => setTrendFilter(item.id as TrendFilter)}
                         className={`rounded-lg py-1.5 text-xs font-medium transition-colors cursor-pointer ${
                           trendFilter === item.id
-                            ? "bg-[#4F46E5] text-white"
+                            ? "bg-[#2563EB] text-white"
                             : "border border-zinc-200/80 bg-white text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
                         }`}
                       >
@@ -956,13 +956,13 @@ export default function StocksPage() {
                           onClick={() => setSelectedSector(sector)}
                           className={`flex w-full items-center justify-between rounded-lg px-2.5 py-2 text-left text-xs transition-colors cursor-pointer ${
                             active
-                              ? "bg-indigo-50/80 font-medium text-[#4F46E5]"
+                              ? "bg-blue-50/80 font-medium text-[#2563EB]"
                               : "text-zinc-600 hover:bg-zinc-50 hover:text-zinc-900"
                           }`}
                         >
                           <span>{sector}</span>
                           {active && (
-                            <span className="size-1.5 rounded-full bg-[#4F46E5]" />
+                            <span className="size-1.5 rounded-full bg-[#2563EB]" />
                           )}
                         </button>
                       );
@@ -986,7 +986,7 @@ export default function StocksPage() {
                   <button
                     type="button"
                     onClick={resetFilters}
-                    className="mt-5 inline-flex h-10 items-center justify-center rounded-lg bg-[#4F46E5] px-5 text-xs sm:text-sm font-medium text-white hover:bg-[#4338CA] cursor-pointer"
+                    className="mt-5 inline-flex h-10 items-center justify-center rounded-lg bg-[#2563EB] px-5 text-xs sm:text-sm font-medium text-white hover:bg-[#1D4ED8] cursor-pointer"
                   >
                     Reset Filters
                   </button>
@@ -1000,7 +1000,7 @@ export default function StocksPage() {
                         <Link
                           key={stock.id}
                           href={`/stocks/${stock.id}`}
-                          className="flex h-full flex-col justify-between rounded-xl border border-zinc-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md"
+                          className="flex h-full flex-col justify-between rounded-xl border border-zinc-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
                         >
                           {/* Top: Logo + Ticker & Company Name */}
                           <div className="flex items-center gap-3.5">
@@ -1123,10 +1123,10 @@ export default function StocksPage() {
                                     <div className="scale-75 origin-left -mr-2">
                                       {row.logo}
                                     </div>
-                                    <span className="inline-flex items-center rounded bg-zinc-100 px-1.5 py-0.5 text-[11px] font-medium text-zinc-600 group-hover:bg-indigo-50 group-hover:text-[#4F46E5] transition-colors">
+                                    <span className="inline-flex items-center rounded bg-zinc-100 px-1.5 py-0.5 text-[11px] font-medium text-zinc-600 group-hover:bg-blue-50 group-hover:text-[#2563EB] transition-colors">
                                       {row.ticker}
                                     </span>
-                                    <span className="max-w-[180px] truncate text-xs sm:text-[13px] font-normal text-zinc-900 uppercase group-hover:text-[#4F46E5] transition-colors">
+                                    <span className="max-w-[180px] truncate text-xs sm:text-[13px] font-normal text-zinc-900 uppercase group-hover:text-[#2563EB] transition-colors">
                                       {row.name}
                                     </span>
                                   </Link>

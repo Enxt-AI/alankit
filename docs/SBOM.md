@@ -65,7 +65,7 @@ smc-unlisted-stox/
 │   ├── cookie-crypto         (AES-256-GCM utility)
 │   ├── db-ticketing          (Prisma – ticketing DB)
 │   ├── db-unlistedstock      (Prisma – main DB)
-│   ├── email-service         (Resend – NestJS injectable)
+│   ├── email-service         (Netcore Cloud REST – NestJS injectable)
 │   ├── eslint-config         (Shared ESLint presets)
 │   ├── redis-service         (ioredis wrapper)
 │   ├── shared-types          (Cross-service TS types)
@@ -489,7 +489,6 @@ These are first-party packages linked via `workspace:*` or `workspace:^`.
 | `react-hook-form` | `^7.66.0` | MIT |
 | `react-icons` | `^5.5.0` | MIT |
 | `recharts` | `^3.4.1` | MIT |
-| `resend` | `^4.1.2` | MIT |
 | `tailwind-merge` | `^3.4.0` | MIT |
 | `tailwindcss-animate` | `^1.0.7` | MIT |
 | `use-debounce` | `^10.0.6` | MIT |
@@ -680,7 +679,6 @@ These are first-party packages linked via `workspace:*` or `workspace:^`.
 
 | Dependency | Version | Type | License |
 |------------|---------|------|---------|
-| `resend` | `^4.1.2` | prod | MIT |
 | `@nestjs/common` | `11.1.8` | prod | MIT |
 | `reflect-metadata` | `0.2.2` | prod | Artistic-2.0 |
 | `rxjs` | `^7.8.1` | prod | Apache-2.0 |
@@ -859,7 +857,7 @@ A deduplicated list of all unique third-party packages used anywhere in the mono
 | 92 | `react-icons` | UI / Icons | MIT |
 | 93 | `recharts` | UI / Charts | MIT |
 | 94 | `reflect-metadata` | Runtime / Metadata | Artistic-2.0 |
-| 95 | `resend` | Email / API | MIT |
+| 95 | Netcore Cloud (REST API) | Email / API | - |
 | 96 | `rxjs` | Utility / Reactive | Apache-2.0 |
 | 97 | `sonner` | UI / Toast | MIT |
 | 98 | `source-map-support` | Debug / Source Maps | MIT |
@@ -991,7 +989,7 @@ A deduplicated list of all unique third-party packages used anywhere in the mono
 |---------|---------|---------|
 | **Cashfree** | `cashfree-pg`, `@cashfreepayments/cashfree-js` | Payment gateway |
 | **Twilio** | `twilio` | OTP via SMS |
-| **Resend** | `resend` | Transactional email |
+| **Netcore Cloud** | REST API (`fetch`) | Transactional email |
 | **Google OAuth** | `@react-oauth/google` | Social login |
 | **AWS S3 / MinIO** | `@aws-sdk/client-s3` | File storage |
 

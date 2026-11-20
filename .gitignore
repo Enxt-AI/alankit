@@ -73,3 +73,5 @@ logo.webp
 .playwright-mcp
 unlisted_backup.dump
 .dump
+
+/tmp

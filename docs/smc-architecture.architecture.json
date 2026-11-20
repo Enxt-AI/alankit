@@ -205,7 +205,7 @@
       "id": "external",
       "type": "external",
       "label": "External Providers",
-      "sublabel": "Cashfree + Resend + Google",
+      "sublabel": "Cashfree + Netcore Cloud + Google",
       "pos": [
         820,
         400
@@ -353,7 +353,7 @@
       "title": "Data and trust",
       "items": [
         "Postgres, Redis 7, MinIO S3 object store",
-        "Cashfree PG webhooks, Resend email, Google OAuth"
+        "Cashfree PG webhooks, Netcore Cloud email, Google OAuth"
       ]
     }
   ]

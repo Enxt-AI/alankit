@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import logo from "@/public/logo.png";
 import { useAuthSession } from "@/lib/auth";
 import { usePathname } from "next/navigation";
 import { Bell, ChevronDown, Menu, User, X } from "lucide-react";
@@ -30,55 +32,7 @@ export function Header() {
       <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-10">
         {/* Brand Logo */}
         <Link href="/" className="flex items-center gap-2.5 shrink-0">
-          <svg
-            width="30"
-            height="30"
-            viewBox="0 0 400 400"
-            fill="none"
-            xmlns="http://www.w3.org/2000/svg"
-            aria-hidden="true"
-          >
-            <g
-              stroke="#4F46E5"
-              strokeWidth="36"
-              strokeLinecap="round"
-              strokeLinejoin="round"
-            >
-              <rect
-                x="72"
-                y="72"
-                width="128"
-                height="128"
-                rx="48"
-                transform="rotate(-45 136 136)"
-              />
-              <rect
-                x="200"
-                y="72"
-                width="128"
-                height="128"
-                rx="48"
-                transform="rotate(45 264 136)"
-              />
-              <rect
-                x="72"
-                y="200"
-                width="128"
-                height="128"
-                rx="48"
-                transform="rotate(45 136 264)"
-              />
-              <rect
-                x="200"
-                y="200"
-                width="128"
-                height="128"
-                rx="48"
-                transform="rotate(-45 264 264)"
-              />
-            </g>
-          </svg>
-          <span className="text-[22px] font-medium tracking-tight text-zinc-900"></span>
+          <Image src={logo} alt="UnlistedStocx" className="h-auto w-40 sm:w-48" preload />
         </Link>
 
         {/* Center Navigation Links (Desktop) */}
@@ -120,12 +74,12 @@ export function Header() {
             href="/profile"
             className="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3.5 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 hover:text-zinc-900"
           >
-            <User className="size-4 text-[#4F46E5]" />
+            <User className="size-4 text-[#2563EB]" />
             <span>Profile</span>
           </Link>
           </>}
 
-          {!isAuthenticated && <Link href="/login" className="inline-flex h-10 items-center justify-center rounded-lg bg-[#4F46E5] px-5 text-sm font-medium text-white transition-colors hover:bg-[#4338CA]">
+          {!isAuthenticated && <Link href="/login" className="inline-flex h-10 items-center justify-center rounded-lg bg-[#2563EB] px-5 text-sm font-medium text-white transition-colors hover:bg-[#1D4ED8]">
             Sign In
           </Link>}
         </div>
@@ -188,11 +142,11 @@ export function Header() {
               onClick={() => setMobileMenuOpen(false)}
               className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white text-sm font-medium text-zinc-800"
             >
-              <User className="size-4 text-[#4F46E5]" />
+              <User className="size-4 text-[#2563EB]" />
               <span>Profile</span>
             </Link>
             </>}
-            {!isAuthenticated && <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-[#4F46E5] text-sm font-medium text-white transition-colors hover:bg-[#4338CA]">
+            {!isAuthenticated && <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-[#2563EB] text-sm font-medium text-white transition-colors hover:bg-[#1D4ED8]">
               Sign In
             </Link>}
           </div>

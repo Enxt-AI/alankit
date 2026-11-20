@@ -174,7 +174,7 @@ export default function ProfilePage() {
             {/* Top Brand Row */}
             <div className="flex items-center justify-between px-1 py-1">
               <Link href="/" className="flex items-center gap-2.5">
-                <div className="flex size-7 items-center justify-center rounded-full border-2 border-zinc-200 text-[#4F46E5]">
+                <div className="flex size-7 items-center justify-center rounded-full border-2 border-zinc-200 text-[#2563EB]">
                   <svg
                     width="16"
                     height="16"

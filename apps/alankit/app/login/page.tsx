@@ -2,16 +2,15 @@
 
 import { useEffect, useRef, useState, type ClipboardEvent, type FormEvent, type KeyboardEvent } from "react";
 import Link from "next/link";
+import Image from "next/image";
+import logo from "@/public/logo.png";
 import {
   ArrowLeft,
   ArrowRight,
   Check,
-  Home,
   LockKeyhole,
   Mail,
   ShieldCheck,
-  User,
-  Zap,
 } from "lucide-react";
 
 import { authRequest, refreshSession } from "@/lib/auth";
@@ -138,7 +137,7 @@ export default function LoginPage() {
   const isOtpStep = step === "phone-otp" || step === "email-otp";
   const isNewAccount = step === "email" || step === "email-otp" || step === "name";
   const stepTitle =
-    step === "phone" ? "Welcome" :
+    step === "phone" ? "Welcome to Alankit" :
     step === "phone-otp" ? "Verify Phone" :
     step === "email" ? "Enter Email" :
     step === "email-otp" ? "Verify Email" :
@@ -146,7 +145,7 @@ export default function LoginPage() {
     "You're signed in";
 
   const stepDescription =
-    step === "phone" ? "Enter your phone number to get started" :
+    step === "phone" ? "Sign in or create an account with your mobile number." :
     step === "phone-otp" ? `We've sent a 6-digit code to +91 ${phone}` :
     step === "email" ? "Link your email to complete sign-up" :
     step === "email-otp" ? `We've sent a 6-digit code to ${email}` :
@@ -154,74 +153,21 @@ export default function LoginPage() {
     "Your account is ready.";
 
   return (
-    <div className="flex min-h-screen bg-white font-sans">
-      <aside className="relative hidden overflow-hidden border-r border-slate-100 bg-[#fafafa] p-6 lg:flex lg:w-[45%] lg:flex-col xl:w-[40%] xl:p-8 2xl:p-10">
-        <div className="mx-auto flex h-full w-full max-w-lg flex-col justify-between">
-          <Link href="/" className="flex w-fit items-center gap-3">
-            <span className="flex size-10 items-center justify-center rounded-xl bg-[#4F46E5] text-sm font-medium text-white">A</span>
-            <span className="text-lg font-semibold text-zinc-900">Alankit</span>
+    <div className="flex min-h-svh flex-col bg-white font-sans text-zinc-900">
+      <header className="border-b border-zinc-100">
+        <div className="mx-auto flex h-20 max-w-7xl items-center justify-between px-6 lg:px-10">
+          <Link href="/" aria-label="UnlistedStocx home" className="flex items-center gap-2.5">
+            <Image src={logo} alt="UnlistedStocx" className="h-auto w-40 sm:w-48" preload />
           </Link>
-
-          <div className="my-auto py-4">
-            <h1 className="text-[30px] font-medium leading-[1.16] tracking-tight text-zinc-900 xl:text-[34px]">
-              Invest in <br />
-              <span className="text-[#4F46E5]">Pre-IPO &amp; Unlisted</span><br />
-              Shares
-            </h1>
-            <p className="mb-6 mt-3 max-w-sm text-[13px] leading-relaxed text-zinc-500 xl:text-[14px]">
-              Join investors accessing carefully selected pre-IPO and unlisted investment opportunities.
-            </p>
-
-            <div className="relative flex h-44 items-center justify-center overflow-hidden rounded-2xl border border-zinc-200 bg-white">
-              <div className="absolute size-40 rounded-full border-[24px] border-[#4F46E5]/10" />
-              <div className="relative flex items-center gap-3">
-                <div className="flex size-16 items-center justify-center rounded-2xl bg-white shadow-none">
-                  <Zap className="size-8 text-[#4F46E5]" />
-                </div>
-                <div>
-                  <p className="text-xs font-semibold uppercase tracking-[0.18em] text-[#4338CA]">Alankit</p>
-                  <p className="mt-1 text-sm font-medium text-zinc-900">Investment access</p>
-                </div>
-              </div>
-            </div>
-
-            <div className="mt-5 space-y-2.5">
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-100/60 bg-white shadow-none">
-                  <ShieldCheck className="size-5 text-[#4F46E5]" />
-                </div>
-                <div>
-                  <h3 className="text-[13px] font-medium leading-snug text-zinc-900">Institutional Grade Security</h3>
-                  <p className="text-xs leading-normal text-zinc-500">Your investments and data are protected.</p>
-                </div>
-              </div>
-              <div className="flex items-center gap-3">
-                <div className="flex size-10 shrink-0 items-center justify-center rounded-xl border border-slate-100/60 bg-white shadow-none">
-                  <Zap className="size-5 text-[#4F46E5]" />
-                </div>
-                <div>
-                  <h3 className="text-[13px] font-medium leading-snug text-zinc-900">Lightning Fast Execution</h3>
-                  <p className="text-xs leading-normal text-zinc-500">Experience seamless transaction processing.</p>
-                </div>
-              </div>
-            </div>
-          </div>
-          <div />
+          <Link href="/" className="inline-flex items-center gap-2 text-sm text-zinc-500 transition-colors hover:text-zinc-900">
+            <ArrowLeft className="size-4" />Back to home
+          </Link>
         </div>
-      </aside>
+      </header>
 
-      <main className="relative flex min-h-screen flex-1 flex-col justify-between bg-white p-4 sm:p-6 lg:p-8">
-        <Link href="/" className="absolute right-6 top-6 hidden items-center gap-2 text-sm font-semibold text-[#4F46E5] transition-colors hover:text-[#4338CA] md:flex">
-          <Home className="size-4" />Back to Home
-        </Link>
-
-        <div className="mx-auto flex flex-1 w-full max-w-[400px] flex-col justify-between py-2">
-          <div className="my-auto w-full">
-            <Link href="/" className="mb-5 flex items-center justify-center gap-2 lg:hidden">
-              <span className="flex size-8 items-center justify-center rounded-lg bg-[#4F46E5] text-xs font-medium text-white">A</span>
-              <span className="font-semibold text-zinc-900">Alankit</span>
-            </Link>
-
+      <main className="flex flex-1 items-center justify-center px-6 py-14 sm:py-20">
+        <div className="w-full max-w-[380px]">
+          <div className="w-full">
             {step !== "phone" && step !== "complete" && (
               <button type="button" onClick={goBack} className="mb-5 inline-flex items-center gap-1.5 text-sm text-zinc-500 transition-colors hover:text-slate-700">
                 <ArrowLeft className="size-4" />Back
@@ -236,8 +182,8 @@ export default function LoginPage() {
                   const active = index === current;
                   return (
                     <div key={label} className={`flex-1`}>
-                      <div className={`h-1.5 rounded-full ${active ? "bg-[#4F46E5]" : complete ? "bg-indigo-200" : "bg-slate-100"}`} />
-                      <p className={`mt-2 text-xs font-medium ${active ? "text-[#4338CA]" : complete ? "text-[#4F46E5]" : "text-zinc-500"}`}>{label}</p>
+                      <div className={`h-1.5 rounded-full ${active ? "bg-[#2563EB]" : complete ? "bg-blue-200" : "bg-slate-100"}`} />
+                      <p className={`mt-2 text-xs font-medium ${active ? "text-[#1D4ED8]" : complete ? "text-[#2563EB]" : "text-zinc-500"}`}>{label}</p>
                     </div>
                   );
                 })}
@@ -246,26 +192,24 @@ export default function LoginPage() {
 
             {step === "complete" ? (
               <div className="text-center sm:text-left">
-                <span className="mx-auto flex size-12 items-center justify-center rounded-[16px] border border-indigo-100 bg-indigo-50 text-[#4F46E5] sm:mx-0">
+                <span className="mx-auto flex size-12 items-center justify-center rounded-[16px] border border-blue-100 bg-blue-50 text-[#2563EB] sm:mx-0">
                   <Check className="size-6" />
                 </span>
-                <p className="mt-5 text-sm font-semibold text-[#4F46E5]">You&apos;re signed in</p>
-                <h1 className="mt-2 text-[24px] font-medium tracking-tight text-zinc-900 sm:text-[28px]">Welcome{name ? `, ${name}` : " back"}</h1>
+                <p className="mt-5 text-sm font-semibold text-[#2563EB]">You&apos;re signed in</p>
+                <h1 className="mt-2 text-[28px] font-normal tracking-tight text-zinc-900 sm:text-[32px]">Welcome{name ? `, ${name}` : " back"}</h1>
                 <p className="mt-2 text-[13px] leading-relaxed text-zinc-500 sm:text-[14px]">Your account is ready. Continue to your portfolio and orders.</p>
-                <Link href="/dashboard" className="mt-8 inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#4338CA]">
+                <Link href="/dashboard" className="mt-8 inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#2563EB] text-base font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#1D4ED8]">
                   Continue to dashboard <ArrowRight className="size-[18px]" />
                 </Link>
               </div>
             ) : (
               <>
                 {step !== "phone-otp" && step !== "email-otp" && (
-                  <div className="mb-4 space-y-2 text-center sm:text-left">
+                  <div className="mb-8 space-y-3 text-left">
                     {step === "phone" && (
-                      <span className="mx-auto mb-3 flex size-12 items-center justify-center rounded-[16px] border border-zinc-200 bg-indigo-50/50 sm:mx-0">
-                        <User className="size-5 text-[#4F46E5]" strokeWidth={2.5} />
-                      </span>
+                      <p className="mb-4 text-xs font-medium uppercase tracking-[0.16em] text-[#2563EB]">Your investment journey</p>
                     )}
-                    <h1 className="text-[24px] font-medium tracking-tight text-zinc-900 sm:text-[28px]">{stepTitle}</h1>
+                    <h1 className="text-[28px] font-normal tracking-tight text-zinc-900 sm:text-[32px]">{stepTitle}</h1>
                     <p className="text-[13px] leading-relaxed text-zinc-500 sm:text-[14px]">{stepDescription}</p>
                   </div>
                 )}
@@ -291,11 +235,11 @@ export default function LoginPage() {
                             setNotice("");
                           }}
                           placeholder="98765 43210"
-                          className="h-14 w-full rounded-xl border border-zinc-200 bg-white pl-24 pr-4 text-[17px] text-slate-800 shadow-sm outline-none transition-all placeholder:text-slate-300 focus:border-[#4F46E5] focus:ring-4 focus:ring-[#4F46E5]/10"
+                          className="h-12 w-full rounded-lg border border-zinc-200 bg-white pl-24 pr-4 text-base text-slate-800 shadow-none outline-none transition-all placeholder:text-slate-300 focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10"
                         />
                       </div>
                     </div>
-                    <button aria-busy={busy} disabled={busy} type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#4338CA]">
+                    <button aria-busy={busy} disabled={busy} type="submit" className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#2563EB] text-base font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#1D4ED8]">
                       {busy ? "Sending code..." : "Continue"} <ArrowRight className="size-[18px]" />
                     </button>
                   </form>
@@ -304,19 +248,19 @@ export default function LoginPage() {
                 {isOtpStep && (
                   <form onSubmit={step === "phone-otp" ? verifyPhone : verifyEmail} className="space-y-5">
                     <div className="space-y-1 text-center">
-                      <span className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-indigo-50">
-                        <ShieldCheck className="size-5 text-[#4F46E5]" />
+                      <span className="mx-auto mb-2 flex size-10 items-center justify-center rounded-full bg-blue-50">
+                        <ShieldCheck className="size-5 text-[#2563EB]" />
                       </span>
                       <h1 className="text-xl font-medium text-slate-900">{step === "phone-otp" ? "Enter OTP" : "Verify Email"}</h1>
                       <p className="flex flex-wrap items-center justify-center gap-1 text-sm text-zinc-500">
                         <span>We&apos;ve sent a 6-digit code to</span>
                         <span className="font-semibold text-slate-800">{step === "phone-otp" ? `+91 ${phone}` : email}</span>
-                        {step === "phone-otp" && <button type="button" onClick={() => setStep("phone")} className="ml-1 text-xs font-semibold text-[#4F46E5] hover:underline">(Edit)</button>}
-                        {step === "email-otp" && <button type="button" onClick={() => setStep("email")} className="ml-1 text-xs font-semibold text-[#4F46E5] hover:underline">(Edit)</button>}
+                        {step === "phone-otp" && <button type="button" onClick={() => setStep("phone")} className="ml-1 text-xs font-semibold text-[#2563EB] hover:underline">(Edit)</button>}
+                        {step === "email-otp" && <button type="button" onClick={() => setStep("email")} className="ml-1 text-xs font-semibold text-[#2563EB] hover:underline">(Edit)</button>}
                       </p>
                     </div>
 
-                    <div className="flex justify-center gap-2" onPaste={handleOtpPaste}>
+                    <div className="grid grid-cols-6 gap-2" onPaste={handleOtpPaste}>
                       {otp.map((digit, index) => (
                         <input
                           key={index}
@@ -329,14 +273,14 @@ export default function LoginPage() {
                           onChange={(event) => updateOtp(index, event.target.value)}
                           onKeyDown={(event) => handleOtpKeyDown(index, event)}
                           aria-label={`OTP digit ${index + 1}`}
-                          className="h-12 w-11 rounded-xl border border-slate-200 text-center text-lg font-medium text-slate-900 outline-none transition-all focus:border-[#4F46E5] focus:ring-4 focus:ring-[#4F46E5]/10 sm:w-12"
+                          className="h-12 min-w-0 w-full rounded-lg border border-slate-200 text-center text-lg font-medium text-slate-900 outline-none transition-all focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10"
                         />
                       ))}
                     </div>
-                    <button aria-busy={busy} disabled={busy} type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#4338CA]">
+                    <button aria-busy={busy} disabled={busy} type="submit" className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#2563EB] text-base font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#1D4ED8]">
                       {busy ? "Verifying..." : "Verify code"} <ArrowRight className="size-[18px]" />
                     </button>
-                    <button type="button" disabled={busy || cooldown > 0} onClick={resendOtp} className="w-full text-sm text-[#4F46E5] disabled:text-zinc-400">
+                    <button type="button" disabled={busy || cooldown > 0} onClick={resendOtp} className="w-full text-sm text-[#2563EB] disabled:text-zinc-400">
                       {cooldown > 0 ? `Resend code in ${cooldown}s` : "Resend code"}
                     </button>
                   </form>
@@ -348,10 +292,10 @@ export default function LoginPage() {
                       <label htmlFor="email" className="ml-1 text-sm font-semibold text-slate-700">Email Address</label>
                       <div className="relative">
                         <Mail className="pointer-events-none absolute left-3.5 top-1/2 size-4 -translate-y-1/2 text-zinc-500" />
-                        <input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={(event) => { setEmail(event.target.value); setNotice(""); }} placeholder="you@example.com" className="h-14 w-full rounded-xl border border-slate-200 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:border-[#4F46E5] focus:ring-4 focus:ring-[#4F46E5]/10" />
+                        <input id="email" name="email" type="email" autoComplete="email" required value={email} onChange={(event) => { setEmail(event.target.value); setNotice(""); }} placeholder="you@example.com" className="h-12 w-full rounded-lg border border-slate-200 pl-10 pr-4 text-sm text-slate-900 outline-none transition-all focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10" />
                       </div>
                     </div>
-                    <button aria-busy={busy} disabled={busy} type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#4338CA]">
+                    <button aria-busy={busy} disabled={busy} type="submit" className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#2563EB] text-base font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#1D4ED8]">
                       {busy ? "Sending code..." : "Continue"} <ArrowRight className="size-[18px]" />
                     </button>
                   </form>
@@ -361,9 +305,9 @@ export default function LoginPage() {
                   <form onSubmit={completeRegistration} className="space-y-5">
                     <div className="space-y-2">
                       <label htmlFor="name" className="ml-1 text-sm font-semibold text-slate-700">Your Name</label>
-                      <input id="name" name="name" type="text" autoComplete="name" required value={name} onChange={(event) => { setName(event.target.value); setNotice(""); }} placeholder="Enter your full name" className="h-14 w-full rounded-xl border border-slate-200 px-4 text-sm text-slate-900 outline-none transition-all focus:border-[#4F46E5] focus:ring-4 focus:ring-[#4F46E5]/10" />
+                      <input id="name" name="name" type="text" autoComplete="name" required value={name} onChange={(event) => { setName(event.target.value); setNotice(""); }} placeholder="Enter your full name" className="h-12 w-full rounded-lg border border-slate-200 px-4 text-sm text-slate-900 outline-none transition-all focus:border-[#2563EB] focus:ring-4 focus:ring-[#2563EB]/10" />
                     </div>
-                    <button aria-busy={busy} disabled={busy} type="submit" className="inline-flex h-14 w-full items-center justify-center gap-2 rounded-xl bg-[#4F46E5] text-[17px] font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#4338CA]">
+                    <button aria-busy={busy} disabled={busy} type="submit" className="inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg bg-[#2563EB] text-base font-medium text-white shadow-none transition-all disabled:cursor-wait disabled:opacity-60 hover:bg-[#1D4ED8]">
                       Complete and sign in <ArrowRight className="size-[18px]" />
                     </button>
                   </form>
@@ -374,8 +318,8 @@ export default function LoginPage() {
                 )}
 
                 {step === "phone" && (
-                  <p className="mt-7 text-xs leading-relaxed text-zinc-500">
-                    By continuing, you agree to our <Link href="/support" className="font-medium text-[#4F46E5] hover:text-[#4338CA]">Terms and Privacy Policy</Link>.
+                  <p className="mt-6 text-center text-xs leading-5 text-zinc-500">
+                    By continuing, you agree to our <Link href="/support" className="font-medium text-[#2563EB] hover:text-[#1D4ED8]">Terms and Privacy Policy</Link>.
                   </p>
                 )}
               </>
@@ -383,10 +327,13 @@ export default function LoginPage() {
           </div>
         </div>
 
-        <div className="hidden items-center justify-center gap-2 text-xs text-zinc-500 lg:flex">
-          <LockKeyhole className="size-3.5" />Secure sign-in experience
-        </div>
       </main>
+      <footer className="mx-6 border-t border-zinc-100 py-6">
+        <div className="mx-auto flex max-w-7xl flex-wrap items-center justify-center gap-x-6 gap-y-3 text-xs text-zinc-500 sm:justify-between lg:px-4">
+          <span className="inline-flex items-center gap-2"><LockKeyhole className="size-3.5" />Sign in securely with a one-time code</span>
+          <Link href="/support" className="transition-colors hover:text-[#2563EB]">Need help? Contact support</Link>
+        </div>
+      </footer>
     </div>
   );
 }

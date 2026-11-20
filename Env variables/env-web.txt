@@ -28,5 +28,5 @@ CONTACT_SUPPORT_EMAIL                       Optional    support@unlistedstox.com
 # - BACKEND_ORIGIN, AUTH_SERVICE_URL, STOCKS_SERVICE_URL
 # - MINIO_ENDPOINT, MINIO_PUBLIC_URL
 # - REVALIDATION_SECRET
-# - RESEND_API_KEY, RESEND_FROM_EMAIL
+# - NETCORE_API_KEY, NETCORE_ENDPOINT, EMAIL_FROM
 # ------------------------------------------------------------------------------

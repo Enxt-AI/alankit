@@ -67,7 +67,7 @@ export const stocksCatalog: StockDetail[] = [
     technicalRating: {
       label: "Strong Buy",
       score: 82,
-      color: "#4F46E5",
+      color: "#2563EB",
     },
     analystRating: {
       label: "Buy",
@@ -122,7 +122,7 @@ export const stocksCatalog: StockDetail[] = [
     technicalRating: {
       label: "Strong Buy",
       score: 86,
-      color: "#4F46E5",
+      color: "#2563EB",
     },
     analystRating: {
       label: "Strong Buy",
@@ -177,7 +177,7 @@ export const stocksCatalog: StockDetail[] = [
     technicalRating: {
       label: "Strong Buy",
       score: 80,
-      color: "#4F46E5",
+      color: "#2563EB",
     },
     analystRating: {
       label: "Buy",
@@ -232,7 +232,7 @@ export const stocksCatalog: StockDetail[] = [
     technicalRating: {
       label: "Buy",
       score: 68,
-      color: "#4F46E5",
+      color: "#2563EB",
     },
     analystRating: {
       label: "Buy",
@@ -285,7 +285,7 @@ export function getStockById(rawId: string): StockDetail {
     id: normalized,
     ticker: upper,
     name: `${upper} INDIA LIMITED`,
-    logoBg: "#4F46E5",
+    logoBg: "#2563EB",
     logoText: upper.slice(0, 4),
     logoType: "initial",
     initial: upper.charAt(0) || "I",

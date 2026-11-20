@@ -249,7 +249,7 @@ export function StockDetailsSections({ stock }: { stock: StockDetail }) {
           <button
             type="button"
             onClick={() => setShowMoreStats((prev) => !prev)}
-            className="mt-6 inline-block text-xs font-medium text-[#4F46E5] underline underline-offset-4 hover:text-[#4338CA] cursor-pointer"
+            className="mt-6 inline-block text-xs font-medium text-[#2563EB] underline underline-offset-4 hover:text-[#1D4ED8] cursor-pointer"
           >
             {showMoreStats ? "See Less" : "See More"}
           </button>
@@ -268,7 +268,7 @@ export function StockDetailsSections({ stock }: { stock: StockDetail }) {
                 onClick={() => setActiveTab(tab)}
                 className={`h-10 rounded-lg px-4 text-xs sm:text-sm font-medium transition-colors cursor-pointer ${
                   isActive
-                    ? "bg-[#4F46E5] text-white"
+                    ? "bg-[#2563EB] text-white"
                     : "border border-zinc-200/90 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
                 }`}
               >
@@ -295,7 +295,7 @@ export function StockDetailsSections({ stock }: { stock: StockDetail }) {
           <button
             type="button"
             onClick={() => setReadMoreAbout((prev) => !prev)}
-            className="mt-3 inline-block text-xs font-medium text-[#4F46E5] underline underline-offset-4 hover:text-[#4338CA] cursor-pointer"
+            className="mt-3 inline-block text-xs font-medium text-[#2563EB] underline underline-offset-4 hover:text-[#1D4ED8] cursor-pointer"
           >
             {readMoreAbout ? "Read Less" : "Read More"}
           </button>
@@ -330,7 +330,7 @@ export function StockDetailsSections({ stock }: { stock: StockDetail }) {
                   href={`https://${stock.companyProfile.website}`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="mt-2 block truncate text-xs sm:text-sm font-normal text-zinc-900 hover:text-[#4F46E5] transition-colors"
+                  className="mt-2 block truncate text-xs sm:text-sm font-normal text-zinc-900 hover:text-[#2563EB] transition-colors"
                 >
                   {stock.companyProfile.website}
                 </a>
@@ -362,7 +362,7 @@ export function StockDetailsSections({ stock }: { stock: StockDetail }) {
                       </span>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="line-clamp-2 text-xs font-medium leading-snug text-zinc-900 group-hover:text-[#4F46E5] transition-colors">
+                      <h3 className="line-clamp-2 text-xs font-medium leading-snug text-zinc-900 group-hover:text-[#2563EB] transition-colors">
                         {item.title}
                       </h3>
                       <p className="mt-1.5 text-[11px] text-zinc-500">
@@ -386,7 +386,7 @@ export function StockDetailsSections({ stock }: { stock: StockDetail }) {
                       </span>
                     </div>
                     <div className="min-w-0 flex-1">
-                      <h3 className="line-clamp-2 text-xs font-medium leading-snug text-zinc-900 group-hover:text-[#4F46E5] transition-colors">
+                      <h3 className="line-clamp-2 text-xs font-medium leading-snug text-zinc-900 group-hover:text-[#2563EB] transition-colors">
                         {item.title}
                       </h3>
                       <p className="mt-1.5 text-[11px] text-zinc-500">
@@ -402,7 +402,7 @@ export function StockDetailsSections({ stock }: { stock: StockDetail }) {
             <button
               type="button"
               onClick={() => setShowAllNews((prev) => !prev)}
-              className="mt-6 inline-block text-xs font-medium text-[#4F46E5] underline underline-offset-4 hover:text-[#4338CA] cursor-pointer"
+              className="mt-6 inline-block text-xs font-medium text-[#2563EB] underline underline-offset-4 hover:text-[#1D4ED8] cursor-pointer"
             >
               {showAllNews ? "Show Less" : "See All"}
             </button>
@@ -425,7 +425,7 @@ export function StockDetailsSections({ stock }: { stock: StockDetail }) {
                   <button
                     type="button"
                     onClick={() => setOpenFaqId(isOpen ? null : faq.id)}
-                    className="flex w-full items-center justify-between gap-4 py-4.5 text-left text-xs sm:text-sm font-normal text-zinc-900 hover:text-[#4F46E5] transition-colors cursor-pointer"
+                    className="flex w-full items-center justify-between gap-4 py-4.5 text-left text-xs sm:text-sm font-normal text-zinc-900 hover:text-[#2563EB] transition-colors cursor-pointer"
                   >
                     <span>{faq.question}</span>
                     <ChevronDown

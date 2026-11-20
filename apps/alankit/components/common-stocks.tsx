@@ -205,7 +205,7 @@ export function CommonStocks() {
                     onClick={() => setActiveTab(tab)}
                     className={`h-10 rounded-lg px-4 text-xs sm:text-sm font-medium transition-colors cursor-pointer ${
                       isActive
-                        ? "bg-[#4F46E5] text-white"
+                        ? "bg-[#2563EB] text-white"
                         : "border border-zinc-200/90 bg-white text-zinc-700 hover:bg-zinc-50 hover:text-zinc-900"
                     }`}
                   >
@@ -255,10 +255,10 @@ export function CommonStocks() {
                           className="flex items-center gap-3 group"
                         >
                           {row.logo}
-                          <span className="inline-flex items-center rounded bg-zinc-100 px-1.5 py-0.5 text-[11px] font-medium text-zinc-600 group-hover:bg-indigo-50 group-hover:text-[#4F46E5] transition-colors">
+                          <span className="inline-flex items-center rounded bg-zinc-100 px-1.5 py-0.5 text-[11px] font-medium text-zinc-600 group-hover:bg-blue-50 group-hover:text-[#2563EB] transition-colors">
                             {row.ticker}
                           </span>
-                          <span className="max-w-[200px] truncate text-xs sm:text-[13px] font-normal text-zinc-900 uppercase group-hover:text-[#4F46E5] transition-colors">
+                          <span className="max-w-[200px] truncate text-xs sm:text-[13px] font-normal text-zinc-900 uppercase group-hover:text-[#2563EB] transition-colors">
                             {row.name}
                           </span>
                         </Link>

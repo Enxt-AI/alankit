@@ -18,6 +18,7 @@ services:
       - ticketing-service
       - payments-service
       - storage-service
+      - alankit
     restart: unless-stopped
     networks:
       staging-network:
@@ -228,6 +229,37 @@ services:
       driver: json-file
       options:
         max-size: 5m
+        max-file: 3
+
+  alankit:
+    build:
+      context: ./apps/alankit
+      dockerfile: Dockerfile
+      args:
+        BACKEND_ORIGIN: ${BACKEND_ORIGIN}
+    image: alankit:staging
+    container_name: alankit-staging
+    env_file:
+      - .env.staging
+    environment:
+      NODE_ENV: ${NODE_ENV}
+      PORT: ${ALANKIT_PORT}
+      BACKEND_ORIGIN: ${BACKEND_ORIGIN}
+      NODE_OPTIONS: ${ALANKIT_NODE_OPTIONS}
+    restart: unless-stopped
+    networks:
+      - staging-network
+    mem_limit: 250m
+    healthcheck:
+      test: ["CMD-SHELL", "wget --spider -q http://127.0.0.1:${ALANKIT_PORT}/ || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
+    logging:
+      driver: json-file
+      options:
+        max-size: 10m
         max-file: 3
 
   postgres:

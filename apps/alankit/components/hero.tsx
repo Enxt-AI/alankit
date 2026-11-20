@@ -112,7 +112,7 @@ export function Hero() {
           <ScrollReveal variant="fade-up" delayMs={300}>
             <div className="mt-10 flex items-center">
               <Link href="/stocks">
-                <Button className="h-11 rounded-lg bg-[#4F46E5] px-6 text-sm font-medium text-white hover:bg-[#4338CA] cursor-pointer">
+                <Button className="h-11 rounded-lg bg-[#2563EB] px-6 text-sm font-medium text-white hover:bg-[#1D4ED8] cursor-pointer">
                   Explore Stocks
                 </Button>
               </Link>
@@ -133,7 +133,7 @@ export function Hero() {
                   aria-label={`Switch to background slide ${idx + 1}`}
                   className={`h-1.5 rounded-full transition-all cursor-pointer ${
                     idx === currentSlide
-                      ? "w-7 bg-[#4F46E5]"
+                      ? "w-7 bg-[#2563EB]"
                       : "w-2 bg-white/30 hover:bg-white/60"
                   }`}
                 />

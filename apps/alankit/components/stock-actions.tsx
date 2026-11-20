@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { Bookmark, BookmarkCheck } from "lucide-react";
 
 const WATCHLIST_STORAGE_KEY = "alankit-watchlist";
@@ -14,7 +15,6 @@ export function StockActions({
 }) {
   const [isSaved, setIsSaved] = useState(false);
   const [isLoaded, setIsLoaded] = useState(false);
-  const [showBuyNotice, setShowBuyNotice] = useState(false);
   const [watchlistError, setWatchlistError] = useState(false);
 
   useEffect(() => {
@@ -53,30 +53,23 @@ export function StockActions({
   return (
     <div className="mt-5">
       <div className="flex flex-wrap items-center gap-3">
-        <button
-          type="button"
-          onClick={() => setShowBuyNotice(true)}
-          className="inline-flex h-10 items-center justify-center rounded-lg bg-[#4F46E5] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#4338CA]"
+        <Link
+          href="/checkout"
+          className="inline-flex h-10 items-center justify-center rounded-lg bg-[#2563EB] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#1D4ED8]"
         >
           Buy {ticker}
-        </button>
+        </Link>
         <button
           type="button"
           onClick={toggleWatchlist}
           disabled={!isLoaded}
           aria-pressed={isSaved}
-          className={`inline-flex h-10 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors disabled:opacity-60 ${isSaved ? "border-indigo-200 bg-indigo-50 text-[#4F46E5]" : "border-zinc-200 bg-white text-zinc-700 hover:border-indigo-200 hover:bg-indigo-50 hover:text-[#4F46E5]"}`}
+          className={`inline-flex h-10 items-center justify-center gap-2 rounded-lg border px-4 text-sm font-medium transition-colors disabled:opacity-60 ${isSaved ? "border-blue-200 bg-blue-50 text-[#2563EB]" : "border-zinc-200 bg-white text-zinc-700 hover:border-blue-200 hover:bg-blue-50 hover:text-[#2563EB]"}`}
         >
           {isSaved ? <BookmarkCheck className="size-4" /> : <Bookmark className="size-4" />}
           {isSaved ? "Added to Watchlist" : "Add to Watchlist"}
         </button>
       </div>
-      {showBuyNotice && (
-        <p role="status" className="mt-3 text-xs text-zinc-500">
-          Buy orders aren’t connected yet. No order has been placed.
-          <button type="button" onClick={() => setShowBuyNotice(false)} className="ml-2 font-medium text-[#4F46E5] hover:text-[#4338CA]">Dismiss</button>
-        </p>
-      )}
       {watchlistError && <p role="alert" className="mt-3 text-xs text-rose-600">Couldn’t update your watchlist in this browser.</p>}
     </div>
   );

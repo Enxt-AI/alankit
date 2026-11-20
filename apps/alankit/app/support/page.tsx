@@ -68,7 +68,7 @@ export default function SupportPage() {
           <ScrollReveal variant="fade-up" delayMs={80}>
             <div className="mt-8 grid grid-cols-1 gap-5 sm:grid-cols-3">
               <div className="rounded-xl border border-zinc-200/80 bg-white p-5">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-50 text-[#4F46E5]">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-[#2563EB]">
                   <Phone className="size-4" />
                 </div>
                 <p className="mt-4 text-sm font-medium text-zinc-900">
@@ -83,7 +83,7 @@ export default function SupportPage() {
               </div>
 
               <div className="rounded-xl border border-zinc-200/80 bg-white p-5">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-50 text-[#4F46E5]">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-[#2563EB]">
                   <Mail className="size-4" />
                 </div>
                 <p className="mt-4 text-sm font-medium text-zinc-900">
@@ -98,7 +98,7 @@ export default function SupportPage() {
               </div>
 
               <div className="rounded-xl border border-zinc-200/80 bg-white p-5">
-                <div className="flex size-10 items-center justify-center rounded-lg bg-indigo-50 text-[#4F46E5]">
+                <div className="flex size-10 items-center justify-center rounded-lg bg-blue-50 text-[#2563EB]">
                   <MapPin className="size-4" />
                 </div>
                 <p className="mt-4 text-sm font-medium text-zinc-900">
@@ -142,7 +142,7 @@ export default function SupportPage() {
                     type="text"
                     required
                     placeholder="Anshu Sharma"
-                    className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3.5 text-xs text-zinc-900 focus:border-[#4F46E5] focus:outline-none"
+                    className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3.5 text-xs text-zinc-900 focus:border-[#2563EB] focus:outline-none"
                   />
                 </div>
                 <div>
@@ -153,7 +153,7 @@ export default function SupportPage() {
                     type="text"
                     required
                     placeholder="ALK-IN-84920"
-                    className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3.5 text-xs text-zinc-900 focus:border-[#4F46E5] focus:outline-none"
+                    className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3.5 text-xs text-zinc-900 focus:border-[#2563EB] focus:outline-none"
                   />
                 </div>
               </div>
@@ -162,7 +162,7 @@ export default function SupportPage() {
                 <label className="block text-xs font-medium text-zinc-600 mb-1.5">
                   Topic
                 </label>
-                <select className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-xs text-zinc-900 focus:border-[#4F46E5] focus:outline-none">
+                <select className="h-10 w-full rounded-lg border border-zinc-200 bg-white px-3 text-xs text-zinc-900 focus:border-[#2563EB] focus:outline-none">
                   <option>Unlisted Share Order &amp; Settlement</option>
                   <option>Demat Account / DIS Verification</option>
                   <option>KYC &amp; Bank Account Update</option>
@@ -178,13 +178,13 @@ export default function SupportPage() {
                   rows={4}
                   required
                   placeholder="Describe your query or share your order reference number..."
-                  className="w-full rounded-lg border border-zinc-200 bg-white p-3.5 text-xs text-zinc-900 focus:border-[#4F46E5] focus:outline-none"
+                  className="w-full rounded-lg border border-zinc-200 bg-white p-3.5 text-xs text-zinc-900 focus:border-[#2563EB] focus:outline-none"
                 />
               </div>
 
               <Button
                 type="submit"
-                className="h-10 rounded-lg bg-[#4F46E5] px-5 text-xs sm:text-sm font-medium text-white hover:bg-[#4338CA] cursor-pointer"
+                className="h-10 rounded-lg bg-[#2563EB] px-5 text-xs sm:text-sm font-medium text-white hover:bg-[#1D4ED8] cursor-pointer"
               >
                 <Send className="mr-1.5 size-3.5" />
                 Submit Request
@@ -204,7 +204,7 @@ export default function SupportPage() {
                       <button
                         type="button"
                         onClick={() => setOpenFaq(isOpen ? null : item.id)}
-                        className="flex w-full items-center justify-between gap-4 py-4 text-left text-xs sm:text-sm font-medium text-zinc-900 hover:text-[#4F46E5] cursor-pointer"
+                        className="flex w-full items-center justify-between gap-4 py-4 text-left text-xs sm:text-sm font-medium text-zinc-900 hover:text-[#2563EB] cursor-pointer"
                       >
                         <span>{item.q}</span>
                         <ChevronDown

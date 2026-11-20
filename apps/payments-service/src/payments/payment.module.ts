@@ -1,3 +1,4 @@
+import { NdpsGateway } from './ndps.gateway';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
@@ -24,7 +25,7 @@ import { PaymentEffectsWorker } from './payment-effects.worker';
     }),
   ],
   controllers: [PaymentController],
-  providers: [PaymentService, PaymentWebhookProcessor, PaymentEffectsWorker],
+  providers: [NdpsGateway, PaymentService, PaymentWebhookProcessor, PaymentEffectsWorker],
   exports: [PaymentService],
 })
 export class PaymentModule {}

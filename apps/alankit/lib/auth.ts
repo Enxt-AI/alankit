@@ -45,14 +45,38 @@ export async function authRequest(path: string, body?: Record<string, string>): 
   return data;
 }
 
-export async function refreshSession(): Promise<boolean> {
+const SESSION_CACHE_MS = 60_000;
+let sessionCache: { authenticated: boolean; checkedAt: number } | null = null;
+let sessionRequest: Promise<boolean> | null = null;
+
+// Explicit refreshes (after login) must confirm the new session, even if a
+// background check started before the sign-in completed.
+export async function refreshSession(force = true): Promise<boolean> {
+  if (sessionRequest) {
+    if (!force) return sessionRequest;
+    await sessionRequest;
+  }
+  if (!force && sessionCache && Date.now() - sessionCache.checkedAt < SESSION_CACHE_MS) {
+    return sessionCache.authenticated;
+  }
+
+  const request = (async () => {
+    let authenticated = false;
+    try {
+      await authRequest("profile");
+      authenticated = true;
+    } catch {
+      // Logged-out visitors also get a cached result to avoid repeated 401s.
+    }
+    sessionCache = { authenticated, checkedAt: Date.now() };
+    window.dispatchEvent(new CustomEvent("alankit-session-change", { detail: authenticated }));
+    return authenticated;
+  })();
+  sessionRequest = request;
   try {
-    await authRequest("profile");
-    window.dispatchEvent(new CustomEvent("alankit-session-change", { detail: true }));
-    return true;
-  } catch {
-    window.dispatchEvent(new CustomEvent("alankit-session-change", { detail: false }));
-    return false;
+    return await request;
+  } finally {
+    if (sessionRequest === request) sessionRequest = null;
   }
 }
 
@@ -60,7 +84,7 @@ export function useAuthSession() {
   const [authenticated, setAuthenticated] = useState(false);
   useEffect(() => {
     let active = true;
-    const update = () => { void refreshSession().then(value => { if (active) setAuthenticated(value); }); };
+    const update = () => { void refreshSession(false).then(value => { if (active) setAuthenticated(value); }); };
     const changed = (event: Event) => setAuthenticated((event as CustomEvent<boolean>).detail === true);
     window.addEventListener("alankit-session-change", changed);
     window.addEventListener("focus", update);

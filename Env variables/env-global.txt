@@ -13,7 +13,7 @@
 
 ## 1. Core Runtime & Public Origins
 NAME                                        REQUIRED    FALLBACK / EXAMPLE VALUE                                    SERVICES USING IT                                                       DESCRIPTION
-NODE_ENV                                    Yes         production                                                  auth-service, payments-service, stocks-service, storage-service, ticketing-service, web, panels, rm-distributors    Sets production runtime mode across all NestJS and Next.js containers.
+NODE_ENV                                    Yes         production                                                  auth-service, payments-service, stocks-service, storage-service, ticketing-service, web, panels, rm-distributors, alankit   Sets production runtime mode across all NestJS and Next.js containers.
 FRONTEND_URL                                Yes (Prod)  https://www.unlistedstox.com                                auth-service, payments-service, stocks-service, storage-service, ticketing-service  Added to Fastify CORS allowed origins in all 5 backend services; also used by `payments-service` (Cashfree return URL) and `stocks-service` (DigiLocker KYC callback & SEO/static-page revalidation).
 
 
@@ -42,16 +42,11 @@ REDIS_PASSWORD                              Optional    undefined               
 REDIS_TLS                                   Optional    false                                                       auth-service, payments-service, stocks-service, storage-service, ticketing-service  Set to `'true'` to enable TLS (`tls: {}`) on ioredis / Bull connections.
 
 
-## 5. Email Delivery (Resend / SmartPing)
+## 5. Email Delivery (Netcore Cloud)
 NAME                                        REQUIRED    FALLBACK / EXAMPLE VALUE                                    SERVICES USING IT                                                       DESCRIPTION
-EMAIL_PROVIDER                              Optional    smartping                                                   auth-service, payments-service, stocks-service, ticketing-service, web  Selects the email provider used by `packages/email-service` and the web contact form. Valid values: `smartping` (default) or `resend`.
-RESEND_API_KEY                              Yes*        re_xxxxxxxxx                                                auth-service, payments-service, stocks-service, ticketing-service, web  Resend API key used when `EMAIL_PROVIDER=resend`; also used directly by `POST /api/contact` in `web`.
-SMARTPING_API_KEY                           Yes*        sp_xxxxxxxxx                                                auth-service, payments-service, stocks-service, ticketing-service, web  SmartPing API key used when `EMAIL_PROVIDER=smartping`. Sent as `Authorization: App <SMARTPING_API_KEY>`.
-SMARTPING_ENDPOINT                          Optional    https://1eqrmn.apiemail.smartping.io/email/4/messages       auth-service, payments-service, stocks-service, ticketing-service, web  SmartPing messages endpoint override.
-RESEND_FROM_EMAIL                           Optional    Unlistedstox <no-reply@unlistedstox.com>                 auth-service, payments-service, stocks-service, ticketing-service, web  Primary default `from` email address for all outbound transactional and contact-form emails.
-EMAIL_FROM                                  Optional    Unlistedstox <no-reply@unlistedstox.com>                 auth-service, payments-service, stocks-service, ticketing-service, web  Secondary fallback `from` email address when `RESEND_FROM_EMAIL` is not set.
-
-* Required only for the provider you actually use.
+NETCORE_API_KEY                             Yes         xxxxxxxxxx                                                  auth-service, payments-service, stocks-service, ticketing-service, web  Netcore Cloud API key used by `packages/email-service` and the web contact form. Sent as the `api_key` header.
+NETCORE_ENDPOINT                            Optional    https://emailapi.netcorecloud.net/v5/mail/send             auth-service, payments-service, stocks-service, ticketing-service, web  Netcore Cloud send endpoint override.
+EMAIL_FROM                                  Optional    Unlistedstox <no-reply@unlistedstox.com>                 auth-service, payments-service, stocks-service, ticketing-service, web  Default `from` address for all outbound transactional and contact-form emails.
 
 
 ## 6. Cashfree Payment Gateway (`payments-service` only)
@@ -71,7 +66,7 @@ MINIO_SECRET_KEY                            Yes (Prod)  <minio-secret-key>      
 
 ## 8. Internal Service Discovery & Next.js ISR Revalidation
 NAME                                        REQUIRED    FALLBACK / EXAMPLE VALUE                                    SERVICES USING IT                                                       DESCRIPTION
-BACKEND_ORIGIN                              Optional    http://smc-nginx:80 (or internal K8s gateway URL)           web, panels                                                             Internal reverse-proxy/gateway origin used at runtime by Next.js route handlers, SSR helpers (`web`), and `/storage/[...path]` fallback (`web`, `panels`).
+BACKEND_ORIGIN                              Optional    http://smc-nginx:80 (or internal K8s gateway URL)           web, panels, alankit                                                    Internal reverse-proxy/gateway origin used at runtime by Next.js route handlers, SSR helpers (`web`), and `/storage/[...path]` fallback (`web`, `panels`).
 AUTH_SERVICE_URL                            Optional    http://auth-service:3002/api                                web                                                                     Internal K8s URL for `auth-service` used during Next.js SSR (`lib/api-client.ts`).
 STOCKS_SERVICE_URL                          Optional    http://stocks-service:3003/api                              web                                                                     Internal K8s URL for `stocks-service` used during Next.js SSR/ISR (`lib/api-client.ts`, `lib/static-pages-server.ts`).
 STORAGE_SERVICE_URL                         Optional    http://storage-service:3005                                 stocks-service                                                          Internal K8s URL for `storage-service` used by `CarouselService` in `stocks-service` to upload/delete/stream carousel media.

@@ -106,7 +106,7 @@ export function TrendingStocks() {
               >
                 <Link
                   href={`/stocks/${stock.id}`}
-                  className="flex h-full flex-col justify-between rounded-xl border border-zinc-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-md"
+                  className="flex h-full flex-col justify-between rounded-xl border border-zinc-200/80 bg-white p-5 transition-all duration-300 hover:-translate-y-1 hover:border-blue-200 hover:shadow-md"
                 >
                   {/* Top: Logo + Ticker & Company Name */}
                   <div className="flex items-center gap-3.5">

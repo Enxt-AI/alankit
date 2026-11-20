@@ -50,11 +50,11 @@ export default function WatchlistPage() {
       <main className="mx-auto w-full max-w-7xl flex-1 px-6 py-10 lg:px-10">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <p className="text-sm font-medium text-[#4F46E5]">Your market, at a glance</p>
+            <p className="text-sm font-medium text-[#2563EB]">Your market, at a glance</p>
             <h1 className="mt-2 text-3xl font-semibold tracking-tight text-zinc-900">My Watchlist</h1>
             <p className="mt-2 text-sm text-zinc-500">Keep an eye on the stocks you care about.</p>
           </div>
-          <Link href="/stocks" className="inline-flex h-10 items-center rounded-lg bg-[#4F46E5] px-4 text-sm font-medium text-white transition-colors hover:bg-[#4338CA]">
+          <Link href="/stocks" className="inline-flex h-10 items-center rounded-lg bg-[#2563EB] px-4 text-sm font-medium text-white transition-colors hover:bg-[#1D4ED8]">
             Browse stocks
           </Link>
         </div>
@@ -65,7 +65,7 @@ export default function WatchlistPage() {
               <h2 className="font-semibold text-zinc-900">Saved stocks</h2>
               <p className="mt-1 text-xs text-zinc-500">{watchedStocks.length} {watchedStocks.length === 1 ? "stock" : "stocks"} in your watchlist</p>
             </div>
-            <Bookmark className="size-5 text-[#4F46E5]" />
+            <Bookmark className="size-5 text-[#2563EB]" />
           </div>
 
           {isLoaded && watchedStocks.length > 0 ? (
@@ -87,7 +87,7 @@ export default function WatchlistPage() {
                         {stock.changePercent}
                       </p>
                     </div>
-                    <button type="button" onClick={() => toggleSaved(stock.id)} aria-label={`Remove ${stock.ticker} from watchlist`} className="rounded-lg border border-zinc-200 p-2 text-[#4F46E5] transition-colors hover:bg-indigo-50">
+                    <button type="button" onClick={() => toggleSaved(stock.id)} aria-label={`Remove ${stock.ticker} from watchlist`} className="rounded-lg border border-zinc-200 p-2 text-[#2563EB] transition-colors hover:bg-blue-50">
                       <BookmarkCheck className="size-4" />
                     </button>
                   </div>
@@ -96,7 +96,7 @@ export default function WatchlistPage() {
             </div>
           ) : isLoaded ? (
             <div className="px-6 py-14 text-center">
-              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-indigo-50 text-[#4F46E5]"><Bookmark className="size-5" /></div>
+              <div className="mx-auto flex size-12 items-center justify-center rounded-full bg-blue-50 text-[#2563EB]"><Bookmark className="size-5" /></div>
               <h3 className="mt-4 font-semibold text-zinc-900">Your watchlist is empty</h3>
               <p className="mx-auto mt-2 max-w-sm text-sm text-zinc-500">Add stocks from the list below to keep their latest prices and changes handy.</p>
             </div>
@@ -111,7 +111,7 @@ export default function WatchlistPage() {
               <h2 className="text-lg font-semibold text-zinc-900">Discover stocks</h2>
               <p className="mt-1 text-sm text-zinc-500">Add a stock to follow it in your watchlist.</p>
             </div>
-            <label className="flex h-10 w-full max-w-xs items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 text-zinc-400 focus-within:border-indigo-400">
+            <label className="flex h-10 w-full max-w-xs items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3 text-zinc-400 focus-within:border-blue-400">
               <Search className="size-4" />
               <input value={query} onChange={(event) => setQuery(event.target.value)} placeholder="Search stocks" className="w-full bg-transparent text-sm text-zinc-800 outline-none placeholder:text-zinc-400" />
             </label>
@@ -125,7 +125,7 @@ export default function WatchlistPage() {
                     <span className="flex size-9 shrink-0 items-center justify-center rounded-lg text-[10px] font-bold text-white" style={{ backgroundColor: stock.logoBg }}>{stock.logoText ?? stock.ticker.slice(0, 3)}</span>
                     <span className="min-w-0"><span className="block text-sm font-semibold text-zinc-900">{stock.ticker}</span><span className="block max-w-[220px] truncate text-xs text-zinc-500">{stock.name}</span></span>
                   </Link>
-                  <button type="button" onClick={() => toggleSaved(stock.id)} className={`inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border px-3 text-xs font-medium transition-colors ${saved ? "border-indigo-200 bg-indigo-50 text-[#4F46E5]" : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"}`}>
+                  <button type="button" onClick={() => toggleSaved(stock.id)} className={`inline-flex h-9 shrink-0 items-center gap-2 rounded-lg border px-3 text-xs font-medium transition-colors ${saved ? "border-blue-200 bg-blue-50 text-[#2563EB]" : "border-zinc-200 text-zinc-600 hover:bg-zinc-50"}`}>
                     {saved ? <BookmarkCheck className="size-3.5" /> : <Bookmark className="size-3.5" />}{saved ? "Added" : "Add"}
                   </button>
                 </div>

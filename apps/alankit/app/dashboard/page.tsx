@@ -261,7 +261,7 @@ const youMayAlsoLike: RecommendationCard[] = [
     sparkline:
       "M0 8 L14 6 L28 18 L42 14 L56 24 L70 16 L84 22 L98 20 L112 26 L126 19 L132 24",
     logo: (
-      <div className="flex size-7 items-center justify-center rounded-full bg-indigo-50 text-[10px] font-bold text-indigo-600">
+      <div className="flex size-7 items-center justify-center rounded-full bg-blue-50 text-[10px] font-bold text-blue-600">
         T
       </div>
     ),
@@ -384,7 +384,7 @@ function DashboardPortfolio() {
             <tbody className="divide-y divide-zinc-100 text-xs">
               {dashboardStocks.map((stock) => (
                 <tr key={stock.id} className="text-zinc-600 transition-colors hover:bg-zinc-50">
-                  <td className="px-5 py-4"><Link href={`/stocks/${stock.id}`} className="flex items-center gap-3 hover:text-[#4F46E5]"><span className="flex size-8 items-center justify-center rounded-lg text-[10px] font-bold" style={{ backgroundColor: stock.logoBg, color: stock.logoColor ?? "#4F46E5" }}>{stock.logoText}</span><span><span className="block font-semibold text-zinc-900">{stock.ticker}</span><span className="block text-[11px] text-zinc-400">{stock.name}</span></span></Link></td>
+                  <td className="px-5 py-4"><Link href={`/stocks/${stock.id}`} className="flex items-center gap-3 hover:text-[#2563EB]"><span className="flex size-8 items-center justify-center rounded-lg text-[10px] font-bold" style={{ backgroundColor: stock.logoBg, color: stock.logoColor ?? "#2563EB" }}>{stock.logoText}</span><span><span className="block font-semibold text-zinc-900">{stock.ticker}</span><span className="block text-[11px] text-zinc-400">{stock.name}</span></span></Link></td>
                   <td className="px-5 py-4">{stock.position.totalShares}</td><td className="px-5 py-4">{stock.position.avgBuyPrice}</td><td className="px-5 py-4">{stock.position.totalInvested}</td><td className="px-5 py-4 font-semibold text-zinc-900">{stock.position.currentValue}</td><td className={`px-5 py-4 font-semibold ${stock.isPositive ? "text-emerald-600" : "text-rose-600"}`}>{stock.position.profitLoss} <span className="text-[10px]">({stock.position.profitPct})</span></td>
                 </tr>
               ))}
@@ -527,10 +527,10 @@ function DashboardOrders() {
                       setSelectedOrder(order);
                     }
                   }}
-                  className="cursor-pointer text-zinc-600 transition-colors hover:bg-indigo-50/50 focus:bg-indigo-50/50 focus:outline-none"
+                  className="cursor-pointer text-zinc-600 transition-colors hover:bg-blue-50/50 focus:bg-blue-50/50 focus:outline-none"
                 >
                   <td className="px-5 py-4 font-medium text-zinc-500">{order.id}</td>
-                  <td className="px-5 py-4"><Link href={`/stocks/${order.stockId}`} onClick={(event) => event.stopPropagation()} className="font-semibold text-zinc-900 hover:text-[#4F46E5]">{order.stockName}</Link></td>
+                  <td className="px-5 py-4"><Link href={`/stocks/${order.stockId}`} onClick={(event) => event.stopPropagation()} className="font-semibold text-zinc-900 hover:text-[#2563EB]">{order.stockName}</Link></td>
                   <td className="px-5 py-4"><span className="rounded-md bg-emerald-50 px-2 py-1 text-[10px] font-semibold text-emerald-700">{order.type}</span></td>
                   <td className="px-5 py-4">{order.shares}</td><td className="px-5 py-4">{order.price}</td><td className="px-5 py-4 font-semibold text-zinc-900">{order.amount}</td><td className="px-5 py-4">{order.date}</td>
                   <td className="px-5 py-4"><span className="inline-flex items-center gap-1.5 text-emerald-700"><span className="size-1.5 rounded-full bg-emerald-500" />{order.status}</span></td>
@@ -541,7 +541,7 @@ function DashboardOrders() {
                         event.stopPropagation();
                         downloadDealSheet(order);
                       }}
-                      className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 px-2.5 py-1.5 text-[11px] font-medium text-zinc-700 transition-colors hover:border-indigo-200 hover:bg-indigo-50 hover:text-[#4F46E5]"
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-zinc-200 px-2.5 py-1.5 text-[11px] font-medium text-zinc-700 transition-colors hover:border-blue-200 hover:bg-blue-50 hover:text-[#2563EB]"
                     >
                       <Download className="size-3.5" />Download
                     </button>
@@ -612,7 +612,7 @@ function DashboardOrders() {
                 <button
                   type="button"
                   onClick={() => downloadOrderDocument(selectedOrder, "Invoice")}
-                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#4F46E5] px-3 text-xs font-medium text-white transition-colors hover:bg-[#4338CA]"
+                  className="inline-flex h-10 items-center justify-center gap-2 rounded-lg bg-[#2563EB] px-3 text-xs font-medium text-white transition-colors hover:bg-[#1D4ED8]"
                 >
                   <Download className="size-4" />Download invoice
                 </button>
@@ -672,7 +672,7 @@ function DashboardWatchlist() {
             <h2 className="text-sm font-semibold text-zinc-900">Saved stocks</h2>
             <p className="mt-1 text-xs text-zinc-400">{watchedStocks.length} {watchedStocks.length === 1 ? "stock" : "stocks"}</p>
           </div>
-          <Bookmark className="size-4 text-[#4F46E5]" />
+          <Bookmark className="size-4 text-[#2563EB]" />
         </div>
         {!isLoaded ? (
           <p className="px-5 py-10 text-center text-sm text-zinc-500">Loading your watchlist…</p>
@@ -692,7 +692,7 @@ function DashboardWatchlist() {
                 </Link>
                 <div className="flex items-center gap-4">
                   <div className="text-right"><p className="text-sm font-semibold text-zinc-900">₹{stock.price.toLocaleString("en-IN")}</p><p className={`text-xs font-medium ${stock.isPositive ? "text-emerald-600" : "text-rose-600"}`}>{stock.changePercent}</p></div>
-                  <button type="button" onClick={() => removeStock(stock.id)} aria-label={`Remove ${stock.ticker} from watchlist`} className="rounded-lg border border-zinc-200 p-2 text-[#4F46E5] hover:bg-indigo-50"><BookmarkCheck className="size-4" /></button>
+                  <button type="button" onClick={() => removeStock(stock.id)} aria-label={`Remove ${stock.ticker} from watchlist`} className="rounded-lg border border-zinc-200 p-2 text-[#2563EB] hover:bg-blue-50"><BookmarkCheck className="size-4" /></button>
                 </div>
               </div>
             ))}
@@ -783,7 +783,7 @@ export default function DashboardPage() {
             {/* Top Brand Row */}
             <div className="flex items-center justify-between px-1 py-1">
               <Link href="/" className="flex items-center gap-2.5">
-                <div className="flex size-7 items-center justify-center rounded-full border-2 border-zinc-200 text-[#4F46E5]">
+                <div className="flex size-7 items-center justify-center rounded-full border-2 border-zinc-200 text-[#2563EB]">
                   <svg
                     width="16"
                     height="16"
@@ -1036,7 +1036,7 @@ export default function DashboardPage() {
 
                 <div className="px-4 pb-4 pt-5 sm:px-6">
                   <div className="flex items-center gap-2 text-[11px] text-zinc-400">
-                    <span className="size-2 rounded-full bg-[#4F46E5]" />Portfolio value
+                    <span className="size-2 rounded-full bg-[#2563EB]" />Portfolio value
                   </div>
                   <svg
                     role="img"
@@ -1047,17 +1047,17 @@ export default function DashboardPage() {
                   >
                     <defs>
                       <linearGradient id="portfolio-area-fill" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="0%" stopColor="#4F46E5" stopOpacity="0.18" />
-                        <stop offset="100%" stopColor="#4F46E5" stopOpacity="0.01" />
+                        <stop offset="0%" stopColor="#2563EB" stopOpacity="0.18" />
+                        <stop offset="100%" stopColor="#2563EB" stopOpacity="0.01" />
                       </linearGradient>
                     </defs>
                     {[0, 1, 2, 3].map((line) => (
                       <line key={line} x1="0" x2={portfolioChartWidth} y1={(portfolioChartHeight / 3) * line} y2={(portfolioChartHeight / 3) * line} stroke="#E4E4E7" strokeDasharray="4 6" />
                     ))}
                     <path d={portfolioAreaPath} fill="url(#portfolio-area-fill)" />
-                    <path d={portfolioLinePath} fill="none" stroke="#4F46E5" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
+                    <path d={portfolioLinePath} fill="none" stroke="#2563EB" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" vectorEffect="non-scaling-stroke" />
                     {portfolioPoints.map((point, index) => (
-                      index === portfolioPoints.length - 1 ? <circle key={index} cx={point.x} cy={point.y} r="5" fill="#4F46E5" stroke="white" strokeWidth="3" vectorEffect="non-scaling-stroke" /> : null
+                      index === portfolioPoints.length - 1 ? <circle key={index} cx={point.x} cy={point.y} r="5" fill="#2563EB" stroke="white" strokeWidth="3" vectorEffect="non-scaling-stroke" /> : null
                     ))}
                   </svg>
                   <div className="flex justify-between text-[10px] text-zinc-400">
@@ -1271,7 +1271,7 @@ export default function DashboardPage() {
                         <div className="flex items-center gap-2.5">
                           {card.logo}
                           <div className="min-w-0">
-                            <p className="truncate text-xs font-semibold text-zinc-900 group-hover:text-[#4F46E5]">
+                            <p className="truncate text-xs font-semibold text-zinc-900 group-hover:text-[#2563EB]">
                               {card.name}
                             </p>
                             <p className="truncate text-[10px] text-zinc-400">
@@ -1810,7 +1810,7 @@ export default function DashboardPage() {
                           <div className="flex items-center gap-2.5">
                             {card.logo}
                             <div className="min-w-0">
-                              <p className="truncate text-xs font-semibold text-zinc-900 group-hover:text-[#4F46E5]">
+                              <p className="truncate text-xs font-semibold text-zinc-900 group-hover:text-[#2563EB]">
                                 {card.name}
                               </p>
                               <p className="truncate text-[10px] text-zinc-400">

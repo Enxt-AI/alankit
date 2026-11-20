@@ -54,10 +54,10 @@ These private settings are not universally required: gateway configuration and i
 
 | Variable | Requirement / behavior | Source |
 |---|---|---|
-| `RESEND_API_KEY` | Required for real contact-form email delivery. Without it, the endpoint logs the submission and returns success without sending email, including in production. Secret: inject at runtime. | `app/api/contact/route.ts:20` |
-| `CONTACT_SUPPORT_EMAIL` | Optional contact email recipient; defaults to `support@unlistedstox.com`. | `app/api/contact/route.ts:40` |
-| `RESEND_FROM_EMAIL` | Preferred contact sender; use a sender supported by the configured Resend account. | `app/api/contact/route.ts:42` |
-| `EMAIL_FROM` | Sender fallback when RESEND_FROM_EMAIL is empty. Final default is `Unlistedstox <no-reply@unlistedstox.com>`. No need to set both sender variables. | `app/api/contact/route.ts:43` |
+| `NETCORE_API_KEY` | Required for real contact-form email delivery. Without it, the endpoint logs the submission and returns success without sending email, including in production. Secret: inject at runtime. | `app/api/contact/route.ts` |
+| `NETCORE_ENDPOINT` | Optional Netcore send endpoint override; defaults to `https://emailapi.netcorecloud.net/v5/mail/send`. | `app/api/contact/route.ts` |
+| `CONTACT_SUPPORT_EMAIL` | Optional contact email recipient; defaults to `support@unlistedstox.com`. | `app/api/contact/route.ts` |
+| `EMAIL_FROM` | Sender address for contact-form emails. Default is `Unlistedstox <no-reply@unlistedstox.com>`. | `app/api/contact/route.ts` |
 | `REVALIDATION_SECRET` | Required to use authenticated `/api/revalidate`. Missing value rejects requests with 401. Match the calling backend's value. Secret: inject at runtime; Turbo listing it does not make it a build requirement. | `app/api/revalidate/route.ts:41` |
 | `MINIO_ENDPOINT` | Preferred storage-proxy base URL, including scheme and port. Optional because hard-coded fallback candidates exist; set explicitly for the intended environment. | `app/storage/[...path]/route.ts:19` |
 | `MINIO_PUBLIC_URL` | Next storage-proxy candidate after MINIO_ENDPOINT; must be reachable from the web server. Optional. | `app/storage/[...path]/route.ts:20` |
@@ -87,7 +87,7 @@ These private settings are not universally required: gateway configuration and i
 ## Deployment checklist
 
 - **Build:** set the public settings you need, plus BACKEND_ORIGIN or private service origins for routing. Supply server data origins for pages prerendered during build. Set GTM_ID during build too if using that fallback.
-- **Runtime:** pass BACKEND_ORIGIN and/or AUTH_SERVICE_URL/STOCKS_SERVICE_URL where needed, RESEND_API_KEY, REVALIDATION_SECRET, the desired email and storage settings, and GTM_ID if using its fallback. Keep NODE_ENV=production; keep the existing PORT/HOSTNAME defaults unless changing networking.
+- **Runtime:** pass BACKEND_ORIGIN and/or AUTH_SERVICE_URL/STOCKS_SERVICE_URL where needed, NETCORE_API_KEY, REVALIDATION_SECRET, the desired email and storage settings, and GTM_ID if using its fallback. Keep NODE_ENV=production; keep the existing PORT/HOSTNAME defaults unless changing networking.
 - Optional flags may remain unset. No runtime secrets need to be added to the public build-variable list.
 - First wire the desired build inputs through Dockerfile/Compose and Turbo; supplying them only to the existing runtime env_file is insufficient.
 

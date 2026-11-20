@@ -6,7 +6,7 @@ type StockGaugeMeterProps = {
   ratingLabel: string;
   /** Score from 0 (far left) to 100 (far right) */
   score: number;
-  /** Hex color for the active arc, e.g. "#4F46E5" or "#4D9A78" */
+  /** Hex color for the active arc, e.g. "#2563EB" or "#4D9A78" */
   arcColor?: string;
 };
 
@@ -15,7 +15,7 @@ export function StockGaugeMeter({
   description,
   ratingLabel,
   score,
-  arcColor = "#4F46E5",
+  arcColor = "#2563EB",
 }: StockGaugeMeterProps) {
   const clampedScore = Math.max(0, Math.min(100, score));
 

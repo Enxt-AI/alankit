@@ -119,7 +119,7 @@ function StockAvatar({ stock }: { stock: StockDetail }) {
   }
 
   return (
-    <div className="flex size-20 sm:size-22 items-center justify-center rounded-full bg-[#4F46E5] ring-4 ring-white shadow-sm">
+    <div className="flex size-20 sm:size-22 items-center justify-center rounded-full bg-[#2563EB] ring-4 ring-white shadow-sm">
       <span className="text-2xl font-bold text-white">
         {stock.initial || stock.ticker.charAt(0)}
       </span>

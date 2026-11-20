@@ -54,7 +54,7 @@ Sources: `apps/rm-distributors/Dockerfile:16,41,53-55,75-77`, `apps/rm-distribut
 ## Settings that are not requirements for this app
 
 - `MINIO_ENDPOINT` and `MINIO_PUBLIC_URL` are supplied by staging Compose, but there are no application reads or storage-proxy handlers consuming them in this service. They do not configure RM Distributors behavior.
-- `RESEND_API_KEY`, `RESEND_FROM_EMAIL` and `EMAIL_FROM` are read by the shared `email-service` implementation, but RM Distributors does not import or instantiate that service. It is listed in package dependencies and copied/built by Docker; those facts do not execute its constructor or require its settings. The package's build command is TypeScript compilation. These email values are not current build/runtime requirements for this frontend service.
+- `NETCORE_API_KEY`, `NETCORE_ENDPOINT` and `EMAIL_FROM` are read by the shared `email-service` implementation, but RM Distributors does not import or instantiate that service. It is listed in package dependencies and copied/built by Docker; those facts do not execute its constructor or require its settings. The package's build command is TypeScript compilation. These email values are not current build/runtime requirements for this frontend service.
 - `REVALIDATION_SECRET` is in root Turbo globalEnv, but has no application consumer here.
 - No reads of `NEXT_PUBLIC_*`, DATABASE_URL, JWT_SECRET, PANELS_URL, ticketing/payment/storage service URL variables or payment-provider secret keys were found. Browser API calls use relative `/api/...` paths, and cookie names come from shared constants.
 

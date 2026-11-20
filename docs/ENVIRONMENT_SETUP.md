@@ -7,7 +7,7 @@ This guide provides comprehensive instructions for setting up all environment va
 The SMC Unlisted Stox application consists of:
 - **Backend**: 3 NestJS microservices deployed on EC2 (auth-service, stocks-service, ticketing-service)
 - **Frontend**: Next.js application deployed on Vercel
-- **External Services**: Supabase (PostgreSQL), Upstash (Redis), Twilio (SMS), Google OAuth, SendGrid (email), Razorpay (payments)
+- **External Services**: Supabase (PostgreSQL), Upstash (Redis), Twilio (SMS), Google OAuth, Netcore Cloud (email), Razorpay (payments)
 
 This guide covers setting up all required environment variables for a complete staging deployment.
 
@@ -19,7 +19,7 @@ Before starting, ensure you have accounts set up for:
 - [Vercel](https://vercel.com) - Frontend deployment
 - [Twilio](https://twilio.com) - SMS service
 - [Google Cloud Console](https://console.cloud.google.com) - OAuth
-- [SendGrid](https://sendgrid.com) - Email service
+- [Netcore Cloud](https://netcorecloud.com) - Email service
 - [Razorpay](https://razorpay.com) - Payment gateway (India-based)
 
 ## Quick Start Checklist
@@ -31,7 +31,7 @@ Before starting, ensure you have accounts set up for:
 | JWT/Cookie Secrets | Required | 2 min | Section 1 |
 | Twilio SMS | Required | 10 min | Section 4 |
 | Google OAuth | Required | 10 min | Section 5 |
-| SendGrid Email | Required | 10 min | Section 6 |
+| Netcore Cloud Email | Required | 10 min | Section 6 |
 | Razorpay Payments | Optional | 10 min | Section 7 |
 | Vercel Frontend | Required | 5 min | Section 8 |
 | Marketing Webhooks | Optional | 15 min | Section 9 |
@@ -139,33 +139,20 @@ NEXT_PUBLIC_GOOGLE_CLIENT_ID=your-client-id.apps.googleusercontent.com
 - Enable **Google+ API** in the API Library
 - The `NEXT_PUBLIC_GOOGLE_CLIENT_ID` goes in Vercel dashboard
 
-## Section 6: SendGrid Email Setup
+## Section 6: Netcore Cloud Email Setup
 
-1. Create a SendGrid account at [sendgrid.com](https://sendgrid.com)
-2. Navigate to **Settings → API Keys**
-3. Create a new API key with "Mail Send" permissions
-4. Go to **Settings → Sender Authentication**
-5. Verify a sender email address
+1. Create a Netcore Cloud account and obtain an API key for the Email API
+2. Verify the sender email/domain you will use in the `from` address
+3. Set the API key in `NETCORE_API_KEY`
 
 **Environment Variables:**
 ```
-EMAIL_PROVIDER=sendgrid
-SENDGRID_API_KEY=SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-EMAIL_FROM=noreply@yourdomain.com
-EMAIL_MOCK_MODE=false
+NETCORE_API_KEY=your_api_key_here
+NETCORE_ENDPOINT=https://emailapi.netcorecloud.net/v5/mail/send
+EMAIL_FROM=Unlistedstox <no-reply@unlistedstox.com>
 ```
 
-**Alternative SMTP Configuration:**
-```
-EMAIL_PROVIDER=smtp
-SMTP_HOST=smtp.sendgrid.net
-SMTP_PORT=587
-SMTP_SECURE=false
-SMTP_USER=apikey
-SMTP_PASS=SG.xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx
-```
-
-**Cost:** Free tier includes 100 emails/day
+The endpoint is optional; the value above is the default.
 
 ## Section 7: Razorpay Payment Gateway Setup
 
@@ -281,7 +268,7 @@ EMAIL_MOCK_MODE=false
 - Ensure Google+ API is enabled
 
 ### Email Not Sending
-- Verify SendGrid sender authentication
+- Verify the Netcore Cloud sender email/domain
 - Check API key has correct permissions
 - Confirm sender email is verified
 
@@ -308,10 +295,9 @@ EMAIL_MOCK_MODE=false
 | `TWILIO_PHONE_NUMBER` | Auth | Yes | Twilio phone number | `+1234567890` |
 | `GOOGLE_CLIENT_ID` | Auth, Frontend | Yes | Google OAuth client ID | `xxx.apps.googleusercontent.com` |
 | `GOOGLE_CLIENT_SECRET` | Auth | Yes | Google OAuth client secret | `secret` |
-| `EMAIL_PROVIDER` | Stocks, Ticketing | Yes | Email provider | `sendgrid` |
-| `SENDGRID_API_KEY` | Stocks, Ticketing | Yes | SendGrid API key | `SG.xxxxx` |
+| `NETCORE_API_KEY` | Stocks, Ticketing | Yes | Netcore Cloud API key | `xxxxxxxxxx` |
+| `NETCORE_ENDPOINT` | Stocks, Ticketing | No | Netcore send endpoint override | `https://emailapi.netcorecloud.net/v5/mail/send` |
 | `EMAIL_FROM` | Stocks, Ticketing | Yes | Sender email | `noreply@domain.com` |
-| `EMAIL_MOCK_MODE` | Stocks, Ticketing | No | Mock email mode | `false` |
 | `KYC_MOCK_MODE` | Stocks | No | Mock KYC mode | `true` |
 | `RAZORPAY_KEY_ID` | Stocks | No | Razorpay key ID | `rzp_test_xxx` |
 | `RAZORPAY_KEY_SECRET` | Stocks | No | Razorpay key secret | `secret` |

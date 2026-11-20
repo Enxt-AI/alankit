@@ -63,6 +63,11 @@ async function bootstrap() {
 
   const fastifyInstance = app.getHttpAdapter().getInstance();
 
+  // NDPS posts the browser return and callback as URL-encoded form data.
+  fastifyInstance.addContentTypeParser('application/x-www-form-urlencoded', { parseAs: 'string' }, (_request, body, done) => {
+    done(null, Object.fromEntries(new URLSearchParams(body as string)));
+  });
+
   registerRequestIdHook(fastifyInstance);
   registerHttpAccessHook(fastifyInstance);
 

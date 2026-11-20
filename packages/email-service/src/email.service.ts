@@ -31,7 +31,7 @@ export class EmailService {
     PAYMENTS: 'Unlistedstox Payments <no-reply@unlistedstox.com>',
   };
 
-  private readonly fromEmail = process.env.RESEND_FROM_EMAIL || this.SENDERS.DEFAULT;
+  private readonly fromEmail = process.env.EMAIL_FROM || this.SENDERS.DEFAULT;
 
   // Brand Colors & Assets
   private readonly COLORS = {

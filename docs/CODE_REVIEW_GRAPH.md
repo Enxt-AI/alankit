@@ -111,7 +111,7 @@ An online platform for trading unlisted/pre-IPO stocks featuring:
 +-----------------------------------------------------------------------------�
 �  +-----------------+ +-----------------+ +-----------------+               �
 �  � db-unlistedstock� �  db-ticketing   � �  email-service  �               �
-�  � (Prisma Client) � � (Prisma Client) � � (Resend wrapper)�               �
+�  � (Prisma Client) � � (Prisma Client) � � (Netcore wrapper)              �
 �  +-----------------+ +-----------------+ +-----------------+               �
 �  +-----------------+ +-----------------+ +-----------------+               �
 �  �  redis-service  � �  cookie-crypto  � �  shared-types   �               �
@@ -163,7 +163,7 @@ graph TD
         DB_MAIN[db-unlistedstock<br/>Prisma Client]
         DB_TICKET[db-ticketing<br/>Prisma Client]
         REDIS[redis-service<br/>IORedis]
-        EMAIL[email-service<br/>Resend]
+        EMAIL[email-service<br/>Netcore Cloud]
         COOKIE[cookie-crypto<br/>AES-256-GCM]
         SHARED[shared-types<br/>TypeScript]
         STATS[stats-types<br/>TypeScript]
@@ -395,7 +395,7 @@ export { PrismaClient as TicketingPrismaClient } from './generated/prisma';
 | Package | Purpose |
 |---------|---------|
 | `redis-service` | Redis client for caching, sessions, OTP storage |
-| `email-service` | NestJS module for sending emails via Resend |
+| `email-service` | NestJS module for sending emails via Netcore Cloud |
 | `cookie-crypto` | AES-256-GCM encryption for HTTP cookies |
 
 #### 3.3 Type Packages
