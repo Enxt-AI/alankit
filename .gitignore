@@ -91,3 +91,6 @@ CODEBUDDY.md
 GEMINI.md
 QODER.md
 opencode.jsonc
+migration_lock.toml
+migration.sql
+graphify-out 
