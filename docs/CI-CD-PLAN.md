@@ -108,7 +108,7 @@ auth-service:
   # … keep container_name, env_file, environment, depends_on, networks, healthcheck, mem_limit
 ```
 
-Same for stocks, ticketing, payments, storage, web, panels, rm-distributors. Keep `nginx` (no build) and `postgres` (profile `local-db`) untouched. Keep `staging-network` external.
+Same for stocks, ticketing, payments, storage, web, panels, rm-distributors. Keep `nginx` (no build) untouched. Keep `staging-network` external.
 
 ### 3.5 `scripts/deploy-staging.sh` (runs on server via runner)
 

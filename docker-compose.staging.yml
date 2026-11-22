@@ -262,27 +262,7 @@ services:
         max-size: 10m
         max-file: 3
 
-  postgres:
-    profiles:
-      - local-db
-    image: postgres:15-alpine
-    container_name: postgres-staging
-    restart: unless-stopped
-    environment:
-      POSTGRES_USER: ${POSTGRES_USER}
-      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
-    volumes:
-      - ./.state/postgres-data:/var/lib/postgresql/data
-      - ./docker/postgres-init:/docker-entrypoint-initdb.d:ro
-    networks:
-      - staging-network
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER}"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
 networks:
   staging-network:
     external: true
-    name: smc-staging-network
+    name: alankit-staging
