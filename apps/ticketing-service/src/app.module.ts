@@ -3,7 +3,6 @@ import { APP_GUARD } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { BullModule } from '@nestjs/bull';
 import { join } from 'path';
-import { ScheduleModule } from '@nestjs/schedule';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { HealthModule } from './health/health.module';
@@ -17,7 +16,6 @@ import { NotificationModule } from './notification/notification.module';
 import { AssignmentModule } from './assignment/assignment.module';
 import { ReportsModule } from './reports/reports.module';
 import { AuthModule } from './auth/auth.module';
-import { SchedulerModule } from './scheduler/scheduler.module';
 import { EmailModule } from 'email-service';
 import { GlobalJwtAuthGuard } from './auth/guards/global-jwt-auth.guard';
 
@@ -34,7 +32,6 @@ import { GlobalJwtAuthGuard } from './auth/guards/global-jwt-auth.guard';
       }),
       inject: [ConfigService],
     }),
-    ScheduleModule.forRoot(),
     HealthModule,
     PrismaModule,
     TicketModule,
@@ -46,7 +43,6 @@ import { GlobalJwtAuthGuard } from './auth/guards/global-jwt-auth.guard';
     AssignmentModule,
     ReportsModule,
     AuthModule,
-    SchedulerModule,
     EmailModule,
   ],
   controllers: [AppController],

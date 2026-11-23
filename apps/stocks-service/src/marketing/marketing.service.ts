@@ -1799,7 +1799,6 @@ export class MarketingService implements OnModuleInit {
    * - MARKETING_LEAD_SYNC_CRON: cron expression, default every 2 minutes
    * - MARKETING_LEAD_SYNC_ENABLED: set to 'false' to disable
    */
-  @Cron(process.env.MARKETING_LEAD_SYNC_CRON || '*/2 * * * *')
   async autoSyncDatabaseUsersToLeads() {
     if (process.env.MARKETING_LEAD_SYNC_ENABLED === 'false') return;
     if (this.leadSyncInFlight) {

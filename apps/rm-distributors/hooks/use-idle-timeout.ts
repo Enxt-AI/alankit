@@ -42,7 +42,7 @@ export function useIdleTimeout(timeoutMs: number = 10 * 60 * 1000) {
     }
 
     try {
-      await fetch(logoutEndpoint, {
+      await fetch((await import("@/lib/api-fetch")).resolveApiUrl(logoutEndpoint), {
         method: "POST",
         headers: getAuthHeaders(),
         credentials: "include",

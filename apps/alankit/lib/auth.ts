@@ -22,7 +22,8 @@ export async function authRequest(path: string, body?: Record<string, string>): 
   } catch {
     fingerprint = "browser-storage-unavailable";
   }
-  const response = await fetch(`/api/auth/${path}`, {
+  const authBase = (process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:3002').replace(/\/$/, '');
+  const response = await fetch(`${authBase}/api/auth/${path}`, {
     method: body ? "POST" : "GET",
     credentials: "include",
     cache: "no-store",

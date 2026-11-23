@@ -44,16 +44,8 @@ const nextConfig = {
     ];
   },
   async rewrites() {
-    // All /api/* and /storage/* calls are proxied to the single backend gateway defined by BACKEND_ORIGIN.
-    const backendOrigin = process.env.BACKEND_ORIGIN?.trim().replace(/\/$/, '');
-    if (!backendOrigin) {
-      throw new Error('BACKEND_ORIGIN environment variable is required');
-    }
-
-    return [
-      { source: '/storage/:path*', destination: `${backendOrigin}/storage/:path*` },
-      { source: '/api/:path*', destination: `${backendOrigin}/api/:path*` },
-    ];
+    // Client now calls backend services directly; no proxy rewrites.
+    return [];
   },
   async headers() {
     return [

@@ -9,6 +9,7 @@ import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff, ChevronDown, Check, Search, X } from "lucide-react";
 import { getAuthHeaders } from "@/lib/auth-headers";
+import { resolveApiUrl } from "@/lib/api-fetch";
 import { cn } from "@/lib/utils";
 
 type BranchOption = { id: string; name: string };
@@ -35,7 +36,7 @@ export default function BranchLogin() {
     let cancelled = false;
     (async () => {
       try {
-        const response = await fetch("/api/auth/branch/login-options", {
+        const response = await fetch(resolveApiUrl("/api/auth/branch/login-options"), {
           headers: { ...getAuthHeaders() },
           credentials: "include",
         });
@@ -142,7 +143,7 @@ export default function BranchLogin() {
     setError(null);
 
     try {
-      const response = await fetch("/api/auth/branch/login", {
+      const response = await fetch(resolveApiUrl("/api/auth/branch/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

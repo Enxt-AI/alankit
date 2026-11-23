@@ -177,7 +177,6 @@ export class OrdersService {
     return this.alankitEsign.createTransaction({ signerName, location: 'India', pdf });
   }
 
-  @Cron(CronExpression.EVERY_DAY_AT_3AM, { timeZone: 'Asia/Kolkata' })
   async cleanupAlankitSourcePdfs() {
     if (!this.configService.get('ALANKIT_ESIGN_SUBSCRIPTION_KEY')) return;
     const removed = await this.signedDealSheets.cleanupExpiredAlankitSourcePdfs();
@@ -2952,7 +2951,6 @@ export class OrdersService {
    * Release Expired Inventory Reservations (Runs every minute)
    * Sweeps for orders that exceeded their reservation window and refunds stock.
    */
-  @Cron(CronExpression.EVERY_MINUTE)
   async releaseExpiredInventory() {
     const expiredOrders = await this.prisma.order.findMany({
       where: {
@@ -3024,7 +3022,6 @@ export class OrdersService {
   /**
    * Daily accounting pass for settlement data written by the Payments service.
    */
-  @Cron(CronExpression.EVERY_DAY_AT_6AM)
   async syncPendingSettlementVouchers() {
     try {
       await this.accountingService.autoCreatePendingSettlementVouchers();

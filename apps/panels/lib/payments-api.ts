@@ -1,4 +1,4 @@
-import { stocksApi } from './api-client';
+import { paymentsApi } from './api-client';
 import {
   CreatePaymentOrderResponse,
   VerifyPaymentDto,
@@ -11,7 +11,7 @@ import {
  */
 export async function createPaymentOrder(orderId: string): Promise<CreatePaymentOrderResponse> {
   try {
-    const response = await stocksApi.post<CreatePaymentOrderResponse>(
+    const response = await paymentsApi.post<CreatePaymentOrderResponse>(
       `/payments/${orderId}/create`
     );
     return response.data;
@@ -48,7 +48,7 @@ export async function createPaymentOrder(orderId: string): Promise<CreatePayment
  */
 export async function verifyPayment(dto: VerifyPaymentDto): Promise<VerifyPaymentResponse> {
   try {
-    const response = await stocksApi.post<VerifyPaymentResponse>('/payments/verify', dto);
+    const response = await paymentsApi.post<VerifyPaymentResponse>('/payments/verify', dto);
     return response.data;
   } catch (error: any) {
     if (error.response) {
@@ -83,7 +83,7 @@ export async function verifyPayment(dto: VerifyPaymentDto): Promise<VerifyPaymen
  */
 export async function getPaymentStatus(orderId: string): Promise<PaymentStatusResponse> {
   try {
-    const response = await stocksApi.get<PaymentStatusResponse>(`/payments/${orderId}`);
+    const response = await paymentsApi.get<PaymentStatusResponse>(`/payments/${orderId}`);
     return response.data;
   } catch (error: any) {
     if (error.response) {
@@ -112,7 +112,7 @@ export async function getPaymentStatus(orderId: string): Promise<PaymentStatusRe
  */
 export async function syncCashfreeStatusAdmin(orderId: string): Promise<any> {
   try {
-    const response = await stocksApi.post(`/payments/admin/${orderId}/sync-cashfree`);
+    const response = await paymentsApi.post(`/payments/admin/${orderId}/sync-ndps`);
     return response.data;
   } catch (error: any) {
     if (error.response) {

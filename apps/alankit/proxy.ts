@@ -9,14 +9,14 @@ export async function proxy(request: NextRequest) {
     return response;
   };
 
-  const backendOrigin = process.env.BACKEND_ORIGIN?.trim().replace(/\/$/, "");
+  const authBase = (process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || process.env.BACKEND_ORIGIN || 'http://localhost:3002').trim().replace(/\/$/, "");
   const cookie = request.headers.get("cookie");
-  if (!backendOrigin || !cookie) return deny();
+  if (!authBase || !cookie) return deny();
 
   try {
     // Validate the session with the auth service, including expiry, revocation,
     // and account status. Cookie presence alone never grants access.
-    const result = await fetch(`${backendOrigin}/api/auth/profile`, {
+    const result = await fetch(`${authBase}/api/auth/profile`, {
       headers: { cookie },
       cache: "no-store",
       redirect: "error",

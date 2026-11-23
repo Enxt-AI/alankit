@@ -46,19 +46,9 @@ export class StocksService implements OnModuleInit {
   ) {}
 
   async onModuleInit() {
-    // Schedule the midnight job for capturing daily stock snapshots
-    if (this.snapshotsQueue) {
-      await this.snapshotsQueue.add(
-        'capture-daily-snapshots',
-        {},
-        {
-          repeat: { cron: '0 0 * * *' }, // Midnight every day
-          jobId: 'daily-snapshot-job' // Ensure it's not duplicated
-       }
-      );
-      this.logger.log('Scheduled daily snapshot job in BullMQ');
-   }
- }
+    // Daily snapshot scheduling disabled for local/dev runs.
+    this.logger.log('Daily snapshot job scheduling skipped');
+  }
 
   /**
    * Create a new stock (Admin only)

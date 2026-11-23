@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { getAuthHeaders } from "@/lib/auth-headers";
+import { resolveApiUrl } from "@/lib/api-fetch";
 
 export default function RMLogin() {
   const [email, setEmail] = useState("");
@@ -29,7 +30,7 @@ export default function RMLogin() {
     try {
       const endpoint = rmType === "internal" ? "/api/auth/internal-rm/login" : "/api/auth/distributor-rm/login";
       
-      const response = await fetch(endpoint, {
+      const response = await fetch(resolveApiUrl(endpoint), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

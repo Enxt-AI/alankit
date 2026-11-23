@@ -18,7 +18,26 @@ function getPanelContextHeader(): Record<string, string> {
  * Authenticated fetch wrapper.
  * Requests use the same host so browser cookies are sent with the API calls.
  */
+const AUTH_SERVICE_URL = (process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:3002').replace(/\/$/, '');
+const STOCKS_SERVICE_URL = (process.env.NEXT_PUBLIC_STOCKS_SERVICE_URL || 'http://localhost:3003').replace(/\/$/, '');
+const TICKETING_SERVICE_URL = (process.env.NEXT_PUBLIC_TICKETING_SERVICE_URL || 'http://localhost:3001').replace(/\/$/, '');
+const PAYMENTS_SERVICE_URL = (process.env.NEXT_PUBLIC_PAYMENTS_SERVICE_URL || 'http://localhost:3004').replace(/\/$/, '');
+
+export function resolveApiUrl(input: RequestInfo | URL): RequestInfo | URL {
+  if (typeof input !== 'string' || !input.startsWith('/api/')) return input;
+
+  if (input.startsWith('/api/auth/')) return `${AUTH_SERVICE_URL}${input}`;
+  if (input.startsWith('/api/stocks/') || input.startsWith('/api/orders/') || input.startsWith('/api/baskets/') || input.startsWith('/api/content/')) {
+    return `${STOCKS_SERVICE_URL}${input}`;
+  }
+  if (input.startsWith('/api/tickets/') || input.startsWith('/api/labels/')) return `${TICKETING_SERVICE_URL}${input}`;
+  if (input.startsWith('/api/payments/')) return `${PAYMENTS_SERVICE_URL}${input}`;
+
+  return input;
+}
+
 export async function apiFetch(input: RequestInfo | URL, init?: RequestInit): Promise<Response> {
+  input = resolveApiUrl(input);
   const mergedInit: RequestInit = {
     ...init,
     headers: {

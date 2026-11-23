@@ -1,7 +1,6 @@
 import { Module } from '@nestjs/common';
 import { APP_GUARD, APP_INTERCEPTOR } from '@nestjs/core';
 import { ConfigModule, ConfigService } from '@nestjs/config';
-import { ScheduleModule } from '@nestjs/schedule';
 import { BullModule } from '@nestjs/bull';
 import { esignRedisOptions } from './orders/esign.config';
 import { AppController } from './app.controller';
@@ -91,8 +90,6 @@ import { CarouselModule } from './carousel/carousel.module';
     SeoMetadataModule, // Global SEO metadata management
     ApprovalsModule, // Maker-Checker Approvals
     CarouselModule, // App carousel media management (CMS + Admin + Public)
-    // Global scheduler (cron jobs). IMPORTANT: Register once to avoid duplicate job execution.
-    ScheduleModule.forRoot(),
   ],
   controllers: [AppController],
   providers: [

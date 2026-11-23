@@ -326,7 +326,6 @@ export class NotificationsService {
    * - Deletes notifications regardless of read/unread status.
    * - DB-only operation: no Redis invalidation needed (hot caches are short-lived: 60s TTL).
    */
-  @Cron('0 2 * * *')
   async cleanupOldNotifications() {
     this.logger.log(
       `Starting notification cleanup (retention: ${NotificationsService.RETENTION_DAYS} days)`,

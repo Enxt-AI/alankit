@@ -10,7 +10,8 @@ export type KycStatus = {
 async function request(path: string, body?: object): Promise<KycStatus> {
   let fingerprint = '';
   try { fingerprint = localStorage.getItem('device-fingerprint') || ''; } catch {}
-  const response = await fetch(`/api/kyc/alankit/${path}`, {
+  const stocksBase = (process.env.NEXT_PUBLIC_STOCKS_SERVICE_URL || 'http://localhost:3003').replace(/\/$/, '');
+  const response = await fetch(`${stocksBase}/api/kyc/alankit/${path}`, {
     method: body ? 'POST' : 'GET', credentials: 'include', cache: 'no-store',
     signal: AbortSignal.timeout(25_000),
     headers: { 'x-device-fingerprint': fingerprint, ...(body ? { 'Content-Type': 'application/json' } : {}) },

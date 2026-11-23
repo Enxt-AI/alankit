@@ -31,17 +31,12 @@ function resolveBrowserSafeBaseURL(envValue: string | undefined): string {
   const raw = (envValue || "").trim();
   if (!raw) return fallback;
 
-  // Relative baseURLs are already same-origin.
+  // Allow direct backend URLs (absolute) so the client can call services directly.
   if (raw.startsWith("/")) return raw;
 
-  // In the browser, prefer same-origin requests so HttpOnly cookies are
-  // set and sent reliably without cross-origin CORS+credentials.
-  if (typeof window !== "undefined") {
-    return fallback;
-  }
-
-  // Non-browser contexts: allow explicit env baseURL.
-  return raw;
+  const origin = raw.replace(/\/$/, "");
+  if (origin.endsWith("/api")) return origin;
+  return `${origin}/api`;
 }
 
 // Auth Service API Client
@@ -54,6 +49,13 @@ const authApi = axios.create({
 // Stocks Service API Client
 const stocksApi = axios.create({
   baseURL: resolveBrowserSafeBaseURL(process.env.NEXT_PUBLIC_STOCKS_SERVICE_URL),
+  withCredentials: true,
+  timeout: 60000,
+});
+
+// Payments Service API Client
+const paymentsApi = axios.create({
+  baseURL: resolveBrowserSafeBaseURL(process.env.NEXT_PUBLIC_PAYMENTS_SERVICE_URL),
   withCredentials: true,
   timeout: 60000,
 });
@@ -185,4 +187,7 @@ authApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor)
 stocksApi.interceptors.request.use(requestInterceptor, requestErrorInterceptor);
 stocksApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
 
-export { authApi, stocksApi, requestInterceptor, requestErrorInterceptor };
+paymentsApi.interceptors.request.use(requestInterceptor, requestErrorInterceptor);
+paymentsApi.interceptors.response.use(responseInterceptor, responseErrorInterceptor);
+
+export { authApi, stocksApi, paymentsApi, requestInterceptor, requestErrorInterceptor };

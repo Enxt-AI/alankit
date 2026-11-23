@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { Eye, EyeOff } from "lucide-react";
 import { getAuthHeaders } from "@/lib/auth-headers";
+import { resolveApiUrl } from "@/lib/api-fetch";
 
 export default function DistributorLogin() {
   const [email, setEmail] = useState("");
@@ -26,7 +27,7 @@ export default function DistributorLogin() {
     setError(null);
 
     try {
-      const response = await fetch("/api/auth/distributor/login", {
+      const response = await fetch(resolveApiUrl("/api/auth/distributor/login"), {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

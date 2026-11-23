@@ -7,7 +7,8 @@ export type CheckoutSession = {
 export async function paymentRequest<T>(path: string, body?: object): Promise<T> {
   let fingerprint = '';
   try { fingerprint = localStorage.getItem('device-fingerprint') || ''; } catch {}
-  const response = await fetch(`/api/${path}`, {
+  const paymentsBase = (process.env.NEXT_PUBLIC_PAYMENTS_SERVICE_URL || 'http://localhost:3004').replace(/\/$/, '');
+  const response = await fetch(`${paymentsBase}/api/${path}`, {
     method: body ? 'POST' : 'GET', credentials: 'include', cache: 'no-store',
     signal: AbortSignal.timeout(30000),
     headers: { 'x-device-fingerprint': fingerprint, ...(body ? { 'Content-Type': 'application/json' } : {}) },

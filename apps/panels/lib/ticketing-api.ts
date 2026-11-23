@@ -3,11 +3,6 @@ import axios from 'axios';
 function resolveTicketingBaseURL(envValue: string | undefined): string {
   const fallback = '/api';
   const raw = (envValue || '').trim();
-
-  if (typeof window !== 'undefined') {
-    return fallback;
-  }
-
   if (!raw) return fallback;
   if (raw.startsWith('/')) return raw;
 

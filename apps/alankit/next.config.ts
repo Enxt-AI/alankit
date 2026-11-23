@@ -17,16 +17,8 @@ const nextConfig: NextConfig = {
     },
   },
   async rewrites() {
-    if (!backendOrigin) {
-      throw new Error("BACKEND_ORIGIN environment variable is required");
-    }
-
-    return [
-      {
-        source: "/api/:path*",
-        destination: `${backendOrigin}/api/:path*`,
-      },
-    ];
+    // Client now calls backend services directly; no proxy rewrites.
+    return [];
   },
 };
 

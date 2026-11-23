@@ -24,18 +24,8 @@ const nextConfig: NextConfig = {
     ];
   },
   async rewrites() {
-    // Proxy backend /api/* calls to the single backend gateway defined by BACKEND_ORIGIN.
-    const backendOrigin = process.env.BACKEND_ORIGIN?.trim().replace(/\/$/, '');
-    if (!backendOrigin) {
-      throw new Error('BACKEND_ORIGIN environment variable is required');
-    }
-
-    return [
-      { source: '/api/auth/:path*', destination: `${backendOrigin}/api/auth/:path*` },
-      { source: '/api/stocks/:path*', destination: `${backendOrigin}/api/stocks/:path*` },
-      { source: '/api/orders/:path*', destination: `${backendOrigin}/api/orders/:path*` },
-      // Health check is now handled locally via app/api/health/route.ts
-    ];
+    // Client now calls backend services directly; no proxy rewrites.
+    return [];
   },
 };
 

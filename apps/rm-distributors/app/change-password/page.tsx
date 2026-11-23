@@ -8,10 +8,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
 import { withBasePath } from "@/lib/base-path";
+import { resolveApiUrl } from "@/lib/api-fetch";
 
 /** POST JSON to the auth-service (proxied via next.config rewrites) and normalise errors */
 async function postJson(url: string, body: Record<string, unknown>) {
-  const response = await fetch(url, {
+  const response = await fetch(resolveApiUrl(url), {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(body),
