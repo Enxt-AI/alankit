@@ -34,6 +34,9 @@ export class PaymentService {
       const order = await tx.order.findUnique({ where: { id: orderId }, include: { user: true } });
       if (!order || order.userId !== userId) throw new NotFoundException('Order not found');
       if (order.status !== 'PENDING' || ['PAID', 'SUCCESS'].includes(order.paymentStatus)) throw new BadRequestException('Order is not payable');
+      if (order.esignStatus !== 'SIGNED' || order.esignValidationVerdict !== 'MATCH') {
+        throw new BadRequestException('A completed e-sign with a verified KYC identity match is required before payment');
+      }
       const deadline = order.expiresAt ?? new Date(order.createdAt.getTime() + 86400000);
       if (Date.now() >= deadline.getTime()) throw new BadRequestException('This order has expired');
       if (order.user.kycStatus !== 'VERIFIED') throw new BadRequestException('KYC verification required before payment');

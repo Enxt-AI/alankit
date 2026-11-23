@@ -1,8 +1,8 @@
 # E-sign worker
 
-The stocks API produces jobs. Only the separate worker consumes `digitap-esign`.
+The stocks API produces jobs. Only the separate worker consumes `alankit-esign`.
 Start both processes; starting only the API will leave e-sign jobs waiting.
-Both need the same Redis connection, database, Digitap and storage configuration.
+Both need the same Redis connection, database, Alankit and storage configuration.
 The worker has no HTTP listener and does not import the application's scheduler.
 
 ## Local development
@@ -38,7 +38,7 @@ Chromium uses memory outside the Node heap. Check total usage with `docker stats
 
 One replica at concurrency 1 consumes at most one queued job at a time.
 Replicas multiply concurrency, so increase them only after measuring resources
-and confirming Digitap's quota. Each worker logs queue wait, processing duration,
+and confirming Alankit's quota. Each worker logs queue wait, processing duration,
 and Node RSS (which excludes Chromium child processes).
 
 ```sh
@@ -53,13 +53,8 @@ alongside API releases. Do not run an additional Compose API alongside that API.
 Allow at least 120 seconds for graceful worker shutdown rather than force removal.
 
 Deploy the worker and API together, and drain the old embedded consumers during
-the first rollout. Asynchronous HTTP polling and shared provider rate limiting
-remain unfinished. The HTTP endpoints still wait for their queued result.
-
-Digitap account quotas confirmed on 2026-10-08: 10 requests/second,
-600 requests/minute, and 36,000 requests/hour. These are shared account quotas,
-not per-worker allowances. A future shared limiter must include both worker and
-API e-sign requests; increasing replicas must not multiply these limits.
+the first rollout. The HTTP endpoints still wait for their queued result.
+Alankit's account quotas and shared rate-limit policy are not documented yet.
 
 ## Request deduplication
 
@@ -90,6 +85,11 @@ reconciliation rather than automatic recreation; archive jobs retain their
 existing retry behavior. This prevents duplicate execution per retained request
 key, but cannot guarantee exactly-once provider behavior after Redis data loss.
 
-Document upload is awaited before a generation result becomes reusable. Provider
-generation and upload calls have 60-second abort signals; a timeout is treated as
-an uncertain outcome, not permission to create another session.
+Source-document upload is awaited before a generation result becomes reusable.
+Alankit transaction calls have 60-second abort signals; a timeout is treated as
+an uncertain outcome, not permission to create another session. Before the
+provider migration, drain or reconcile outstanding jobs from the legacy
+`digitap-esign` queue; the new worker consumes only `alankit-esign`.
+
+Alankit request quotas have not been confirmed. Keep concurrency at 1 until the
+provider confirms its limits and production behavior.

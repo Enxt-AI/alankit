@@ -8,11 +8,11 @@ import { positiveInteger } from './esign.config';
 
 /** Registered only by EsignWorkerModule. One dispatcher gives a real per-worker cap. */
 @Injectable()
-export class DigitapEsignProcessor implements OnModuleInit, BeforeApplicationShutdown {
-  private readonly logger = new PinoNestLogger('stocks-service', 'DigitapEsignProcessor');
+export class EsignProcessor implements OnModuleInit, BeforeApplicationShutdown {
+  private readonly logger = new PinoNestLogger('stocks-service', 'EsignProcessor');
 
   constructor(
-    @InjectQueue('digitap-esign') private readonly queue: Queue,
+    @InjectQueue('alankit-esign') private readonly queue: Queue,
     private readonly ordersService: OrdersService,
     private readonly config: ConfigService,
   ) {}
@@ -71,7 +71,7 @@ export class DigitapEsignProcessor implements OnModuleInit, BeforeApplicationShu
     }
     const result = await generate();
     // If the process dies before Bull acknowledges completion, replay this
-    // result on redelivery without creating a second Digitap document.
+    // result on redelivery without creating a second provider transaction.
     await this.queue.client.hset(key, 'esignExecutionResult', JSON.stringify(result));
     return result;
   }

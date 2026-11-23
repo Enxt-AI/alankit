@@ -144,12 +144,15 @@ async function requestESign<T>(url: string, body: unknown, explicitRequestId?: s
     if (pendingESignRequests.get(intentKey) === requestId) pendingESignRequests.delete(intentKey);
     return response.data;
   } catch (error: any) {
-    // Do not rotate the key on a timeout: Digitap may already have created it.
+    // Do not rotate the key on a timeout: Alankit may already have created it.
     throw new Error(error.response?.data?.message || 'Unable to establish e-Sign connection. Please try again.');
   }
 }
 
-export async function generateESign(orderId: string, requestId?: string): Promise<{ docId: string }> {
+export async function generateESign(
+  orderId: string,
+  requestId?: string,
+): Promise<{ docId: string; eSignUrl: string; pdfUrl: string }> {
   return requestESign('/orders/' + orderId + '/generate-esign', undefined, requestId);
 }
 
@@ -186,10 +189,10 @@ export async function generateESignSession(
  * Verify E-Sign Identity
  *
  * Synchronous identity gate — calls the backend to fetch the signed document
- * from Digitap and validate the signer's Aadhaar identity against our KYC records.
- * Must be called BEFORE createOrder to block mismatched Aadhaar signers.
+ * and validate the signer against our KYC identity policy.
+ * Only a MATCH verdict permits sign-first order linkage and payment.
  *
- * @param docId  Digitap document ID from the e-sign session
+ * @param docId  Provider reference from the e-sign session
  * @returns { verdict: 'MATCH' | 'MISMATCH' | 'INSUFFICIENT_DATA', reason: string }
  */
 export async function verifyESignIdentity(

@@ -17,7 +17,7 @@ describe('E-sign request deduplication', () => {
         return { name, data: payload };
       }),
       getJob: jest.fn(async id => jobs.get(id)),
-      toKey: (id: string) => `bull:digitap-esign:${id}`,
+      toKey: (id: string) => `bull:alankit-esign:${id}`,
       client: { hget: jest.fn().mockResolvedValue(null) },
     };
     service = new EsignRequestsService(queue);

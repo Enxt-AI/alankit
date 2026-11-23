@@ -7,7 +7,7 @@ import { Test } from '@nestjs/testing';
 import { BullModule, getQueueToken } from '@nestjs/bull';
 import { ConfigService } from '@nestjs/config';
 import { MODULE_METADATA } from '@nestjs/common/constants';
-import { DigitapEsignProcessor } from './digitap-esign.processor';
+import { EsignProcessor } from './esign.processor';
 import { OrdersService } from './orders.service';
 import { OrdersModule } from './orders.module';
 import { EsignWorkerModule } from '../esign-worker.module';
@@ -18,8 +18,8 @@ describe('E-sign worker lifecycle', () => {
   it('allows Nest initialization while the Bull consumer loop remains pending', async () => {
     const queue = makeQueue();
     const app = await Test.createTestingModule({
-      providers: [DigitapEsignProcessor,
-        { provide: getQueueToken('digitap-esign'), useValue: queue },
+      providers: [EsignProcessor,
+        { provide: getQueueToken('alankit-esign'), useValue: queue },
         { provide: OrdersService, useValue: {} },
         { provide: ConfigService, useValue: new ConfigService({}) },
       ],
@@ -32,15 +32,15 @@ describe('E-sign worker lifecycle', () => {
   }, 2000);
 
   it('registers the processor only in the worker and exports its queue dependency', () => {
-    expect(Reflect.getMetadata(MODULE_METADATA.PROVIDERS, OrdersModule)).not.toContain(DigitapEsignProcessor);
+    expect(Reflect.getMetadata(MODULE_METADATA.PROVIDERS, OrdersModule)).not.toContain(EsignProcessor);
     expect(Reflect.getMetadata(MODULE_METADATA.EXPORTS, OrdersModule)).toContain(BullModule);
     expect(Reflect.getMetadata(MODULE_METADATA.PROVIDERS, EsignWorkerModule)
-      .filter((provider: unknown) => provider === DigitapEsignProcessor)).toHaveLength(1);
+      .filter((provider: unknown) => provider === EsignProcessor)).toHaveLength(1);
   });
 
   it('accepts explicit concurrency and propagates synchronous registration failures', () => {
     const queue = makeQueue();
-    const worker = new DigitapEsignProcessor(queue as any, {} as any, new ConfigService({ ESIGN_CONCURRENCY: '3' }));
+    const worker = new EsignProcessor(queue as any, {} as any, new ConfigService({ ESIGN_CONCURRENCY: '3' }));
     worker.onModuleInit();
     expect(queue.process).toHaveBeenCalledWith('*', 3, expect.any(Function));
     queue.process.mockImplementation(() => { throw new Error('Cannot define the same handler twice'); });
@@ -49,7 +49,7 @@ describe('E-sign worker lifecycle', () => {
 
   it.each(['0', '-1', '1.5', 'abc', '33'])('rejects invalid concurrency %s before registration', value => {
     const queue = makeQueue();
-    const worker = new DigitapEsignProcessor(queue as any, {} as any, new ConfigService({ ESIGN_CONCURRENCY: value }));
+    const worker = new EsignProcessor(queue as any, {} as any, new ConfigService({ ESIGN_CONCURRENCY: value }));
     expect(() => worker.onModuleInit()).toThrow('ESIGN_CONCURRENCY');
     expect(queue.process).not.toHaveBeenCalled();
   });
@@ -59,7 +59,7 @@ describe('E-sign worker lifecycle', () => {
     queue.process.mockReturnValue(Promise.reject(new Error('consumer failed')));
     const exit = jest.spyOn(process, 'exit').mockImplementation(() => undefined as never);
     try {
-      new DigitapEsignProcessor(queue as any, {} as any, new ConfigService({})).onModuleInit();
+      new EsignProcessor(queue as any, {} as any, new ConfigService({})).onModuleInit();
       await Promise.resolve();
       expect(exit).toHaveBeenCalledWith(1);
     } finally {
@@ -70,19 +70,19 @@ describe('E-sign worker lifecycle', () => {
   it('does not repeat generation when a stalled job is delivered to another worker', async () => {
     let claimed = false;
     const queue = {
-      toKey: (id: string) => `bull:digitap-esign:${id}`,
+      toKey: (id: string) => `bull:alankit-esign:${id}`,
       client: {
         eval: jest.fn(async () => { if (claimed) return 0; claimed = true; return 1; }),
         hget: jest.fn().mockResolvedValue(null), hset: jest.fn().mockResolvedValue(1),
       },
     };
     const orders = { processGenerateESignSession: jest.fn().mockResolvedValue({ docId: 'doc-1' }) };
-    const workers = [0, 1].map(() => new DigitapEsignProcessor(queue as any, orders as any, new ConfigService({})));
+    const workers = [0, 1].map(() => new EsignProcessor(queue as any, orders as any, new ConfigService({})));
     const job = { id: 'job-1', name: 'generate-session', timestamp: Date.now(), data: { userId: 'user-1', dto: {} } };
     const results = await Promise.allSettled(workers.map(worker => worker.process(job as any)));
     expect(orders.processGenerateESignSession).toHaveBeenCalledTimes(1);
     expect(results.filter(result => result.status === 'rejected')).toHaveLength(1);
-    expect(queue.client.hset).toHaveBeenCalledWith('bull:digitap-esign:job-1', 'esignExecutionResult', JSON.stringify({ docId: 'doc-1' }));
+    expect(queue.client.hset).toHaveBeenCalledWith('bull:alankit-esign:job-1', 'esignExecutionResult', JSON.stringify({ docId: 'doc-1' }));
   });
 
   it('recovers a saved result after a crash before Bull completion acknowledgement', async () => {
@@ -90,7 +90,7 @@ describe('E-sign worker lifecycle', () => {
       eval: jest.fn().mockResolvedValue(0), hget: jest.fn().mockResolvedValue('{"docId":"saved-doc"}'),
     } };
     const orders = { processGenerateESign: jest.fn() };
-    const worker = new DigitapEsignProcessor(queue as any, orders as any, new ConfigService({}));
+    const worker = new EsignProcessor(queue as any, orders as any, new ConfigService({}));
     expect(await worker.process({ id: 'job-1', name: 'generate-order-esign', timestamp: Date.now(), data: {} } as any)).toEqual({ docId: 'saved-doc' });
     expect(orders.processGenerateESign).not.toHaveBeenCalled();
   });

@@ -14,6 +14,7 @@ import { RedisModule } from '../redis/redis.module';
 import { AccountingModule } from '../accounting/accounting.module';
 import { BullModule } from '@nestjs/bull';
 import { EsignRequestsService } from './esign-requests.service';
+import { AlankitEsignService } from './alankit-esign.service';
 
 /**
  * Orders Module
@@ -30,11 +31,11 @@ import { EsignRequestsService } from './esign-requests.service';
     RedisModule,
     AccountingModule,
     BullModule.registerQueue({
-      name: 'digitap-esign',
+      name: 'alankit-esign',
     }),
   ],
   controllers: [OrdersController],
-  providers: [SignedDealSheetService, OrdersService, PdfGeneratorService, EsignRequestsService],
+  providers: [SignedDealSheetService, OrdersService, PdfGeneratorService, EsignRequestsService, AlankitEsignService],
   exports: [OrdersService, BullModule],
 })
 export class OrdersModule {}

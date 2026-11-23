@@ -7,7 +7,7 @@ describe('E-sign ownership before order creation', () => {
   beforeEach(() => {
     prisma = {
       order: { findFirst: jest.fn().mockResolvedValue(null) },
-      esignAttempt: { findFirst: jest.fn(), upsert: jest.fn() },
+      esignAttempt: { findFirst: jest.fn(), findUnique: jest.fn(), upsert: jest.fn() },
     };
     service = Object.create(OrdersService.prototype);
     Object.assign(service, { prisma, logger: { error: jest.fn() } });
@@ -41,6 +41,25 @@ describe('E-sign ownership before order creation', () => {
     await service.logEsignAttempt({ docId: ' doc-1 ', userId: 'user-1' });
     expect(prisma.esignAttempt.upsert).toHaveBeenCalledWith(expect.objectContaining({
       where: { docId: 'doc-1' }, create: expect.objectContaining({ docId: 'doc-1', userId: 'user-1' }),
+    }));
+  });
+
+  it('does not treat an Alankit signing callback as a KYC identity match', async () => {
+    prisma.esignAttempt.findFirst.mockResolvedValue({ docId: 'ref-1', userId: 'user-1' });
+    prisma.esignAttempt.findUnique.mockResolvedValue({
+      docId: 'ref-1',
+      userId: 'user-1',
+      status: 'SIGNED',
+      intent: { provider: 'ALANKIT' },
+    });
+    prisma.esignAttempt.update = jest.fn().mockResolvedValue({});
+    prisma.order.updateMany = jest.fn().mockResolvedValue({ count: 0 });
+
+    const result = await service.verifyESignIdentity('ref-1', 'user-1');
+
+    expect(result.verdict).toBe('INSUFFICIENT_DATA');
+    expect(prisma.order.updateMany).toHaveBeenCalledWith(expect.objectContaining({
+      data: { esignValidationVerdict: 'INSUFFICIENT_DATA' },
     }));
   });
 });
