@@ -147,31 +147,51 @@ Authorization: Bearer <token>
 
 ## Environment Variables
 
+Create a `.env` file in this service directory. Required and optional variables:
+
 ```env
-# Database
-DATABASE_URL="postgresql://postgres:postgres@localhost:5432/stocks"
-
-# Server
-PORT=3002
+# Core
 NODE_ENV=development
+PORT=3002
+LOG_LEVEL=debug
 
-# JWT Secret
-JWT_SECRET=your-super-secret-jwt-key-change-in-production-use-long-random-string
+# Database (PostgreSQL)
+DATABASE_URL=postgresql://user:password@host:5432/dbname
 
-# Google OAuth Configuration
-GOOGLE_CLIENT_ID=GOOGLE_CLIENT_ID_HERE
-GOOGLE_CLIENT_SECRET=GOOGLE_CLIENT_SECRET_HERE
+# Redis (required; use redis://localhost:6379 for local docker redis)
+REDIS_URL=redis://localhost:6379
 
-# Redis
-REDIS_HOST=localhost
-REDIS_PORT=6379
+# Cookies & encryption
+COOKIE_ENCRYPTION_KEY=replace-with-64-char-hex
+FRONTEND_URL=http://localhost:3000
+COOKIE_DOMAIN=
+SECURE_COOKIES=false
 
-# Rate Limiting (Phone OTP)
-PHONE_OTP_REQUEST_LIMIT=3        # Max OTP requests per phone per window
-PHONE_OTP_REQUEST_WINDOW=900     # Window in seconds (15 min)
-PHONE_OTP_VERIFY_LIMIT=5         # Max verify attempts per phone per window
-PHONE_OTP_VERIFY_WINDOW=900      # Window in seconds (15 min)
+# Field-level encryption
+PRISMA_FIELD_ENCRYPTION_KEY=k1.aesgcm256.replace-me
+JSON_FIELD_ENCRYPTION_KEY=k1.aesgcm256.replace-me
+
+# SMS (VoiceSMS)
+VOICESMS_GATEWAY_URL=http://125.16.147.178/VoicenSMS/webresources/CreateSMSCampaignGet
+VOICESMS_UKEY=replace-me
+VOICESMS_SENDER_ID=ALKIMG
+VOICESMS_TEMPLATE_ID=0
+
+# Email (Netcore)
+NETCORE_API_KEY=replace-me
+NETCORE_ENDPOINT=https://emailapi.netcorecloud.net/v5/mail/send
+EMAIL_FROM=alankit <no-reply@alankitunlisted.com>
+
+# Throttling & OTP limits
+THROTTLE_TTL=60000
+THROTTLE_LIMIT=1000
+OTP_DAILY_LIMIT=20
+OTP_HOURLY_LIMIT=10
+OTP_15MIN_LIMIT=5
+TEST_PHONE_NUMBERS=
 ```
+
+Optional (only for key rotation): `PRISMA_FIELD_DECRYPTION_KEYS`, `JSON_FIELD_DECRYPTION_KEYS`.
 
 ## Migration Notes
 

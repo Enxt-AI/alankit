@@ -25,6 +25,60 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
+## Environment Variables
+
+Create a `.env` file in this service directory. Required and optional variables:
+
+```env
+# Core
+NODE_ENV=development
+PORT=3004
+LOG_LEVEL=debug
+
+# Database (PostgreSQL)
+DATABASE_URL=postgresql://user:password@host:5432/dbname
+
+# Redis (required)
+REDIS_URL=redis://localhost:6379
+
+# Cookies & encryption
+COOKIE_ENCRYPTION_KEY=replace-with-64-char-hex
+FRONTEND_URL=http://localhost:3000
+
+# Field-level encryption
+PRISMA_FIELD_ENCRYPTION_KEY=k1.aesgcm256.replace-me
+JSON_FIELD_ENCRYPTION_KEY=k1.aesgcm256.replace-me
+
+# NDPS payment gateway
+NDPS_ENVIRONMENT=uat
+NDPS_RETURN_URL=http://localhost:3000/payment/ndps/return
+NDPS_MERCHANT_ID=replace-me
+NDPS_PASSWORD=replace-me
+NDPS_PRODUCT=replace-me
+NDPS_REQUEST_KEY=replace-me
+NDPS_REQUEST_SALT=replace-me
+NDPS_RESPONSE_KEY=replace-me
+NDPS_RESPONSE_SALT=replace-me
+NDPS_REQUEST_HASH_KEY=replace-me
+NDPS_REQUESTS_PER_SECOND=10
+NDPS_SETTLEMENT_ENABLED=false
+NDPS_SETTLEMENT_PASSWORD=
+NDPS_SETTLEMENT_SALT=
+NDPS_SETTLEMENT_ITERATIONS=
+NDPS_SETTLEMENT_KEY_BITS=
+NDPS_SETTLEMENT_IV_HEX=
+
+# Internal reconciliation
+PAYMENT_SERVICE_INTERNAL_TOKEN=replace-me
+
+# Email (Netcore)
+NETCORE_API_KEY=replace-me
+NETCORE_ENDPOINT=https://emailapi.netcorecloud.net/v5/mail/send
+EMAIL_FROM=alankit <no-reply@alankitunlisted.com>
+```
+
+Optional (only for key rotation): `PRISMA_FIELD_DECRYPTION_KEYS`, `JSON_FIELD_DECRYPTION_KEYS`.
+
 ## Project setup
 
 ```bash

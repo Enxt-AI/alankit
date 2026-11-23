@@ -38,7 +38,6 @@ import { BatchModule } from './batch/batch.module';
 import { CouponsModule } from './coupons/coupons.module';
 import { SeoMetadataModule } from './seo-metadata/seo-metadata.module';
 import { ApprovalsModule } from './approvals/approvals.module';
-import { SellRequestsModule } from './sell-requests/sell-requests.module';
 import { CarouselModule } from './carousel/carousel.module';
 /**
  * AppModule is the root module of the stocks-service application.
@@ -91,7 +90,6 @@ import { CarouselModule } from './carousel/carousel.module';
     CouponsModule, // RM Generated Coupons
     SeoMetadataModule, // Global SEO metadata management
     ApprovalsModule, // Maker-Checker Approvals
-    SellRequestsModule, // User sell request management
     CarouselModule, // App carousel media management (CMS + Admin + Public)
     // Global scheduler (cron jobs). IMPORTANT: Register once to avoid duplicate job execution.
     ScheduleModule.forRoot(),

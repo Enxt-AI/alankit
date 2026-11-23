@@ -75,3 +75,7 @@ unlisted_backup.dump
 .dump
 
 /tmp
+
+# OpenCode / agent config
+agent.md
+opencode.json

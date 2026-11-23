@@ -25,7 +25,46 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-## Project setup
+## Environment Variables
+
+Create a `.env` file in this service directory. Required and optional variables:
+
+```env
+# Core
+NODE_ENV=development
+PORT=3001
+LOG_LEVEL=debug
+
+# Databases
+DATABASE_URL=postgresql://user:password@host:5432/stocks
+TICKETING_DATABASE_URL=postgresql://user:password@host:5432/ticketing
+
+# Redis (required)
+REDIS_URL=redis://localhost:6379
+
+# Cookies & encryption
+COOKIE_ENCRYPTION_KEY=replace-with-64-char-hex
+FRONTEND_URL=http://localhost:3000
+
+# Field-level encryption
+PRISMA_FIELD_ENCRYPTION_KEY=k1.aesgcm256.replace-me
+JSON_FIELD_ENCRYPTION_KEY=k1.aesgcm256.replace-me
+
+# Ticketing settings
+TICKET_ASSIGNMENT_STRATEGY=round-robin
+CRON_AGENT_AVAILABILITY_UPDATE=0 0 * * *
+CRON_AUTO_CLOSE_RESOLVED=0 2 * * *
+AUTO_CLOSE_RESOLVED_DAYS=7
+
+# Email (Netcore)
+NETCORE_API_KEY=replace-me
+NETCORE_ENDPOINT=https://emailapi.netcorecloud.net/v5/mail/send
+EMAIL_FROM=alankit <no-reply@alankitunlisted.com>
+```
+
+Optional (only for key rotation): `PRISMA_FIELD_DECRYPTION_KEYS`, `JSON_FIELD_DECRYPTION_KEYS`.
+
+## Project setup:
 
 ```bash
 $ pnpm install

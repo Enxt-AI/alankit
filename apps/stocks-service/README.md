@@ -25,7 +25,77 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-## Project setup
+## Environment Variables
+
+Create a `.env` file in this service directory. Required and optional variables (see `.env` for a working example):
+
+```env
+# Core
+NODE_ENV=development
+PORT=3003
+LOG_LEVEL=debug
+
+# Database (PostgreSQL)
+DATABASE_URL=postgresql://user:password@host:5432/stocks
+
+# Redis (required)
+REDIS_URL=redis://localhost:6379
+
+# Cookies & encryption
+COOKIE_ENCRYPTION_KEY=replace-with-64-char-hex
+FRONTEND_URL=http://localhost:3000
+SECURE_COOKIES=false
+
+# Field-level encryption
+PRISMA_FIELD_ENCRYPTION_KEY=k1.aesgcm256.replace-me
+JSON_FIELD_ENCRYPTION_KEY=k1.aesgcm256.replace-me
+
+# URLs
+WEB_APP_URL=http://localhost:3000
+PUBLIC_APP_URL=http://localhost:3000
+PUBLIC_API_URL=http://localhost:3003
+API_GATEWAY_URL=http://localhost:3003
+STORAGE_SERVICE_URL=http://localhost:3005
+REVALIDATION_SECRET=
+
+# Invoices
+INVOICE_SECRET=SMC_INVOICE_AUTH_SECRET_KEY_2026
+
+# Digitap
+DIGITAP_BASE_URL=https://api.digitap.ai
+DIGITAP_CLIENT_ID=
+DIGITAP_CLIENT_SECRET=
+DIGITAP_DOCUMENT_HOSTS=esign-signed-docs-production.s3.ap-south-1.amazonaws.com
+
+# Probe42
+PROBE42_API_KEY=
+
+# Payments integration
+PAYMENTS_SERVICE_URL=http://localhost:3004/api
+PAYMENT_SERVICE_INTERNAL_TOKEN=replace-me
+
+# MinIO
+MINIO_ENDPOINT=http://localhost:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+
+# Marketing webhooks
+FACEBOOK_WEBHOOK_VERIFY_TOKEN=
+FACEBOOK_WEBHOOK_SECRET=
+GOOGLE_ADS_WEBHOOK_SECRET=
+TWITTER_WEBHOOK_SECRET=
+MARKETING_LEAD_SYNC_CRON=*/2 * * * *
+MARKETING_LEAD_SYNC_ENABLED=true
+
+# Email (Netcore)
+NETCORE_API_KEY=replace-me
+NETCORE_ENDPOINT=https://emailapi.netcorecloud.net/v5/mail/send
+EMAIL_FROM=alankit <no-reply@alankitunlisted.com>
+```
+
+Optional (only for key rotation): `PRISMA_FIELD_DECRYPTION_KEYS`, `JSON_FIELD_DECRYPTION_KEYS`.
+
+## Project setup:
 
 ```bash
 $ pnpm install

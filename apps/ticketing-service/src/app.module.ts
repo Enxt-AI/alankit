@@ -30,11 +30,7 @@ import { GlobalJwtAuthGuard } from './auth/guards/global-jwt-auth.guard';
     BullModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        redis: configService.get('REDIS_URL') ? configService.get('REDIS_URL') : {
-          host: configService.get('REDIS_HOST', 'localhost'),
-          port: configService.get<number>('REDIS_PORT', 6379),
-          password: configService.get('REDIS_PASSWORD'),
-        },
+        redis: configService.getOrThrow('REDIS_URL'),
       }),
       inject: [ConfigService],
     }),

@@ -11,15 +11,11 @@ export class RedisService implements OnModuleDestroy {
   private client: Redis;
 
   constructor() {
-    const REDIS_TLS = (process.env.REDIS_TLS || '').toLowerCase() === 'true';
-    this.client = process.env.REDIS_URL
-      ? new Redis(process.env.REDIS_URL)
-      : new Redis({
-          host: process.env.REDIS_HOST || 'localhost',
-          port: parseInt(process.env.REDIS_PORT || '6379'),
-          password: process.env.REDIS_PASSWORD || undefined,
-          ...(REDIS_TLS ? { tls: {} } : {}),
-        });
+    const redisUrl = process.env.REDIS_URL;
+    if (!redisUrl) {
+      throw new Error('REDIS_URL is required');
+    }
+    this.client = new Redis(redisUrl);
 
     this.client.on('error', (err) => {
       this.logger.warn({ err }, `Redis connection error: ${err?.message || err}`);

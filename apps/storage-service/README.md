@@ -25,7 +25,29 @@
 
 [Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
 
-## Project setup
+## Environment Variables
+
+Create a `.env` file in this service directory. Required and optional variables:
+
+```env
+# Core
+NODE_ENV=development
+PORT=3005
+LOG_LEVEL=debug
+
+# Redis (required)
+REDIS_URL=redis://localhost:6379
+
+# MinIO / S3 object storage
+MINIO_ENDPOINT=http://localhost:9000
+MINIO_ACCESS_KEY=minioadmin
+MINIO_SECRET_KEY=minioadmin
+
+# CORS
+FRONTEND_URL=http://localhost:3000
+```
+
+## Project setup:
 
 ```bash
 $ pnpm install
