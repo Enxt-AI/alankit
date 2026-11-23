@@ -54,7 +54,7 @@ export function StockActions({
     <div className="mt-5">
       <div className="flex flex-wrap items-center gap-3">
         <Link
-          href="/checkout"
+          href={`/checkout?stockId=${encodeURIComponent(stockId)}`}
           className="inline-flex h-10 items-center justify-center rounded-lg bg-[#2563EB] px-6 text-sm font-semibold text-white transition-colors hover:bg-[#1D4ED8]"
         >
           Buy {ticker}

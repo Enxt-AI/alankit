@@ -1,0 +1,8 @@
+simulation: alankit-kyc
+routing: path
+mocks:
+  - name: alankit-kyc
+    routeKey: alankit
+    origin:
+      - obpp.alankit.co.in
+    path: postman/mocks/alankit-kyc/config.yaml

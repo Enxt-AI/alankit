@@ -29,6 +29,7 @@ import { AuthService } from './auth.service';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
 import { JwtAuthGuard } from './guards/jwt-auth.guard';
+import { publicKycData } from './public-kyc-data';
 import { AdminGuard } from './guards/admin.guard';
 import { SuperAdminGuard } from './guards/super-admin.guard';
 
@@ -443,7 +444,7 @@ export class AuthController {
         fullName: user.fullName,
         phone: maskPhone(user.phone),
         kycStatus: user.kycStatus,
-        kycData: user.kycData,
+        kycData: publicKycData(user.kycData),
         dematStatus: user.dematStatus,
         dematData: user.dematData,
         dematDocuments: user.dematDocuments,

@@ -349,6 +349,9 @@ export default function ProfilePage() {
           </header>
 
           {/* Main 2-Column Content Grid matching Dashboard Aesthetic */}
+          <div className="border-b border-zinc-100 bg-blue-50 px-6 py-4 text-sm">
+            <Link href="/kyc?returnUrl=%2Fprofile" className="font-medium text-blue-700">Check or complete your Alankit KYC →</Link>
+          </div>
           <div className="grid flex-1 grid-cols-1 lg:grid-cols-12">
             {/* ======== LEFT COLUMN: User Overview, Detail KYC, Compliance Card & Account Summary ======== */}
             <div className="border-b border-zinc-100 p-6 lg:col-span-4 lg:border-b-0 lg:border-r">
