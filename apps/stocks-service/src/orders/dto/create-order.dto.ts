@@ -54,7 +54,7 @@ export class CreateOrderDto {
   couponCode?: string;
 
   /**
-   * Digitap e-sign document ID, passed by the sign-first flow
+   * e-sign provider reference, passed by the sign-first flow
    * (esign-success) after identity verification MATCH. Links the new
    * order to its signed document so marketing e-sign state is accurate.
    */
