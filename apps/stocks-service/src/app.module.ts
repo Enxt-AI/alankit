@@ -12,7 +12,6 @@ import { AuthModule } from './auth/auth.module';
 import { GlobalJwtAuthGuard } from './auth/guards/global-jwt-auth.guard';
 import { StocksModule } from './stocks/stocks.module';
 import { UpcomingStocksModule } from './upcoming-stocks/upcoming-stocks.module';
-import { BasketsModule } from './baskets/baskets.module';
 import { OrdersModule } from './orders/orders.module';
 import { PortfolioModule } from './portfolio/portfolio.module';
 import { ContentModule } from './content/content.module';
@@ -28,8 +27,6 @@ import { AdminContextInterceptor } from './common/admin-context.interceptor';
 import { AuditModule } from './audit/audit.module';
 import { SettingsModule } from './settings/settings.module';
 import { KycModule } from './kyc/kyc.module';
-import { DematModule } from './demat/demat.module';
-import { BankModule } from './bank/bank.module';
 import { EmailModule } from 'email-service';
 import { HealthModule } from './health/health.module';
 import { WatchlistModule } from './watchlist/watchlist.module';
@@ -73,10 +70,7 @@ import { CarouselModule } from './carousel/carousel.module';
     // Feature modules
     StocksModule, // Stock management
     UpcomingStocksModule, // Upcoming stocks management
-    BasketsModule, // Stock baskets management
     OrdersModule, // Order management
-    DematModule, // Demat account management (Phase 4)
-    BankModule, // Bank account management
     PortfolioModule, // Portfolio management
     KycModule, // KYC verification (placeholder for Phase 2)
     ContentModule, // News & Blogs management

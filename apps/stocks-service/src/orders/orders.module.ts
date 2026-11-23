@@ -7,7 +7,6 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { AuthModule } from '../auth/auth.module';
 // NOTE: ReferralsModule and RMReferralsModule were removed as part of the
 // RM and referral system deprecation.
-import { BasketsModule } from '../baskets/baskets.module';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { EmailModule } from 'email-service';
 import { CouponsModule } from '../coupons/coupons.module';
@@ -19,13 +18,12 @@ import { EsignRequestsService } from './esign-requests.service';
 /**
  * Orders Module
  * Handles order management features
- * Supports both stock and basket orders
+ * Handles stock orders
  */
 @Module({
   imports: [
     PrismaModule,
     AuthModule,
-    BasketsModule,
     NotificationsModule,
     EmailModule,
     CouponsModule,

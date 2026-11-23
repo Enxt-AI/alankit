@@ -1,7 +1,6 @@
 import { Injectable, NotFoundException, BadRequestException } from '@nestjs/common';
 import { delKey } from 'redis-service';
 import { PrismaService } from '../prisma/prisma.service';
-import { BasketsService } from '../baskets/baskets.service';
 import { StocksService } from '../stocks/stocks.service';
 import { PinoNestLogger } from '@smc/logger';
 
@@ -11,7 +10,6 @@ export class ApprovalsService {
 
   constructor(
     private prisma: PrismaService,
-    private basketsService: BasketsService,
     private stocksService: StocksService,
   ) {}
 
@@ -643,46 +641,7 @@ export class ApprovalsService {
         create: proposedData,
       });
     } else if (request.entityType === 'BASKET') {
-      // CMS basket proposals store { action, data: dto, label }.
-      // Without this branch, approving a basket only flipped the request to
-      // APPROVED and never materialized the StockBasket row — so nothing ever
-      // appeared on the public /baskets listing. Delegate to BasketsService so
-      // slug/version/audit/cache-invalidation/notification handling is reused.
-      const dataToApply =
-        proposedData.data && typeof proposedData.data === 'object' ? proposedData.data : proposedData;
-      const { action: _act, label: _lbl, id: _id, createdAt: _c, updatedAt: _u, _snapshot: _snap, ...basketDto } =
-        dataToApply as Record<string, any>;
-
-      // Strip UI-only fields (e.g. `quantity` from older CMS payloads) so only DTO fields are applied.
-      if (Array.isArray((basketDto as any).constituents)) {
-        (basketDto as any).constituents = (basketDto as any).constituents.map((c: any) => ({
-          stockId: c.stockId,
-          weight: c.weight,
-        }));
-      }
-
-      try {
-        if (proposedData.action === 'DELETE') {
-          if (!request.entityId) throw new BadRequestException('Entity ID missing for Basket delete');
-          await this.basketsService.deleteBasket(request.entityId, adminId);
-        } else if (proposedData.action === 'CREATE') {
-          await this.basketsService.createBasket(basketDto as any, adminId);
-        } else {
-          if (!request.entityId) throw new BadRequestException('Entity ID missing for Basket update');
-          await this.basketsService.updateBasket(request.entityId, basketDto as any, adminId);
-        }
-      } catch (error: any) {
-        // Keep the request PENDING so the failure is visible and retryable
-        // instead of silently marking a never-applied change as APPROVED.
-        if (error?.status === 409 || error?.status === 404 || error instanceof BadRequestException) {
-          throw error;
-        }
-        this.logger.error(
-          `Failed to apply BASKET change request ${request.id}: ${error?.message || error}`,
-          error?.stack,
-        );
-        throw new BadRequestException(error?.message || 'Failed to apply basket change');
-      }
+      throw new BadRequestException('Basket approvals are no longer supported.');
     } else if (request.entityType === 'FAQ') {
       const dataToApply =
         proposedData.data && typeof proposedData.data === 'object' ? proposedData.data : proposedData;

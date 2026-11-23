@@ -20,7 +20,6 @@ import { PrismaService } from '../prisma/prisma.service';
 // NOTE: ReferralsService and RMReferralsService were removed as part of the
 // RM and referral system deprecation. Commission and reward tracking on order
 // completion has been removed.
-import { BasketsService } from '../baskets/baskets.service';
 import { NotificationsService } from '../notifications/notifications.service';
 import { EmailService } from 'email-service';
 import { CouponsService } from '../coupons/coupons.service';
@@ -47,7 +46,6 @@ export class OrdersService {
 
   constructor(
     private prisma: PrismaService,
-    private basketsService: BasketsService,
     private notificationsService: NotificationsService,
     private emailService: EmailService,
     private couponsService: CouponsService,
@@ -261,7 +259,7 @@ export class OrdersService {
     // Check KYC verification status first
     const user = await this.prisma.user.findUnique({
       where: { id: userId },
-      select: { kycStatus: true, email: true, bankStatus: true, dematStatus: true },
+      select: { kycStatus: true, email: true },
     });
 
     if (!user || user.kycStatus !== 'VERIFIED') {
@@ -270,26 +268,6 @@ export class OrdersService {
       );
       throw new BadRequestException(
         'KYC verification is required to purchase stocks. Please complete your KYC verification first.',
-      );
-    }
-
-    // Check Demat verification status
-    if (user.dematStatus !== 'VERIFIED') {
-      this.logger.warn(
-        `Order creation blocked for user ${userId} - Demat not verified`,
-      );
-      throw new BadRequestException(
-        'Demat account verification is required to purchase stocks. Please complete your Demat verification first.',
-      );
-    }
-
-    // Check Bank verification status
-    if (user.bankStatus !== 'VERIFIED') {
-      this.logger.warn(
-        `Order creation blocked for user ${userId} - Bank not verified`,
-      );
-      throw new BadRequestException(
-        'Bank verification is required to purchase stocks. Please complete your Bank verification first.',
       );
     }
 
@@ -309,72 +287,7 @@ export class OrdersService {
 
     // Branch based on order type
     if (dto.basketId) {
-      // ===== BASKET ORDER FLOW =====
-      // Fetch basket with constituents
-      const basket = await this.basketsService.getBasketById(dto.basketId);
-
-      if (!basket) {
-        throw new NotFoundException(`Basket with ID ${dto.basketId} not found`);
-      }
-
-      if (!basket.isActive) {
-        throw new BadRequestException(
-          'This basket is not available for purchase',
-        );
-      }
-
-      if (basket.resolvedStatus !== 'OPEN') {
-        throw new BadRequestException(
-          `This basket is currently ${basket.resolvedStatus} and not available for purchase`,
-        );
-      }
-
-      // Note: We check basic conditions here, but the actual atomic check-and-decrement
-      // happens inside the transaction below to prevent race conditions.
-      for (const c of basket.constituents) {
-        const available = Math.max(0, c.stock.stockQuantity || 0) + (c.stock.backupQuantity || 0);
-        if (available <= 0) {
-          throw new BadRequestException(
-            `Stock "${c.stock.name}" in the basket is currently out of stock (quantity is 0)`,
-          );
-        }
-      }
-
-      // Get calculated price from BasketsService
-      pricePerShare = basket.currentPrice;
-      totalAmount = Number((pricePerShare * dto.quantity).toFixed(2));
-
-      // Create snapshot of basket constituents
-      const basketConstituents = {
-        basketId: basket.id,
-        basketName: basket.name,
-        constituents: basket.constituents.map((c) => ({
-          stockId: c.stockId,
-          stockName: c.stock.name,
-          // Store CIN in the immutable snapshot so historical order displays keep
-          // the same business identifier after Symbol is removed from the schema.
-          stockCin: c.stock.cin,
-          weight: c.weight,
-          priceAtOrder: c.stock.price,
-        })),
-        snapshotDate: new Date().toISOString(),
-      };
-
-      orderData = {
-        userId,
-        basketId: dto.basketId,
-        basketConstituents,
-        stockId: null,
-        quantity: dto.quantity,
-        pricePerShare,
-        totalAmount,
-        status: 'PENDING',
-        paymentStatus: 'PENDING',
-        orderNumber: this.generateAlphanumericId('ORD'),
-        paymentData: {
-          createdAt: new Date().toISOString(),
-        },
-      };
+      throw new BadRequestException('Basket orders are no longer supported.');
     } else {
       // ===== STOCK ORDER FLOW =====
       // Check if stock exists and is active

@@ -62,8 +62,6 @@ export class SellRequestsService {
       select: {
         id: true,
         kycStatus: true,
-        dematStatus: true,
-        bankStatus: true,
       },
     });
 
@@ -73,12 +71,6 @@ export class SellRequestsService {
 
     if (user.kycStatus !== 'VERIFIED') {
       throw new ForbiddenException('KYC verification is required to sell stocks.');
-    }
-    if (user.dematStatus !== 'VERIFIED') {
-      throw new ForbiddenException('Demat account verification is required to sell stocks.');
-    }
-    if (user.bankStatus !== 'VERIFIED') {
-      throw new ForbiddenException('Bank account verification is required to sell stocks.');
     }
 
     // 2. Validate stock exists and is active

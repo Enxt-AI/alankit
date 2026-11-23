@@ -6,7 +6,7 @@ const logger = new PinoNestLogger('stocks-service', 'AuditMiddleware');
 
 /**
  * CMS models that should be audited
- * Note: StockBasket is excluded as it has explicit audit logging in BasketsService
+ * Note: StockBasket remains excluded for legacy basket records.
  */
 const CMS_MODELS = ['Stock', 'Blog', 'News', 'Faq', 'StaticPage'] as const;
 
