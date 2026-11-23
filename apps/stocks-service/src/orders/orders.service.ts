@@ -2382,7 +2382,7 @@ export class OrdersService {
         where: { docId },
         data: {
           status: 'SIGNED',
-          signedAt: alankitAttempt.signedAt ?? new Date(),
+          signedAt: alankitAttempt?.signedAt ?? new Date(),
           intent: { ...alankitIntent, identityVerificationVerdict: 'INSUFFICIENT_DATA' },
         },
       });

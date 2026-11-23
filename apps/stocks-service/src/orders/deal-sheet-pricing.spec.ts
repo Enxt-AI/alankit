@@ -74,6 +74,7 @@ describe('Deal Sheet & e-Sign Pricing', () => {
     let mockRedis: any;
     let mockCoupons: any;
     let mockPdfGenerator: any;
+    let mockAlankitEsign: any;
 
     beforeEach(() => {
       mockEsignRequests = {
@@ -93,7 +94,14 @@ describe('Deal Sheet & e-Sign Pricing', () => {
       };
       mockPdfGenerator = {
         buildDealSheetData: jest.fn().mockReturnValue({}),
-        fillDealSheet: jest.fn().mockResolvedValue(Buffer.from('pdf')),
+        fillDealSheet: jest.fn().mockResolvedValue(Buffer.from('%PDF-test')),
+      };
+      mockAlankitEsign = {
+        createTransaction: jest.fn().mockResolvedValue({
+          referenceNo: '343434112544',
+          redirectUrl: 'https://provider.example/sign?refno=343434112544',
+          sourceObjectKey: '9e973dda-69e5-46e7-9e83-a65cfd08605d.pdf',
+        }),
       };
 
       ordersService = Object.create(OrdersService.prototype);
@@ -103,6 +111,7 @@ describe('Deal Sheet & e-Sign Pricing', () => {
         redisService: mockRedis,
         couponsService: mockCoupons,
         pdfGeneratorService: mockPdfGenerator,
+        alankitEsign: mockAlankitEsign,
         configService: { get: jest.fn().mockReturnValue('test') },
         logger: { log: jest.fn(), error: jest.fn(), warn: jest.fn() },
         normalizeESignDocId: (id: string) => id.trim(),
@@ -155,18 +164,6 @@ describe('Deal Sheet & e-Sign Pricing', () => {
         ],
       });
 
-      // Mock fetch for Digitap generate-esign and PUT upload
-      global.fetch = jest.fn()
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-          json: async () => ({ model: { docId: 'doc-123', url: 'http://upload' } }),
-        })
-        .mockResolvedValueOnce({
-          ok: true,
-          status: 200,
-        });
-
       ordersService.fetchESignHtml = jest.fn().mockResolvedValue('<html>{{price}}</html>');
 
       const dto: GenerateESignSessionDto = {
@@ -175,7 +172,7 @@ describe('Deal Sheet & e-Sign Pricing', () => {
         couponCode: 'SAVE1000', // coupon discount = 1000 -> verified discounted total = 8500, per share = 850
       };
 
-      await ordersService.processGenerateESignSession('user-1', dto);
+      const session = await ordersService.processGenerateESignSession('user-1', dto);
 
       expect(mockPrisma.stock.findUnique).toHaveBeenCalledWith({
         where: { id: 'stock-1' },
@@ -209,6 +206,16 @@ describe('Deal Sheet & e-Sign Pricing', () => {
         }),
         7200,
       );
+      expect(mockAlankitEsign.createTransaction).toHaveBeenCalledWith(expect.objectContaining({
+        signerName: 'Alice',
+        location: 'India',
+        pdf: Buffer.from('%PDF-test'),
+      }));
+      expect(session).toEqual({
+        docId: '343434112544',
+        eSignUrl: 'https://provider.example/sign?refno=343434112544',
+        pdfUrl: '',
+      });
     });
   });
 });
