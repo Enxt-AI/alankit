@@ -124,7 +124,7 @@ export class OrdersController {
 
   /**
    * POST /api/orders/generate-esign-session
-   * Generates a Digitap eSign session without requiring an order (sign-first flow).
+   * Generates an Alankit eSign session without requiring an order (sign-first flow).
    * Accepts stock/basket details in the body to fill the Deal Sheet PDF.
    */
   @Post('generate-esign-session')
@@ -136,7 +136,7 @@ export class OrdersController {
 
   /**
    * POST /api/orders/:id/generate-esign
-   * Generates a Digitap eSign session for the given order
+   * Generates an Alankit eSign session for the given order
    */
   @Post(':id/generate-esign')
   @UseGuards(JwtAuthGuard)
@@ -165,8 +165,8 @@ export class OrdersController {
   /**
    * POST /api/orders/verify-esign-identity
    * Synchronous identity gate — frontend calls this BEFORE creating an order.
-   * Calls Digitap's get-esign-doc, runs validateSignerIdentity against KYC,
-   * and returns { verdict, reason } so the frontend can block on MISMATCH.
+   * Verifies the signer identity against KYC before order linkage/payment.
+   * Order progression requires verdict MATCH.
    */
   @Post('verify-esign-identity')
   @UseGuards(JwtAuthGuard)
@@ -180,8 +180,18 @@ export class OrdersController {
 
   // PUBLIC WEBHOOK ENDPOINTS
   /**
+   * GET /api/orders/esign/success
+   * Alankit calls this endpoint after signing.
+   */
+  @Get('esign/success')
+  @Public()
+  async handleAlankitESignCallback(@Query('resp') resp: string) {
+    return await this.ordersService.handleAlankitESignCallback(resp);
+  }
+
+  /**
    * POST /api/orders/esign-webhook
-   * Digitap automatically POSTs the signed doc details here after signing
+   * Legacy Digitap callback for existing in-flight documents.
    */
   @Post('esign-webhook')
   @Public()

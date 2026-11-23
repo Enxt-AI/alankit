@@ -14,7 +14,7 @@ async function bootstrap() {
     if (stopping) return;
     stopping = true;
     try {
-      await app.get<Queue>(getQueueToken('digitap-esign')).close();
+      await app.get<Queue>(getQueueToken('alankit-esign')).close();
       await app.close();
     } catch (error) {
       esignLogger.error({ event: 'esign.shutdown.failed', err: error }, 'E-sign worker shutdown failed');

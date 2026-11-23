@@ -6,13 +6,12 @@ import { PrismaModule } from '../prisma/prisma.module';
 import { EmailModule } from 'email-service';
 import { NotificationsModule } from '../notifications/notifications.module';
 import { AccountingModule } from '../accounting/accounting.module';
+import { AlankitKycController } from './alankit-kyc.controller';
+import { AlankitKycService } from './alankit-kyc.service';
+import { AlankitKycClient } from './alankit-kyc.client';
 /**
- * KYC Module - Mock KYC verification system
- * Provides multi-step KYC flow with PAN, Aadhaar, Bank, and Document verification
- * Toggle KYC_MOCK_MODE environment variable for production APIs
- *
- * When external KYC integration is active (KycIntegrationConfig.isActive = true),
- * the mock endpoints return a redirect response instead of processing locally.
+ * KYC Module - Alankit PAN lookup and the existing DigiLocker workflow.
+ * Alankit customers use /kyc/alankit for lookup, saved status, and refresh.
  */
 @Module({
   imports: [
@@ -22,8 +21,8 @@ import { AccountingModule } from '../accounting/accounting.module';
     NotificationsModule,
     AccountingModule,
   ],
-  controllers: [KycController],
-  providers: [KycService],
+  controllers: [KycController, AlankitKycController],
+  providers: [KycService, AlankitKycService, AlankitKycClient],
   exports: [KycService],
 })
 export class KycModule {}

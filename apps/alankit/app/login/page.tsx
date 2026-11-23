@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import { authRequest, refreshSession } from "@/lib/auth";
+import { getKycStatus, safeReturnUrl } from "@/lib/kyc";
 type LoginStep = "phone" | "phone-otp" | "email" | "email-otp" | "name" | "complete";
 
 export default function LoginPage() {
@@ -52,8 +53,10 @@ export default function LoginPage() {
   }
   async function finishLogin() {
     if (!await refreshSession()) throw new Error("Unable to confirm your session. Please sign in again.");
-    const returnUrl = new URLSearchParams(window.location.search).get("returnUrl");
-    window.location.assign(returnUrl?.startsWith("/") && !returnUrl.startsWith("//") ? returnUrl : "/");
+    const returnUrl = safeReturnUrl(new URLSearchParams(window.location.search).get("returnUrl"), '/');
+    const kyc = await getKycStatus();
+    window.location.assign(kyc.kycStatus === 'VERIFIED' || returnUrl.startsWith('/kyc')
+      ? returnUrl : `/kyc?returnUrl=${encodeURIComponent(returnUrl)}`);
   }
   function submitPhone(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();

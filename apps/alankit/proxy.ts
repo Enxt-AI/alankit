@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 
 export async function proxy(request: NextRequest) {
   const loginUrl = new URL("/login", request.url);
+  loginUrl.searchParams.set('returnUrl', request.nextUrl.pathname + request.nextUrl.search);
   const deny = () => {
     const response = NextResponse.redirect(loginUrl);
     response.headers.set("Cache-Control", "private, no-store");
@@ -26,6 +27,14 @@ export async function proxy(request: NextRequest) {
     const profile = await result.json();
     if (!profile?.id || profile.type !== "USER") return deny();
 
+    if (request.nextUrl.pathname.startsWith('/checkout') && profile.kycStatus !== 'VERIFIED') {
+      const kycUrl = new URL('/kyc', request.url);
+      kycUrl.searchParams.set('returnUrl', request.nextUrl.pathname + request.nextUrl.search);
+      const response = NextResponse.redirect(kycUrl);
+      response.headers.set('Cache-Control', 'private, no-store');
+      return response;
+    }
+
     const response = NextResponse.next();
     response.headers.set("Cache-Control", "private, no-store");
     return response;
@@ -41,5 +50,7 @@ export const config = {
     "/profile/:path*",
     "/watchlist/:path*",
     "/notifications/:path*",
+    "/kyc/:path*",
+    "/checkout/:path*",
   ],
 };

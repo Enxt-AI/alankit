@@ -1,5 +1,6 @@
 import { reserveStock } from '../common/stock-inventory';
 import { EsignRequestsService } from './esign-requests.service';
+import { AlankitEsignService } from './alankit-esign.service';
 import { allocateVoucherNumber } from 'db-unlistedstock';
 import { assertCompletionTransfer } from './completion-validation';
 import { SignedDealSheetService } from './signed-deal-sheet.service';
@@ -53,9 +54,10 @@ export class OrdersService {
     private pdfGeneratorService: PdfGeneratorService,
     private redisService: RedisService,
     private accountingService: AccountingService,
-    @InjectQueue('digitap-esign') private esignQueue: Queue,
+    @InjectQueue('alankit-esign') private esignQueue: Queue,
     private signedDealSheets: SignedDealSheetService,
     private esignRequests: EsignRequestsService,
+    private alankitEsign: AlankitEsignService,
   ) {}
 
   /**
@@ -129,6 +131,57 @@ export class OrdersService {
     } catch (err: any) {
       this.logger.error(`[esign-attempt] mark ${status} failed for docId ${docId}: ${err?.message}`);
     }
+  }
+
+  private async recordEsignIdentityVerdict(docId: string, verdict: string) {
+    const attempt = await this.prisma.esignAttempt.findUnique({ where: { docId } });
+    if (!attempt) return;
+    const intent = (attempt.intent as Record<string, any> | null) ?? {};
+    await this.prisma.esignAttempt.update({
+      where: { docId },
+      data: { intent: { ...intent, identityVerificationVerdict: verdict } },
+    });
+  }
+
+  private async createAlankitSession(
+    user: any,
+    stock: any,
+    deal: { quantity: number; totalAmount: number; pricePerShare: number; basePrice: number; discountAmount?: number },
+  ) {
+    const activeTemplate = await this.prisma.eSignTemplate.findFirst({
+      orderBy: { createdAt: 'desc' },
+    });
+    if (!activeTemplate?.pdfUrl) {
+      throw new BadRequestException('The e-sign deal-sheet template has not been configured by an admin.');
+    }
+
+    const htmlTemplate = await this.fetchESignHtml(activeTemplate.pdfUrl);
+    if (!htmlTemplate) {
+      throw new BadRequestException('The e-sign deal-sheet template could not be loaded.');
+    }
+
+    let pdf: Buffer;
+    try {
+      pdf = await this.pdfGeneratorService.fillDealSheet(
+        htmlTemplate,
+        this.pdfGeneratorService.buildDealSheetData(user, stock, deal),
+      );
+    } catch (error: any) {
+      this.logger.error('Deal-sheet PDF generation failed', error);
+      throw new BadRequestException('Failed to generate the e-sign document.');
+    }
+    if (!pdf?.length) throw new BadRequestException('Failed to generate the e-sign document.');
+
+    const signerName = typeof user?.fullName === 'string' ? user.fullName.trim() : '';
+    if (!signerName) throw new BadRequestException('A verified signer name is required for e-signing.');
+    return this.alankitEsign.createTransaction({ signerName, location: 'India', pdf });
+  }
+
+  @Cron(CronExpression.EVERY_DAY_AT_3AM, { timeZone: 'Asia/Kolkata' })
+  async cleanupAlankitSourcePdfs() {
+    if (!this.configService.get('ALANKIT_ESIGN_SUBSCRIPTION_KEY')) return;
+    const removed = await this.signedDealSheets.cleanupExpiredAlankitSourcePdfs();
+    if (removed) this.logger.log(`Removed ${removed} expired Alankit source e-sign PDFs`);
   }
 
   private async fetchESignHtml(pdfUrl: string): Promise<string | null> {
@@ -404,12 +457,19 @@ export class OrdersService {
     // Calculate reservation expiration
     orderData.expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000);
 
-    // Sign-first e-sign linkage: the frontend passes the verified docId so the
-    // new order carries its SIGNED e-sign state (verify MATCH ran pre-create).
-    if ((dto as any).esignDocId) {
-      dto.esignDocId = await this.assertESignOwner(dto.esignDocId!, userId);
-      orderData.esignDocId = (dto as any).esignDocId;
+    // The sign-first flow may link only a completed, independently matched session.
+    // The order-first flow can reserve a pending order; payment remains gated on
+    // the same identity verdict in the payments service.
+    if (dto.esignDocId) {
+      dto.esignDocId = await this.assertESignOwner(dto.esignDocId, userId);
+      const esignAttempt = await this.prisma.esignAttempt.findUnique({ where: { docId: dto.esignDocId } });
+      const esignIntent = esignAttempt?.intent as Record<string, any> | null;
+      if (esignAttempt?.status !== 'SIGNED' || esignIntent?.identityVerificationVerdict !== 'MATCH') {
+        throw new BadRequestException('A completed e-sign with a verified KYC identity match is required before linking it to an order.');
+      }
+      orderData.esignDocId = dto.esignDocId;
       orderData.esignStatus = 'SIGNED';
+      orderData.esignValidationVerdict = 'MATCH';
     }
 
     // Create order and deduct stock atomically within a transaction
@@ -640,7 +700,7 @@ export class OrdersService {
   }
 
   /**
-   * Generates a Digitap eSign session for a pending order (Queued via Bull).
+   * Generates an Alankit eSign session for a pending order (queued via Bull).
    * @param orderId Internal DB Order ID
    * @param userId Internal User ID
    * @returns docId to be used by the frontend SDK
@@ -651,8 +711,8 @@ export class OrdersService {
 
 
   /**
-   * Core logic for Digitap eSign session generation for an existing order.
-   * Called only by the DigitapEsignProcessor.
+   * Core logic for Alankit eSign session generation for an existing order.
+   * Called only by the e-sign worker.
    */
   async processGenerateESign(orderId: string, userId: string) {
     const order = await this.prisma.order.findUnique({
@@ -672,133 +732,17 @@ export class OrdersService {
       throw new BadRequestException('e-Sign can only be generated for PENDING orders');
     }
 
-    const baseUrl = this.configService.get('DIGITAP_BASE_URL', 'https://api.digitap.ai');
-    const clientId = this.configService.get('DIGITAP_CLIENT_ID');
-    const clientSecret = this.configService.get('DIGITAP_CLIENT_SECRET');
-
-    if (!clientId || !clientSecret) {
-      throw new BadRequestException('Digitap credentials are not configured.');
-    }
-
-    const authString = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-    
-    // Fallback stub for missing names/phones as digitap strictly requires these format wise
-    const [fName, ...rest] = (order.user.fullName || 'Valued Client').trim().split(' ');
-    const lName = rest.length > 0 ? rest.join(' ') : 'NA';
-    const cleanMobile = (order.user.phone || '9999999999').replace(/\D/g, '').slice(-10);
-
-    // 1. Load the latest e-Sign template from the Database
-    const activeTemplate = await this.prisma.eSignTemplate.findFirst({
-      orderBy: { createdAt: 'desc' }
-    });
-    
-    if (!activeTemplate || !activeTemplate.templateId) {
-       this.logger.error(`No active ESignTemplate found in the database!`);
-       throw new BadRequestException('The global e-Sign document has not been configured by the Admin. Please contact support.');
-    }
-
-    const now = new Date();
-    const dd = String(now.getDate()).padStart(2, '0');
-    const mm = String(now.getMonth() + 1).padStart(2, '0');
-    const yyyy = now.getFullYear();
-    const dateStr = `${dd}_${mm}_${yyyy}`;
-
-    const payload = {
-      uniqueId: `Stock_Purchase_${dateStr}_${order.id.slice(-6)}`,
-      signers: [
-        {
-          name: `${fName} ${lName}`,
-          email: order.user.email || 'noreply@smc.com',
-          mobile: cleanMobile,
-          location: "India"
-        }
-      ],
-      reason: "Stock Purchase Agreement",
-      templateId: activeTemplate.templateId,
-      fileName: `CLIENT DECLARATION TERMS CONDITIONS.pdf`,
-      multiSignerDocId:""
-    };
-
     try {
-      // 2. Generate Session
-      this.logger.log(`eSign payload: ${JSON.stringify(payload)}`);
-      const response = await fetch(`${baseUrl}/ent/v1/generate-esign`, {
-        signal: AbortSignal.timeout(60000),
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Basic ${authString}`
-        },
-        body: JSON.stringify(payload)
+      const session = await this.createAlankitSession(order.user, order.stock ?? order.basket ?? null, {
+        quantity: order.quantity,
+        totalAmount: order.totalAmount,
+        pricePerShare: order.quantity > 0 ? Number((order.totalAmount / order.quantity).toFixed(2)) : order.pricePerShare,
+        basePrice: (order as any).stock?.price ?? order.pricePerShare,
+        discountAmount: (order as any).discountApplied ?? undefined,
       });
-
-      const data = await response.json() as any;
-      this.logger.log(`eSign response [${response.status}]: ${JSON.stringify(data)}`);
-
-      const model = data.model || data; // Digitap wraps response in { code, model: { docId, eSignUrl } }
-
-      if (!response.ok || !model.docId) {
-        this.logger.error(`Digitap eSign generation failed: ${JSON.stringify(data)}`);
-        // If Digitap is down, pass the raw error to the frontend for better tracking
-        const digitapError = data.message || data.msg || data.error || 'Failed to initialize e-Sign session from Digitap';
-        throw new BadRequestException(`Digitap Error: ${digitapError}`);
-      }
-
-      // ── Step 2: Generate PDF using Puppeteer, upload to Digitap S3 ──
-      if (model.url) {
-        let htmlTemplate: string | null = null;
-        if (activeTemplate?.pdfUrl) {
-          htmlTemplate = await this.fetchESignHtml(activeTemplate.pdfUrl);
-        }
-
-        if (!htmlTemplate) {
-          this.logger.error('No eSign HTML template found or fetched!');
-          throw new BadRequestException('The e-Sign document template has not been configured correctly. Please check Admin Settings.');
-        }
-
-        // Build deal-sheet data from real order + user + stock
-        const dealData = this.pdfGeneratorService.buildDealSheetData(
-          order.user,
-          order.stock ?? null,
-          {
-            quantity: order.quantity,
-            totalAmount: order.totalAmount,
-            pricePerShare: order.quantity > 0 ? Number((order.totalAmount / order.quantity).toFixed(2)) : order.pricePerShare,
-            basePrice: (order as any).stock?.price ?? order.pricePerShare,
-            discountAmount: (order as any).discountApplied ?? undefined,
-          },
-        );
-        let filledPdfBuffer: Buffer | null = null;
-        try {
-          filledPdfBuffer = await this.pdfGeneratorService.fillDealSheet(htmlTemplate, dealData);
-          this.logger.log(`Deal sheet filled successfully for order ${order.id}`);
-        } catch (pdfErr: any) {
-          this.logger.error(`PDF generation failed: ${pdfErr.message}`);
-          throw new BadRequestException('Failed to generate e-Sign document.');
-        }
-
-        if (filledPdfBuffer) {
-          // A shared completed result must refer to a fully uploaded document.
-          const upload = await fetch(model.url, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/pdf' },
-            body: new Uint8Array(filledPdfBuffer),
-            signal: AbortSignal.timeout(60000),
-          });
-          if (!upload.ok) throw new Error('Failed to upload the e-sign document.');
-        }
-      }
-
-      // 3. Mark the Document ID in Order
-      await this.prisma.order.update({
-        where: { id: order.id },
-        data: { esignDocId: model.docId, esignStatus: 'PENDING' }
-      });
-
-      // 4. First-class attempt log (marketing e-sign dropouts)
       await this.logEsignAttempt({
         userId: order.userId,
-        docId: model.docId,
+        docId: session.referenceNo,
         stockId: (order as any).stockId ?? null,
         basketId: (order as any).basketId ?? null,
         stockName: (order as any).stock?.name ?? (order as any).basket?.name ?? null,
@@ -806,17 +750,21 @@ export class OrdersService {
         pricePerShare: order.pricePerShare,
         totalAmount: order.totalAmount,
         orderId: order.id,
+        intent: { provider: 'ALANKIT', sourceObjectKey: session.sourceObjectKey },
       });
-
-      return { docId: model.docId, eSignUrl: model.eSignUrl || '', pdfUrl: '' };
+      await this.prisma.order.update({
+        where: { id: order.id },
+        data: { esignDocId: session.referenceNo, esignStatus: 'PENDING' },
+      });
+      return { docId: session.referenceNo, eSignUrl: session.redirectUrl, pdfUrl: '' };
     } catch (e: any) {
-       this.logger.error('eSign Error', e);
-       throw new BadRequestException(e.message || 'Unable to establish e-Sign connection');
+      this.logger.error('Alankit e-sign session generation failed', e);
+      throw e;
     }
   }
 
   /**
-   * Generates a Digitap eSign session WITHOUT requiring an existing order (Queued via Bull).
+   * Generates an Alankit eSign session without requiring an existing order (queued via Bull).
    * Used when the user needs to sign before the order is created.
    * @param userId  Internal User ID (from JWT)
    * @returns { docId, eSignUrl, pdfUrl }
@@ -838,8 +786,8 @@ export class OrdersService {
 
 
   /**
-   * Core logic for Digitap eSign session generation without an order.
-   * Called only by the DigitapEsignProcessor.
+   * Core logic for Alankit eSign session generation without an order.
+   * Called only by the e-sign worker.
    */
   async processGenerateESignSession(userId: string, dto: GenerateESignSessionDto) {
     // ── Fetch user with all KYC/demat/bank data ──────────────────────────────
@@ -942,136 +890,17 @@ export class OrdersService {
     }, 7200); // 2 hours
     this.logger.log(`Stored eSign order intent in Redis for user ${userId}`);
 
-    // ── Digitap credentials ──────────────────────────────────────────────────
-    const baseUrl = this.configService.get('DIGITAP_BASE_URL', 'https://api.digitap.ai');
-    const clientId = this.configService.get('DIGITAP_CLIENT_ID');
-    const clientSecret = this.configService.get('DIGITAP_CLIENT_SECRET');
-    if (!clientId || !clientSecret) {
-      throw new BadRequestException('Digitap credentials are not configured.');
-    }
-    const authString = Buffer.from(`${clientId}:${clientSecret}`).toString('base64');
-
-    // ── Signer name / mobile ─────────────────────────────────────────────────
-    const [fName, ...rest] = (user.fullName || 'Valued Client').trim().split(' ');
-    const lName = rest.length > 0 ? rest.join(' ') : 'NA';
-    const cleanMobile = (user.phone || '9999999999').replace(/\D/g, '').slice(-10);
-
-    // ── Load eSign template ───────────────────────────────────────────────────
-    const activeTemplate = await this.prisma.eSignTemplate.findFirst({
-      orderBy: { createdAt: 'desc' },
-    });
-    if (!activeTemplate?.templateId) {
-      this.logger.error('No active ESignTemplate found in the database!');
-      throw new BadRequestException('The global e-Sign document has not been configured by the Admin. Please contact support.');
-    }
-
-    const now = new Date();
-    const dateStr = [
-      String(now.getDate()).padStart(2, '0'),
-      String(now.getMonth() + 1).padStart(2, '0'),
-      now.getFullYear(),
-    ].join('_');
-    const uniqueSuffix = Math.random().toString(36).slice(2, 8);
-
-    const digitapPayload = {
-      uniqueId: `ESign_${dateStr}_${uniqueSuffix}`,
-      signers: [{
-        name: `${fName} ${lName}`,
-        email: user.email || 'noreply@smc.com',
-        mobile: cleanMobile,
-        location: 'India',
-      }],
-      reason: 'Stock Purchase Agreement',
-      templateId: activeTemplate.templateId,
-      fileName: 'CLIENT DECLARATION TERMS CONDITIONS.pdf',
-      multiSignerDocId: '',
-    };
-
     try {
-      // ── Step 1: Generate eSign session → get docId + presigned S3 PUT URL ──
-      this.logger.log(`eSign session payload: ${JSON.stringify(digitapPayload)}`);
-      const response = await fetch(`${baseUrl}/ent/v1/generate-esign`, {
-        signal: AbortSignal.timeout(60000),
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Basic ${authString}`,
-        },
-        body: JSON.stringify(digitapPayload),
+      const session = await this.createAlankitSession(user, stock, {
+        quantity: dto.quantity,
+        totalAmount: finalDiscountedPrice,
+        pricePerShare: finalDiscountedPricePerShare,
+        basePrice,
+        discountAmount: totalDiscountAmount,
       });
-
-      const data = await response.json() as any;
-      this.logger.log(`eSign session response [${response.status}]: ${JSON.stringify(data)}`);
-
-      const model = data.model || data;
-      if (!response.ok || !model.docId) {
-        this.logger.error(`Digitap eSign session failed: ${JSON.stringify(data)}`);
-        const digitapError = data.message || data.msg || data.error || 'Failed to initialize e-Sign session from Digitap';
-        throw new BadRequestException(`Digitap Error: ${digitapError}`);
-      }
-
-      // ── Step 2: Generate PDF with REAL data, upload to Digitap S3
-      // Never hand an un-uploaded docId to the signer — Digitap shows PREVIEW_FAILED.
-      if (!model.url) {
-        this.logger.error(`Digitap returned no upload URL for docId ${model.docId}; rejecting session.`);
-        throw new BadRequestException('e-Sign document could not be prepared. Please try again.');
-      }
-      {
-        let htmlTemplate: string | null = null;
-        if (activeTemplate?.pdfUrl) {
-          htmlTemplate = await this.fetchESignHtml(activeTemplate.pdfUrl);
-        }
-
-        if (!htmlTemplate) {
-          this.logger.error('No eSign HTML template found or fetched!');
-          throw new BadRequestException('The e-Sign document template has not been configured correctly. Please check Admin Settings.');
-        }
-
-        // Build deal sheet with real user + stock data
-        const dealData = this.pdfGeneratorService.buildDealSheetData(
-          user,
-          stock,
-          {
-            quantity: dto.quantity,
-            totalAmount: finalDiscountedPrice,
-            pricePerShare: finalDiscountedPricePerShare,
-            basePrice,
-            discountAmount: totalDiscountAmount,
-          },
-        );
-
-        let filledPdfBuffer: Buffer | null = null;
-        try {
-          filledPdfBuffer = await this.pdfGeneratorService.fillDealSheet(htmlTemplate, dealData);
-          this.logger.log(`Deal sheet filled for user ${userId} — stock: ${stock?.name ?? 'N/A'}`);
-        } catch (pdfErr: any) {
-          this.logger.error(`PDF generation failed: ${pdfErr.message}`);
-          throw new BadRequestException('Failed to generate e-Sign document.');
-        }
-
-        if (!filledPdfBuffer || filledPdfBuffer.length === 0) {
-          throw new BadRequestException('Failed to generate e-Sign document.');
-        }
-        // A shared completed result must refer to a fully uploaded document.
-        const upload = await fetch(model.url, {
-          method: 'PUT',
-          headers: { 'Content-Type': 'application/pdf' },
-          body: new Uint8Array(filledPdfBuffer),
-          signal: AbortSignal.timeout(60000),
-        });
-        if (!upload.ok) {
-          this.logger.error(`Digitap PDF upload failed for docId ${model.docId}: HTTP ${upload.status}`);
-          throw new Error('Failed to upload the e-sign document.');
-        }
-        this.logger.log(`Digitap PDF uploaded for docId ${model.docId} (${filledPdfBuffer.length} bytes)`);
-      }
-
-      // ── Step 3: Return docId for the frontend SDK ──────────────────────────
-      // First-class attempt log so sign-first cancels are visible in marketing
-      // even though no Order row exists yet.
       await this.logEsignAttempt({
         userId,
-        docId: model.docId,
+        docId: session.referenceNo,
         stockId: dto.stockId ?? null,
         basketId: dto.basketId ?? null,
         stockName: stock?.name ?? basketName ?? null,
@@ -1088,12 +917,14 @@ export class OrdersService {
           discountedPrice: finalDiscountedPrice,
           discountedPricePerShare: finalDiscountedPricePerShare,
           discountAmount: totalDiscountAmount,
+          provider: 'ALANKIT',
+          sourceObjectKey: session.sourceObjectKey,
         },
       });
-      return { docId: model.docId, eSignUrl: model.eSignUrl || '', pdfUrl: '' };
-    } catch (e: any) {
-      this.logger.error('eSign Session Error', e);
-      throw new BadRequestException(e.message || 'Unable to establish e-Sign connection');
+      return { docId: session.referenceNo, eSignUrl: session.redirectUrl, pdfUrl: '' };
+    } catch (error) {
+      this.logger.error('Alankit e-sign session generation failed', error);
+      throw error;
     }
   }
 
@@ -2536,14 +2367,39 @@ export class OrdersService {
     });
   }
 
-  /**
-   * API 2 — POST /v1/get-esign-doc
-   * Fetch the signed document and signer details from Digitap.
-   * Also runs Aadhaar identity validation when a signer is found in 'signed' state,
-   * mirroring the same check in handleESignWebhook so both paths stay consistent.
-   */
+  /** Fetch and archive a completed e-sign PDF, retaining legacy Digitap recovery. */
   async getESignDoc(docId: string) {
     docId = this.normalizeESignDocId(docId);
+    const alankitAttempt = await this.prisma.esignAttempt.findUnique({ where: { docId } });
+    const alankitIntent = alankitAttempt?.intent as Record<string, any> | null;
+    if (alankitIntent?.provider === 'ALANKIT') {
+      const archivedPdf = await this.signedDealSheets.read(docId);
+      if (!archivedPdf) {
+        const pdf = await this.alankitEsign.getSignedPdf(docId);
+        await this.signedDealSheets.archivePdf(docId, pdf);
+      }
+      await this.prisma.esignAttempt.update({
+        where: { docId },
+        data: {
+          status: 'SIGNED',
+          signedAt: alankitAttempt?.signedAt ?? new Date(),
+          intent: { ...alankitIntent, identityVerificationVerdict: 'INSUFFICIENT_DATA' },
+        },
+      });
+      await this.prisma.order.updateMany({
+        where: { esignDocId: docId },
+        data: { esignStatus: 'SIGNED', esignValidationVerdict: 'INSUFFICIENT_DATA' },
+      });
+      if (typeof alankitIntent.sourceObjectKey === 'string') {
+        try {
+          await this.signedDealSheets.deleteAlankitSourcePdf(alankitIntent.sourceObjectKey);
+        } catch (error) {
+          this.logger.warn(`Unable to remove temporary Alankit source PDF for ref=${docId}: ${error}`);
+        }
+      }
+      return { docId, signers: [{ state: 'signed' }], provider: 'ALANKIT' };
+    }
+
     const baseUrl = this.configService.get('DIGITAP_BASE_URL', 'https://api.digitap.ai');
     const clientId = this.configService.get('DIGITAP_CLIENT_ID');
     const clientSecret = this.configService.get('DIGITAP_CLIENT_SECRET');
@@ -2681,6 +2537,10 @@ export class OrdersService {
                 dob: pollKyc.aadhaarDetails?.dob ?? pollKyc.panDetails?.dob ?? pollKyc.dob ?? null,
               },
             );
+            await this.recordEsignIdentityVerdict(
+              docId,
+              pollValidation.verdict,
+            );
             await this.markEsignAttempt(
               docId,
               pollValidation.verdict === 'MISMATCH' ? 'MISMATCH' : 'SIGNED',
@@ -2706,7 +2566,27 @@ export class OrdersService {
    */
   async verifyESignIdentity(docId: string, userId: string) {
     docId = await this.assertESignOwner(docId, userId);
-    // ── 1. Fetch signed doc from Digitap ──────────────────────────────────────
+    const storedAttempt = await this.prisma.esignAttempt.findUnique({ where: { docId } });
+    const storedIntent = storedAttempt?.intent as Record<string, any> | null;
+    if (storedIntent?.provider === 'ALANKIT') {
+      if (storedAttempt?.status !== 'SIGNED') {
+        return {
+          verdict: 'NOT_SIGNED' as const,
+          reason: 'Alankit has not yet confirmed a completed signature.',
+        };
+      }
+      await this.recordEsignIdentityVerdict(docId, 'INSUFFICIENT_DATA');
+      await this.prisma.order.updateMany({
+        where: { esignDocId: docId, userId },
+        data: { esignValidationVerdict: 'INSUFFICIENT_DATA' },
+      });
+      return {
+        verdict: 'INSUFFICIENT_DATA' as const,
+        reason: 'Alankit confirms the signature but does not provide signer identity data required by the KYC match policy.',
+      };
+    }
+
+    // ── 1. Fetch signed doc from legacy Digitap sessions ──────────────────────
     const baseUrl = this.configService.get('DIGITAP_BASE_URL', 'https://api.digitap.ai');
     const clientId = this.configService.get('DIGITAP_CLIENT_ID');
     const clientSecret = this.configService.get('DIGITAP_CLIENT_SECRET');
@@ -2813,6 +2693,7 @@ export class OrdersService {
         dob: expectedDob,
       },
     );
+    await this.recordEsignIdentityVerdict(cleanDocId, validation.verdict);
 
     this.logger.log(
       `[verify-esign-identity] user=${userId} docId=${docId} verdict=${validation.verdict} reason="${validation.reason}"`,
@@ -2865,9 +2746,26 @@ export class OrdersService {
     };
   }
 
+  async handleAlankitESignCallback(resp: string) {
+    const { referenceNo } = this.alankitEsign.parseCallback(resp);
+    const attempt = await this.prisma.esignAttempt.findUnique({ where: { docId: referenceNo } });
+    const intent = attempt?.intent as Record<string, any> | null;
+    if (!attempt || intent?.provider !== 'ALANKIT') {
+      return { status: 'ignored' };
+    }
+
+    await this.esignQueue.add('archive-signed-document', { docId: referenceNo }, {
+      jobId: `alankit-archive-${crypto.createHash('sha256').update(referenceNo).digest('hex')}`,
+      attempts: 8,
+      backoff: { type: 'exponential', delay: 15000 },
+      removeOnComplete: true,
+      removeOnFail: 100,
+    });
+    return { status: 'received' };
+  }
+
   /**
-   * API 3 — Webhook (Digitap calls YOUR endpoint)
-   * Digitap automatically POSTs the signed doc to your server after signing
+   * Legacy Digitap webhook for documents created before the provider migration.
    */
   async handleESignWebhook(payload: any) {
     const docId = payload?.model?.docId;

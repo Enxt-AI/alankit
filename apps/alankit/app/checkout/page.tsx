@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from 'react';
 import Script from 'next/script';
 import Link from 'next/link';
 import { paymentRequest, checkoutSdkUrl, type CheckoutSession } from '@/lib/payments';
+import { getKycStatus } from '@/lib/kyc';
 
 type Stock = { id: string; name: string; price: number; minimumPurchaseQuantity?: number };
 type Order = { id: string; orderNumber: string; totalAmount: number; quantity: number; status: string; paymentStatus: string; stock?: { name: string } };
@@ -19,13 +20,26 @@ export default function CheckoutPage() {
   const [ready, setReady] = useState(false);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [kycVerified, setKycVerified] = useState(false);
   const inFlight = useRef(false);
   const stock = stocks.find(item => item.id === stockId);
 
   useEffect(() => {
     let active = true;
-    Promise.all([paymentRequest<Stock[]>('stocks'), paymentRequest<Order[]>('orders/my-orders')])
-      .then(([items, existing]) => { if (active) { setStocks(items); setOrders(existing.filter(item => item.status === 'PENDING' && item.paymentStatus !== 'PAID')); } })
+    getKycStatus().then(async kyc => {
+      if (!active) return null;
+      if (kyc.kycStatus !== 'VERIFIED') {
+        window.location.replace(`/kyc?returnUrl=${encodeURIComponent(window.location.pathname + window.location.search)}`);
+        return null;
+      }
+      setKycVerified(true);
+      return Promise.all([paymentRequest<Stock[]>('stocks'), paymentRequest<Order[]>('orders/my-orders')]);
+    }).then(result => { if (active && result) {
+      const [items, existing] = result;
+      setStocks(items); setOrders(existing.filter(item => item.status === 'PENDING' && item.paymentStatus !== 'PAID'));
+      const selected = items.find(item => item.id === new URLSearchParams(window.location.search).get('stockId'));
+      if (selected) { setStockId(selected.id); setQuantity(Math.max(1, selected.minimumPurchaseQuantity || 1)); }
+    } })
       .catch(err => { if (active) setError(err.message); });
     return () => { active = false; };
   }, []);
@@ -50,7 +64,8 @@ export default function CheckoutPage() {
     <h1 className="text-3xl font-semibold">Checkout</h1>
     <p className="text-sm text-zinc-600">Choose an available stock or resume an existing order. Sign in and complete KYC before paying.</p>
     {error && <p role="alert" className="rounded-lg bg-rose-50 p-4 text-rose-700">{error} <Link href="/login" className="underline">Sign in</Link></p>}
-    {!order && <>
+    {!kycVerified && <p role="status">Checking KYC before checkout… <Link href="/kyc?returnUrl=%2Fcheckout" className="text-blue-600 underline">Complete KYC</Link></p>}
+    {kycVerified && !order && <>
       {orders.length > 0 && <section className="space-y-3"><h2 className="font-semibold">Pending orders</h2>{orders.map(item => <button key={item.id} disabled={busy} onClick={() => setOrder(item)} className="block w-full rounded-lg border p-4 text-left">{item.stock?.name || item.orderNumber} · {money(item.totalAmount)} <span className="float-right text-blue-600">Resume</span></button>)}</section>}
       <form className="space-y-4 rounded-xl border p-6" onSubmit={event => { event.preventDefault(); void run(async () => {
         if (!stockId || !Number.isSafeInteger(quantity) || quantity < Math.max(1, stock?.minimumPurchaseQuantity || 1)) throw new Error('Select a stock and a valid quantity.');

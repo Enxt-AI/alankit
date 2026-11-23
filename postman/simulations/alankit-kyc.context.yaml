@@ -1,0 +1,11 @@
+scope: PAN-only lookup client and KYC orchestration
+evidence:
+  - Successful response fields come from the supplied corrected FetchLogin PDF.
+  - User explicitly confirmed that password is not required for this integration.
+assumptions:
+  - TEST_KYC_NOT_FOUND is a synthetic fixture, not a documented provider code.
+  - The real not-found code must be configured after receiving a vendor sample.
+limits:
+  - No live provider calls, real PANs, credentials, or database are used.
+  - Tests exercise real HTTP through the provider client with an in-memory Prisma substitute.
+  - Postman cloud discovery was skipped because CLI status is unsupported and sign-in was not established.

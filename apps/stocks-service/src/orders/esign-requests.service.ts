@@ -8,7 +8,7 @@ export const ESIGN_REQUEST_RETENTION_SECONDS = 24 * 60 * 60;
 
 @Injectable()
 export class EsignRequestsService {
-  constructor(@InjectQueue('digitap-esign') private readonly queue: Queue) {}
+  constructor(@InjectQueue('alankit-esign') private readonly queue: Queue) {}
 
   async generate(name: 'generate-session' | 'generate-order-esign', data: { userId: string; [key: string]: unknown }, requestId: string) {
     if (typeof requestId !== 'string' || !/^[a-zA-Z0-9_-]{16,128}$/.test(requestId)) {
