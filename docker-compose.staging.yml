@@ -237,6 +237,9 @@ services:
       dockerfile: Dockerfile
       args:
         BACKEND_ORIGIN: ${BACKEND_ORIGIN}
+        NEXT_PUBLIC_AUTH_SERVICE_URL: ${NEXT_PUBLIC_AUTH_SERVICE_URL}
+        NEXT_PUBLIC_STOCKS_SERVICE_URL: ${NEXT_PUBLIC_STOCKS_SERVICE_URL}
+        NEXT_PUBLIC_PAYMENTS_SERVICE_URL: ${NEXT_PUBLIC_PAYMENTS_SERVICE_URL}
     image: alankit:staging
     container_name: alankit-staging
     env_file:

@@ -9,7 +9,7 @@ export async function proxy(request: NextRequest) {
     return response;
   };
 
-  const authBase = (process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || process.env.BACKEND_ORIGIN || 'http://localhost:3002').trim().replace(/\/$/, "");
+  const authBase = (process.env.BACKEND_ORIGIN || process.env.NEXT_PUBLIC_AUTH_SERVICE_URL || 'http://localhost:3002').trim().replace(/\/$/, "");
   const cookie = request.headers.get("cookie");
   if (!authBase || !cookie) return deny();
 
