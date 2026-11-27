@@ -1,6 +1,5 @@
 import { BadRequestException, ConflictException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { randomUUID } from 'crypto';
-import { Prisma } from 'db-unlistedstock';
 import { PrismaService } from '../prisma/prisma.service';
 import { AlankitKycClient } from './alankit-kyc.client';
 
@@ -58,10 +57,14 @@ export class AlankitKycService {
       verifiedTransactionId: null,
       alankitLookup: { pan, attemptId, state: 'FETCHING', checkedAt: new Date().toISOString() },
     };
+    const previousAttemptId = typeof lookup?.attemptId === 'string' ? lookup.attemptId : null;
     const saved = await this.prisma.user.updateMany({
       where: {
-        id: userId, kycStatus: { not: 'VERIFIED' },
-        kycData: { equals: user.kycData === null ? Prisma.DbNull : user.kycData },
+        id: userId,
+        kycStatus: { not: 'VERIFIED' },
+        ...(previousAttemptId
+          ? { kycData: { path: ['alankitLookup', 'attemptId'], equals: previousAttemptId } }
+          : {}),
       },
       data: { kycData: started, kycStatus: 'PENDING' },
     });
@@ -109,7 +112,12 @@ export class AlankitKycService {
         }
       }
       const updated = await tx.user.updateMany({
-        where: { id: userId, kycData: { equals: started }, isActive: true, isDeleted: false },
+        where: {
+          id: userId,
+          kycData: { path: ['alankitLookup', 'attemptId'], equals: attemptId },
+          isActive: true,
+          isDeleted: false,
+        },
         data: {
           kycData: next, kycStatus: state === 'VERIFIED' ? 'VERIFIED' : 'PENDING',
           ...(state === 'VERIFIED' ? {
