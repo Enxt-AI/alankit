@@ -43,32 +43,33 @@ export class AlankitKycService {
 
   async lookup(userId: string, pan: string) {
     if (!/^[A-Z]{5}[0-9]{4}[A-Z]$/.test(pan)) throw new BadRequestException('Enter a valid PAN number.');
-    const user = await this.user(userId);
-    if (user.kycStatus === 'VERIFIED') return this.summary(user);
-    const previous = (user.kycData as any) || {};
-    const lookup = previous.alankitLookup;
-    if (lookup?.checkedAt && Date.now() - Date.parse(lookup.checkedAt) < 30_000) {
-      throw new BadRequestException('Please wait 30 seconds before checking KYC again.');
-    }
     const attemptId = randomUUID();
-    const started = {
-      ...previous,
-      // Invalidate any previous provider attempt so an old callback cannot verify this PAN.
-      verifiedTransactionId: null,
-      alankitLookup: { pan, attemptId, state: 'FETCHING', checkedAt: new Date().toISOString() },
-    };
-    const previousAttemptId = typeof lookup?.attemptId === 'string' ? lookup.attemptId : null;
-    const saved = await this.prisma.user.updateMany({
-      where: {
-        id: userId,
-        kycStatus: { not: 'VERIFIED' },
-        ...(previousAttemptId
-          ? { kycData: { path: ['alankitLookup', 'attemptId'], equals: previousAttemptId } }
-          : {}),
-      },
-      data: { kycData: started, kycStatus: 'PENDING' },
+    const prep = await this.prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${userId}, 0))::text AS locked`;
+      const user = await tx.user.findUnique({ where: { id: userId } });
+      if (!user) throw new NotFoundException('User not found');
+      if (!user.isActive || user.isDeleted) throw new ForbiddenException('Account is not active.');
+      if (user.kycStatus === 'VERIFIED') return { done: true as const, summary: this.summary(user) };
+
+      const previous = (user.kycData as any) || {};
+      const lookup = previous.alankitLookup;
+      if (lookup?.checkedAt && Date.now() - Date.parse(lookup.checkedAt) < 30_000) {
+        throw new BadRequestException('Please wait 30 seconds before checking KYC again.');
+      }
+      const started = {
+        ...previous,
+        // Invalidate any previous provider attempt so an old callback cannot verify this PAN.
+        verifiedTransactionId: null,
+        alankitLookup: { pan, attemptId, state: 'FETCHING', checkedAt: new Date().toISOString() },
+      };
+      await tx.user.update({
+        where: { id: userId },
+        data: { kycData: started, kycStatus: 'PENDING' },
+      });
+      return { done: false as const, user, previous, started };
     });
-    if (saved.count !== 1) throw new ConflictException('KYC changed. Reload and try again.');
+    if (prep.done) return prep.summary;
+    const { user, previous, started } = prep;
 
     const result = await this.client.fetchByPan(pan);
     const profile = result.state === 'FOUND' ? result.response.data : null;
@@ -96,6 +97,19 @@ export class AlankitKycService {
       } : {}),
     };
     await this.prisma.$transaction(async tx => {
+      await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${userId}, 0))::text AS locked`;
+      const current = await tx.user.findUnique({
+        where: { id: userId },
+        select: { kycData: true, isActive: true, isDeleted: true },
+      });
+      if (
+        !current ||
+        !current.isActive ||
+        current.isDeleted ||
+        (current.kycData as any)?.alankitLookup?.attemptId !== attemptId
+      ) {
+        throw new ConflictException('KYC changed while fetching. Reload and try again.');
+      }
       if (state === 'VERIFIED') {
         // Same lock as the existing DigiLocker flow prevents cross-provider PAN claims.
         await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtextextended(${pan}, 0))::text AS locked`;
@@ -111,13 +125,8 @@ export class AlankitKycService {
           delete (next as any).firstVerifiedAt;
         }
       }
-      const updated = await tx.user.updateMany({
-        where: {
-          id: userId,
-          kycData: { path: ['alankitLookup', 'attemptId'], equals: attemptId },
-          isActive: true,
-          isDeleted: false,
-        },
+      await tx.user.update({
+        where: { id: userId },
         data: {
           kycData: next, kycStatus: state === 'VERIFIED' ? 'VERIFIED' : 'PENDING',
           ...(state === 'VERIFIED' ? {
@@ -135,7 +144,6 @@ export class AlankitKycService {
           } : {}),
         },
       });
-      if (updated.count !== 1) throw new ConflictException('KYC changed while fetching. Reload and try again.');
     });
     return this.summary({ kycStatus: state === 'VERIFIED' ? 'VERIFIED' : 'PENDING', kycData: next });
   }
