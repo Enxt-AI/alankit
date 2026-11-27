@@ -1,8 +1,22 @@
-import { Injectable, NotFoundException, UnauthorizedException, BadRequestException, ForbiddenException, ServiceUnavailableException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  UnauthorizedException,
+  BadRequestException,
+  ForbiddenException,
+  ServiceUnavailableException,
+} from '@nestjs/common';
 import { setKey, getKey, delKey, redis } from 'redis-service';
 import * as crypto from 'crypto';
-import { CONSUME_OTP, RATE_LIMIT, INCREMENT_COUNTER, RELEASE_LOCK, UPDATE_DELIVERY, TAKE_SIGNUP } from './otp-scripts';
-import { PinoNestLogger } from '@smc/logger';
+import {
+  CONSUME_OTP,
+  RATE_LIMIT,
+  INCREMENT_COUNTER,
+  RELEASE_LOCK,
+  UPDATE_DELIVERY,
+  TAKE_SIGNUP,
+} from './otp-scripts';
+import { PinoNestLogger } from '@/logger';
 
 export interface PendingSignup {
   phone: string;
@@ -23,15 +37,35 @@ export class RedisService {
   private readonly logger = new PinoNestLogger(service, ctx);
   private requireSharedState(): void {
     if (process.env.NODE_ENV === 'production') {
-      throw new ServiceUnavailableException('Authentication is temporarily unavailable. Please try again later.');
+      throw new ServiceUnavailableException(
+        'Authentication is temporarily unavailable. Please try again later.',
+      );
     }
   }
 
-  async consumeOTP(target: string, hash: string, maxRetries: number, proof?: { token: string; phone: string }): Promise<void> {
-    const proofKey = proof ? `otp:phone-proof:${crypto.createHash('sha256').update(proof.token).digest('hex')}` : `otp:unused-proof:${target}`;
+  async consumeOTP(
+    target: string,
+    hash: string,
+    maxRetries: number,
+    proof?: { token: string; phone: string },
+  ): Promise<void> {
+    const proofKey = proof
+      ? `otp:phone-proof:${crypto.createHash('sha256').update(proof.token).digest('hex')}`
+      : `otp:unused-proof:${target}`;
     let result: number;
     try {
-      result = Number(await redis.eval(CONSUME_OTP, 3, `otp:${target}`, `lock:otp:${target}`, proofKey, hash, maxRetries, proof?.phone || ''));
+      result = Number(
+        await redis.eval(
+          CONSUME_OTP,
+          3,
+          `otp:${target}`,
+          `lock:otp:${target}`,
+          proofKey,
+          hash,
+          maxRetries,
+          proof?.phone || '',
+        ),
+      );
     } catch {
       this.requireSharedState();
       // Development fallback is synchronous so verification and consumption cannot interleave.
@@ -40,7 +74,13 @@ export class RedisService {
       const item = this.fallbackCache.get(`otp:${target}`);
       const phoneProof = this.fallbackCache.get(proofKey);
       if (block && block.expiry > now) result = -2;
-      else if (proof && (!phoneProof || phoneProof.expiry <= now || phoneProof.value !== proof.phone)) result = -3;
+      else if (
+        proof &&
+        (!phoneProof ||
+          phoneProof.expiry <= now ||
+          phoneProof.value !== proof.phone)
+      )
+        result = -3;
       else if (!item || item.expiry <= now) result = -1;
       else if (item.value.otp === hash && item.value.retries < maxRetries) {
         this.fallbackCache.delete(`otp:${target}`);
@@ -48,35 +88,66 @@ export class RedisService {
         result = 0;
       } else if (++item.value.retries >= maxRetries) {
         this.fallbackCache.delete(`otp:${target}`);
-        this.fallbackCache.set(`lock:otp:${target}`, { value: true, expiry: now + 900000 });
+        this.fallbackCache.set(`lock:otp:${target}`, {
+          value: true,
+          expiry: now + 900000,
+        });
         result = -2;
       } else result = maxRetries - item.value.retries;
     }
     if (result === -1) {
-      this.logger.warn({ event: 'otp.verify.failed', reason: 'expired', target }, 'No OTP sent or OTP expired');
+      this.logger.warn(
+        { event: 'otp.verify.failed', reason: 'expired', target },
+        'No OTP sent or OTP expired',
+      );
       throw new BadRequestException('No OTP sent or OTP expired');
     }
     if (result === -2) {
-      this.logger.warn({ event: 'otp.verify.failed', reason: 'locked', target }, 'Verification locked due to too many failed attempts');
-      throw new BadRequestException('Verification locked due to too many failed attempts. Try again in 15 minutes.');
+      this.logger.warn(
+        { event: 'otp.verify.failed', reason: 'locked', target },
+        'Verification locked due to too many failed attempts',
+      );
+      throw new BadRequestException(
+        'Verification locked due to too many failed attempts. Try again in 15 minutes.',
+      );
     }
     if (result === -3) {
-      this.logger.warn({ event: 'otp.verify.failed', reason: 'phone_proof_expired', target }, 'Phone verification expired or invalid');
-      throw new BadRequestException('Phone verification expired or invalid. Please verify your phone again.');
+      this.logger.warn(
+        { event: 'otp.verify.failed', reason: 'phone_proof_expired', target },
+        'Phone verification expired or invalid',
+      );
+      throw new BadRequestException(
+        'Phone verification expired or invalid. Please verify your phone again.',
+      );
     }
     if (result > 0) {
-      this.logger.warn({ event: 'otp.verify.failed', reason: 'invalid_otp', target, attemptsLeft: result }, `Invalid OTP. Attempts left: ${result}`);
+      this.logger.warn(
+        {
+          event: 'otp.verify.failed',
+          reason: 'invalid_otp',
+          target,
+          attemptsLeft: result,
+        },
+        `Invalid OTP. Attempts left: ${result}`,
+      );
       throw new BadRequestException(`Invalid OTP. Attempts left: ${result}`);
     }
     if (result !== 0) {
-      this.logger.error({ event: 'otp.verify.failed', reason: 'unknown', target, result }, 'Unable to verify OTP');
+      this.logger.error(
+        { event: 'otp.verify.failed', reason: 'unknown', target, result },
+        'Unable to verify OTP',
+      );
       throw new ServiceUnavailableException('Unable to verify OTP.');
     }
   }
 
   async createPhoneProof(phone: string): Promise<string> {
     const token = crypto.randomBytes(32).toString('hex');
-    await this.setKey(`otp:phone-proof:${crypto.createHash('sha256').update(token).digest('hex')}`, phone, 600);
+    await this.setKey(
+      `otp:phone-proof:${crypto.createHash('sha256').update(token).digest('hex')}`,
+      phone,
+      600,
+    );
     return token;
   }
 
@@ -95,7 +166,9 @@ export class RedisService {
   }
 
   async getPhoneProof(token: string): Promise<string | null> {
-    return this.getKey(`otp:phone-proof:${crypto.createHash('sha256').update(token).digest('hex')}`);
+    return this.getKey(
+      `otp:phone-proof:${crypto.createHash('sha256').update(token).digest('hex')}`,
+    );
   }
 
   async takePendingSignup(token: string): Promise<PendingSignup> {
@@ -110,27 +183,48 @@ export class RedisService {
       if (item && item.expiry > Date.now()) data = item.value;
       this.fallbackCache.delete(key);
     }
-    if (!data?.phone || !data?.email) throw new BadRequestException('Signup expired or already completed. Please verify your phone again.');
+    if (!data?.phone || !data?.email)
+      throw new BadRequestException(
+        'Signup expired or already completed. Please verify your phone again.',
+      );
     return data;
   }
 
   /** Give back a claimed signup after a transient failure; never overwrites a live entry. */
-  async restorePendingSignup(token: string, data: PendingSignup, ttlSeconds = 300): Promise<void> {
+  async restorePendingSignup(
+    token: string,
+    data: PendingSignup,
+    ttlSeconds = 300,
+  ): Promise<void> {
     const key = this.signupKey(token);
     try {
       await redis.set(key, JSON.stringify(data), 'EX', ttlSeconds, 'NX');
     } catch {
       this.requireSharedState();
-      if (!this.fallbackCache.has(key)) this.fallbackCache.set(key, { value: data, expiry: Date.now() + ttlSeconds * 1000 });
+      if (!this.fallbackCache.has(key))
+        this.fallbackCache.set(key, {
+          value: data,
+          expiry: Date.now() + ttlSeconds * 1000,
+        });
     }
   }
 
-  async updateOtpDelivery(target: string, hash: string, status: string): Promise<void> {
+  async updateOtpDelivery(
+    target: string,
+    hash: string,
+    status: string,
+  ): Promise<void> {
     await redis.eval(UPDATE_DELIVERY, 1, `otp:${target}`, hash, status);
   }
 
-  private readonly fallbackCache = new Map<string, { value: any; expiry: number }>();
-  private readonly ipNumbersFallback = new Map<string, { numbers: Set<string>; expiry: number }>();
+  private readonly fallbackCache = new Map<
+    string,
+    { value: any; expiry: number }
+  >();
+  private readonly ipNumbersFallback = new Map<
+    string,
+    { numbers: Set<string>; expiry: number }
+  >();
 
   /**
    * Ping Redis to monitor health
@@ -151,7 +245,13 @@ export class RedisService {
    * @param ttlSeconds - Time to live in seconds (default: 300 = 5 minutes)
    * @param cooldownSeconds - Resend cooldown in seconds (default: 30 seconds)
    */
-  async setOTP(mobile: string, otp: string, ttlSeconds: number = 300, cooldownSeconds: number = 30, lock?: { key: string; token: string }) {
+  async setOTP(
+    mobile: string,
+    otp: string,
+    ttlSeconds: number = 300,
+    cooldownSeconds: number = 30,
+    lock?: { key: string; token: string },
+  ) {
     const now = Date.now();
     const cooldownUntil = now + cooldownSeconds * 1000;
     const expiresAt = now + ttlSeconds * 1000;
@@ -165,22 +265,38 @@ export class RedisService {
 
     try {
       if (lock) {
-        const saved = await redis.eval(`
+        const saved = await redis.eval(
+          `
           if redis.call('GET', KEYS[2]) ~= ARGV[1] then return 0 end
           redis.call('SET', KEYS[1], ARGV[2], 'EX', ARGV[3])
           return 1
-        `, 2, `otp:${mobile}`, lock.key, lock.token, JSON.stringify(record), ttlSeconds);
-        if (Number(saved) !== 1) throw new BadRequestException('OTP request expired. Please try again.');
+        `,
+          2,
+          `otp:${mobile}`,
+          lock.key,
+          lock.token,
+          JSON.stringify(record),
+          ttlSeconds,
+        );
+        if (Number(saved) !== 1)
+          throw new BadRequestException(
+            'OTP request expired. Please try again.',
+          );
       } else {
         await setKey(`otp:${mobile}`, record, ttlSeconds);
       }
     } catch (error: any) {
       if (error instanceof BadRequestException) throw error;
       this.requireSharedState();
-      this.logger.warn(`Redis setOTP failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis setOTP failed, using fallback cache: ${error.message}`,
+      );
       if (lock) {
         const owner = this.fallbackCache.get(lock.key);
-        if (!owner || owner.expiry <= now || owner.value !== lock.token) throw new BadRequestException('OTP request expired. Please try again.');
+        if (!owner || owner.expiry <= now || owner.value !== lock.token)
+          throw new BadRequestException(
+            'OTP request expired. Please try again.',
+          );
       }
       this.fallbackCache.set(`otp:${mobile}`, {
         value: record,
@@ -196,12 +312,21 @@ export class RedisService {
    */
   async getOTP(
     mobile: string,
-  ): Promise<{ otp: string; retries: number; lastSentAt?: number; cooldownUntil?: number; expiresAt?: number; deliveryStatus?: string } | null> {
+  ): Promise<{
+    otp: string;
+    retries: number;
+    lastSentAt?: number;
+    cooldownUntil?: number;
+    expiresAt?: number;
+    deliveryStatus?: string;
+  } | null> {
     try {
       return await getKey(`otp:${mobile}`);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis getOTP failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis getOTP failed, using fallback cache: ${error.message}`,
+      );
       const item = this.fallbackCache.get(`otp:${mobile}`);
       if (!item) return null;
       if (item.expiry < Date.now()) {
@@ -217,7 +342,14 @@ export class RedisService {
    */
   async getOTPRecord(
     mobile: string,
-  ): Promise<{ otp: string; retries: number; lastSentAt?: number; cooldownUntil?: number; expiresAt?: number; deliveryStatus?: string } | null> {
+  ): Promise<{
+    otp: string;
+    retries: number;
+    lastSentAt?: number;
+    cooldownUntil?: number;
+    expiresAt?: number;
+    deliveryStatus?: string;
+  } | null> {
     return await this.getOTP(mobile);
   }
 
@@ -253,8 +385,8 @@ export class RedisService {
     try {
       const result = (await redis.eval(
         this.UPDATE_RETRIES_SCRIPT,
-        1,       // number of KEYS
-        key,     // KEYS[1]
+        1, // number of KEYS
+        key, // KEYS[1]
         maxRetries.toString(), // ARGV[1]
       )) as number;
 
@@ -270,11 +402,16 @@ export class RedisService {
 
       return result; // current retry count after increment
     } catch (error: any) {
-      if (error instanceof NotFoundException || error instanceof UnauthorizedException) {
+      if (
+        error instanceof NotFoundException ||
+        error instanceof UnauthorizedException
+      ) {
         throw error;
       }
       this.requireSharedState();
-      this.logger.warn(`Redis updateRetries failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis updateRetries failed, using fallback cache: ${error.message}`,
+      );
       const item = this.fallbackCache.get(key);
       if (!item || item.expiry < Date.now()) {
         if (item) this.fallbackCache.delete(key);
@@ -301,7 +438,9 @@ export class RedisService {
       await delKey(`otp:${mobile}`);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis deleteOTP failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis deleteOTP failed, using fallback cache: ${error.message}`,
+      );
       this.fallbackCache.delete(`otp:${mobile}`);
     }
   }
@@ -319,10 +458,14 @@ export class RedisService {
     windowSeconds: number,
   ): Promise<boolean> {
     try {
-      return Number(await redis.eval(RATE_LIMIT, 1, key, limit, windowSeconds)) === 1;
+      return (
+        Number(await redis.eval(RATE_LIMIT, 1, key, limit, windowSeconds)) === 1
+      );
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis checkRateLimit failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis checkRateLimit failed, using fallback cache: ${error.message}`,
+      );
       const item = this.fallbackCache.get(key);
       let currentCount = 0;
       if (item && item.expiry >= Date.now()) {
@@ -349,7 +492,9 @@ export class RedisService {
       await redis.eval(INCREMENT_COUNTER, 1, key, windowSeconds);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis incrementRateLimit failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis incrementRateLimit failed, using fallback cache: ${error.message}`,
+      );
       const item = this.fallbackCache.get(key);
       let currentCount = 0;
       if (item && item.expiry >= Date.now()) {
@@ -371,7 +516,9 @@ export class RedisService {
       return !!blocked;
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis isBlocked failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis isBlocked failed, using fallback cache: ${error.message}`,
+      );
       const item = this.fallbackCache.get(key);
       if (!item) return false;
       if (item.expiry < Date.now()) {
@@ -387,7 +534,9 @@ export class RedisService {
       await setKey(key, true, durationSeconds);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis setBlock failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis setBlock failed, using fallback cache: ${error.message}`,
+      );
       this.fallbackCache.set(key, {
         value: true,
         expiry: Date.now() + durationSeconds * 1000,
@@ -403,7 +552,9 @@ export class RedisService {
       return ttl > 0 ? ttl : 0;
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis getCooldownRemaining failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis getCooldownRemaining failed, using fallback cache: ${error.message}`,
+      );
       const item = this.fallbackCache.get(key);
       if (!item) return 0;
       if (item.expiry < Date.now()) {
@@ -419,7 +570,9 @@ export class RedisService {
       await setKey(key, true, durationSeconds);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis setCooldown failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis setCooldown failed, using fallback cache: ${error.message}`,
+      );
       this.fallbackCache.set(key, {
         value: true,
         expiry: Date.now() + durationSeconds * 1000,
@@ -447,10 +600,15 @@ export class RedisService {
       return count <= maxUnique;
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis trackUniqueNumberPerIp failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis trackUniqueNumberPerIp failed, using fallback cache: ${error.message}`,
+      );
       let entry = this.ipNumbersFallback.get(ip);
       if (!entry || entry.expiry < Date.now()) {
-        entry = { numbers: new Set<string>(), expiry: Date.now() + windowSeconds * 1000 };
+        entry = {
+          numbers: new Set<string>(),
+          expiry: Date.now() + windowSeconds * 1000,
+        };
         this.ipNumbersFallback.set(ip, entry);
       }
       entry.numbers.add(phone);
@@ -482,21 +640,29 @@ export class RedisService {
     const key = `rate:otp:minute:${target}`;
     try {
       // Atomic counter with a fixed 60-second expiry from the first request.
-      const allowed = await redis.eval(`
+      const allowed = await redis.eval(
+        `
         local count = tonumber(redis.call('GET', KEYS[1]) or '0')
         if count >= 2 then return 0 end
         count = redis.call('INCR', KEYS[1])
         if count == 1 then redis.call('EXPIRE', KEYS[1], 60) end
         return 1
-      `, 1, key);
+      `,
+        1,
+        key,
+      );
       return Number(allowed) === 1;
     } catch {
       this.requireSharedState();
       const now = Date.now();
       const item = this.fallbackCache.get(key);
-      const active = item && item.expiry > now ? item : { value: 0, expiry: now + 60000 };
+      const active =
+        item && item.expiry > now ? item : { value: 0, expiry: now + 60000 };
       if (active.value >= 2) return false;
-      this.fallbackCache.set(key, { value: active.value + 1, expiry: active.expiry });
+      this.fallbackCache.set(key, {
+        value: active.value + 1,
+        expiry: active.expiry,
+      });
       return true;
     }
   }
@@ -507,7 +673,9 @@ export class RedisService {
     deviceFingerprint?: string,
   ): Promise<{ captchaRequired: boolean }> {
     // OTP rate limit disabled for OTP only
-    this.logger.log(`[checkOtpRateLimits] Rate limit check bypassed for target: ${target}`);
+    this.logger.log(
+      `[checkOtpRateLimits] Rate limit check bypassed for target: ${target}`,
+    );
     return { captchaRequired: false };
 
     /*
@@ -703,7 +871,9 @@ export class RedisService {
       await setKey(`session:${sessionId}`, data, ttlSeconds);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis setSession failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis setSession failed, using fallback cache: ${error.message}`,
+      );
       this.fallbackCache.set(`session:${sessionId}`, {
         value: data,
         expiry: Date.now() + ttlSeconds * 1000,
@@ -721,7 +891,9 @@ export class RedisService {
       return await getKey(`session:${sessionId}`);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis getSession failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis getSession failed, using fallback cache: ${error.message}`,
+      );
       const item = this.fallbackCache.get(`session:${sessionId}`);
       if (!item) return null;
       if (item.expiry < Date.now()) {
@@ -741,7 +913,9 @@ export class RedisService {
       await delKey(`session:${sessionId}`);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis deleteSession failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis deleteSession failed, using fallback cache: ${error.message}`,
+      );
       this.fallbackCache.delete(`session:${sessionId}`);
     }
   }
@@ -756,7 +930,9 @@ export class RedisService {
       return await redis.ttl(`session:${sessionId}`);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis getSessionTtl failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis getSessionTtl failed, using fallback cache: ${error.message}`,
+      );
       const item = this.fallbackCache.get(`session:${sessionId}`);
       if (!item) return -2;
       if (item.expiry < Date.now()) {
@@ -777,7 +953,9 @@ export class RedisService {
       await redis.expire(`session:${sessionId}`, ttlSeconds);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis extendSession failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis extendSession failed, using fallback cache: ${error.message}`,
+      );
       const item = this.fallbackCache.get(`session:${sessionId}`);
       if (item) {
         item.expiry = Date.now() + ttlSeconds * 1000;
@@ -792,13 +970,19 @@ export class RedisService {
    * @param sessionData - Current session data object
    * @param idleTimeoutSeconds - Idle timeout in seconds (session expires after this much inactivity)
    */
-  async touchSession(sessionId: string, sessionData: any, idleTimeoutSeconds: number): Promise<void> {
+  async touchSession(
+    sessionId: string,
+    sessionData: any,
+    idleTimeoutSeconds: number,
+  ): Promise<void> {
     try {
       const updatedData = { ...sessionData, lastActivity: Date.now() };
       await setKey(`session:${sessionId}`, updatedData, idleTimeoutSeconds);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis touchSession failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis touchSession failed, using fallback cache: ${error.message}`,
+      );
       const item = this.fallbackCache.get(`session:${sessionId}`);
       if (item) {
         item.value = { ...item.value, lastActivity: Date.now() };
@@ -815,18 +999,23 @@ export class RedisService {
    * @param newSessionId - The newly created session ID
    * @param maxSessions - Maximum allowed concurrent sessions (default: 3)
    */
-  async trackSessionForLimit(userId: string, portal: string, newSessionId: string, maxSessions: number = 3): Promise<void> {
+  async trackSessionForLimit(
+    userId: string,
+    portal: string,
+    newSessionId: string,
+    maxSessions: number = 3,
+  ): Promise<void> {
     const listKey = `user:sessions:${userId}:${portal}`;
     try {
       // 1. Get all previously tracked sessions ordered by age (oldest first)
       const allSessions = await redis.zrange(listKey, 0, -1);
-      
+
       const activeSessions: string[] = [];
-      
+
       // 2. Filter out sessions that have already expired naturally (idle timeout)
       for (const sessionId of allSessions) {
         if (sessionId === newSessionId) continue;
-        
+
         const exists = await redis.exists(`session:${sessionId}`);
         if (exists) {
           activeSessions.push(sessionId);
@@ -835,26 +1024,30 @@ export class RedisService {
           await redis.zrem(listKey, sessionId);
         }
       }
-      
+
       // 3. If remaining active sessions >= limit, evict the oldest ones to make room
       if (activeSessions.length >= maxSessions) {
         const numToRemove = activeSessions.length - maxSessions + 1;
         const sessionsToRemove = activeSessions.slice(0, numToRemove);
-        
+
         for (const sessionId of sessionsToRemove) {
           await this.deleteSession(sessionId);
           await redis.zrem(listKey, sessionId);
-          this.logger.log({ userId, sessionId }, `Evicted old session ${sessionId} for user ${userId} to enforce concurrent limit`);
+          this.logger.log(
+            { userId, sessionId },
+            `Evicted old session ${sessionId} for user ${userId} to enforce concurrent limit`,
+          );
         }
       }
-      
+
       // 4. Track the new session
       await redis.zadd(listKey, Date.now(), newSessionId);
       // Set TTL on the ZSET so it doesn't leak if user never logs in again (7 days max lifetime)
       await redis.expire(listKey, 604800);
-      
     } catch (error: any) {
-      this.logger.warn(`Redis trackSessionForLimit failed (best-effort): ${error.message}`);
+      this.logger.warn(
+        `Redis trackSessionForLimit failed (best-effort): ${error.message}`,
+      );
     }
   }
 
@@ -875,7 +1068,10 @@ export class RedisService {
         try {
           const rawSessionId = await getKey(`active-session:${dc}:${userId}`);
           if (rawSessionId) {
-            const hashedSessionId = crypto.createHash('sha256').update(rawSessionId).digest('hex');
+            const hashedSessionId = crypto
+              .createHash('sha256')
+              .update(rawSessionId)
+              .digest('hex');
             const data = await this.getSession(hashedSessionId);
             if (data && data.userId === userId) {
               const ttl = await this.getSessionTtl(hashedSessionId);
@@ -886,10 +1082,16 @@ export class RedisService {
                 rawSessionId,
                 portal: data.type || data.portal || 'USER',
                 deviceClass: data.deviceClass || dc,
-                userAgent: data.userAgent || (dc === 'APK' ? 'Mobile App (Android)' : 'Web Browser'),
+                userAgent:
+                  data.userAgent ||
+                  (dc === 'APK' ? 'Mobile App (Android)' : 'Web Browser'),
                 ip: data.ip || 'Unknown',
-                issuedAt: data.createdAt ? new Date(data.createdAt).toISOString() : (data.issuedAt || null),
-                lastActivity: data.lastActivity ? new Date(data.lastActivity).toISOString() : null,
+                issuedAt: data.createdAt
+                  ? new Date(data.createdAt).toISOString()
+                  : data.issuedAt || null,
+                lastActivity: data.lastActivity
+                  ? new Date(data.lastActivity).toISOString()
+                  : null,
                 expiresInSeconds: ttl > 0 ? ttl : null,
               });
             } else {
@@ -898,20 +1100,39 @@ export class RedisService {
             }
           }
         } catch (e: any) {
-          this.logger.warn({ userId, deviceClass: dc, err: e }, `Failed reading active-session:${dc}:${userId}: ${e.message}`);
+          this.logger.warn(
+            { userId, deviceClass: dc, err: e },
+            `Failed reading active-session:${dc}:${userId}: ${e.message}`,
+          );
         }
       }
 
       // 2. Also check tracked ZSET lists for any portals (e.g. USER, ADMIN, etc.)
-      const portals = ['USER', 'ADMIN', 'CMS', 'SUPPORT', 'MARKETING', 'ACCOUNTING', 'OPERATION', 'BRANCH', 'INTERNAL_RM', 'DISTRIBUTOR', 'DISTRIBUTOR_RM'];
+      const portals = [
+        'USER',
+        'ADMIN',
+        'CMS',
+        'SUPPORT',
+        'MARKETING',
+        'ACCOUNTING',
+        'OPERATION',
+        'BRANCH',
+        'INTERNAL_RM',
+        'DISTRIBUTOR',
+        'DISTRIBUTOR_RM',
+      ];
       for (const portal of portals) {
         try {
           const listKey = `user:sessions:${userId}:${portal}`;
           const sessionIds = await redis.zrange(listKey, 0, -1);
 
           for (const sid of sessionIds) {
-            const hashedSid = sid.length === 64 ? sid : crypto.createHash('sha256').update(sid).digest('hex');
-            if (seenSessionIds.has(hashedSid) || seenSessionIds.has(sid)) continue;
+            const hashedSid =
+              sid.length === 64
+                ? sid
+                : crypto.createHash('sha256').update(sid).digest('hex');
+            if (seenSessionIds.has(hashedSid) || seenSessionIds.has(sid))
+              continue;
 
             let data = await this.getSession(hashedSid);
             if (!data && sid !== hashedSid) {
@@ -929,8 +1150,12 @@ export class RedisService {
                 deviceClass: data.deviceClass || 'BROWSER',
                 userAgent: data.userAgent || 'Unknown',
                 ip: data.ip || 'Unknown',
-                issuedAt: data.createdAt ? new Date(data.createdAt).toISOString() : (data.issuedAt || null),
-                lastActivity: data.lastActivity ? new Date(data.lastActivity).toISOString() : null,
+                issuedAt: data.createdAt
+                  ? new Date(data.createdAt).toISOString()
+                  : data.issuedAt || null,
+                lastActivity: data.lastActivity
+                  ? new Date(data.lastActivity).toISOString()
+                  : null,
                 expiresInSeconds: ttl > 0 ? ttl : null,
               });
             } else {
@@ -953,7 +1178,10 @@ export class RedisService {
    * @param userId - Unique user/admin ID
    * @param userAgent - User agent string
    */
-  async isNewDeviceForUser(userId: string, userAgent: string): Promise<boolean> {
+  async isNewDeviceForUser(
+    userId: string,
+    userAgent: string,
+  ): Promise<boolean> {
     const key = `user:known_devices:${userId}`;
     const deviceFingerprint = crypto
       .createHash('sha256')
@@ -972,7 +1200,10 @@ export class RedisService {
       await redis.expire(key, 15552000);
       return true;
     } catch (error: any) {
-      this.logger.warn({ userId, err: error }, `Redis isNewDeviceForUser failed (best-effort): ${error.message}`);
+      this.logger.warn(
+        { userId, err: error },
+        `Redis isNewDeviceForUser failed (best-effort): ${error.message}`,
+      );
       return false;
     }
   }
@@ -981,12 +1212,19 @@ export class RedisService {
    * Delete all sessions associated with a specific user ID
    * @param userId - Unique user ID
    */
-  async deleteUserData(user: { id: string; phone?: string | null; email?: string | null }): Promise<void> {
+  async deleteUserData(user: {
+    id: string;
+    phone?: string | null;
+    email?: string | null;
+  }): Promise<void> {
     const targets = new Set<string>();
     if (user.phone) {
       targets.add(user.phone);
       const digits = user.phone.replace(/\D/g, '');
-      const local = digits.length === 12 && digits.startsWith('91') ? digits.slice(2) : digits;
+      const local =
+        digits.length === 12 && digits.startsWith('91')
+          ? digits.slice(2)
+          : digits;
       if (local.length === 10) {
         targets.add(local);
         targets.add(`+91${local}`);
@@ -1007,17 +1245,27 @@ export class RedisService {
     ]);
     for (const target of targets) {
       for (const prefix of [
-        'otp:', 'rate:otp:minute:', 'rate:otp:request:', 'rate:otp:verify:',
-        'rate:otp:hourly:', 'rate:otp:daily:', 'cooldown:otp:',
-        'cooldown:otp:resends:', 'lock:otp:', 'lock:otp:gen:',
-      ]) keys.add(`${prefix}${target}`);
+        'otp:',
+        'rate:otp:minute:',
+        'rate:otp:request:',
+        'rate:otp:verify:',
+        'rate:otp:hourly:',
+        'rate:otp:daily:',
+        'cooldown:otp:',
+        'cooldown:otp:resends:',
+        'lock:otp:',
+        'lock:otp:gen:',
+      ])
+        keys.add(`${prefix}${target}`);
     }
 
     // Clear local fallback records even when Redis is unavailable.
     for (const [key, item] of this.fallbackCache) {
-      if (keys.has(key) ||
-          (key.startsWith('session:') && item.value?.userId === user.id) ||
-          key.startsWith(`user:sessions:${user.id}:`)) {
+      if (
+        keys.has(key) ||
+        (key.startsWith('session:') && item.value?.userId === user.id) ||
+        key.startsWith(`user:sessions:${user.id}:`)
+      ) {
         this.fallbackCache.delete(key);
       }
     }
@@ -1026,7 +1274,13 @@ export class RedisService {
     for (const pattern of ['session:*', 'user:sessions:*']) {
       let cursor = '0';
       do {
-        const [next, scannedKeys] = await redis.scan(cursor, 'MATCH', pattern, 'COUNT', 100);
+        const [next, scannedKeys] = await redis.scan(
+          cursor,
+          'MATCH',
+          pattern,
+          'COUNT',
+          100,
+        );
         cursor = next;
         for (const key of scannedKeys) {
           if (key.startsWith(`user:sessions:${user.id}:`)) {
@@ -1034,7 +1288,11 @@ export class RedisService {
           } else if (key.startsWith('session:')) {
             const raw = await redis.get(key);
             let session: any;
-            try { session = raw ? JSON.parse(raw) : null; } catch { continue; }
+            try {
+              session = raw ? JSON.parse(raw) : null;
+            } catch {
+              continue;
+            }
             if (session?.userId === user.id) await redis.del(key);
           }
         }
@@ -1056,7 +1314,13 @@ export class RedisService {
     try {
       let cursor = '0';
       do {
-        const scanResult = await redis.scan(cursor, 'MATCH', 'session:*', 'COUNT', 100);
+        const scanResult = await redis.scan(
+          cursor,
+          'MATCH',
+          'session:*',
+          'COUNT',
+          100,
+        );
         cursor = scanResult[0];
         const keys = scanResult[1];
 
@@ -1074,7 +1338,10 @@ export class RedisService {
       } while (cursor !== '0');
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn({ userId, err: error }, `Redis deleteAllUserSessions failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        { userId, err: error },
+        `Redis deleteAllUserSessions failed, using fallback cache: ${error.message}`,
+      );
       for (const [key, item] of this.fallbackCache.entries()) {
         if (key.startsWith('session:')) {
           const data = item.value;
@@ -1097,7 +1364,9 @@ export class RedisService {
       await setKey(`user:status:${userId}`, data, ttlSeconds);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis setUserStatusCache failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis setUserStatusCache failed, using fallback cache: ${error.message}`,
+      );
       this.fallbackCache.set(`user:status:${userId}`, {
         value: data,
         expiry: Date.now() + ttlSeconds * 1000,
@@ -1115,7 +1384,9 @@ export class RedisService {
       return await getKey(`user:status:${userId}`);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis getUserStatusCache failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis getUserStatusCache failed, using fallback cache: ${error.message}`,
+      );
       const item = this.fallbackCache.get(`user:status:${userId}`);
       if (!item) return null;
       if (item.expiry < Date.now()) {
@@ -1139,7 +1410,9 @@ export class RedisService {
       return result === 'OK' ? token : null;
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis acquireLock failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis acquireLock failed, using fallback cache: ${error.message}`,
+      );
       const item = this.fallbackCache.get(key);
       if (item && item.expiry >= Date.now()) {
         return null; // Already locked
@@ -1161,8 +1434,11 @@ export class RedisService {
       await redis.eval(RELEASE_LOCK, 1, key, token);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis releaseLock failed, using fallback cache: ${error.message}`);
-      if (this.fallbackCache.get(key)?.value === token) this.fallbackCache.delete(key);
+      this.logger.warn(
+        `Redis releaseLock failed, using fallback cache: ${error.message}`,
+      );
+      if (this.fallbackCache.get(key)?.value === token)
+        this.fallbackCache.delete(key);
     }
   }
 
@@ -1176,7 +1452,9 @@ export class RedisService {
       return await getKey(`idempotency:${key}`);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis getIdempotencyResponse failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis getIdempotencyResponse failed, using fallback cache: ${error.message}`,
+      );
       const item = this.fallbackCache.get(`idempotency:${key}`);
       if (!item) return null;
       if (item.expiry < Date.now()) {
@@ -1193,12 +1471,18 @@ export class RedisService {
    * @param response - Response to cache
    * @param ttlSeconds - Expiry in seconds
    */
-  async setIdempotencyResponse(key: string, response: any, ttlSeconds: number): Promise<void> {
+  async setIdempotencyResponse(
+    key: string,
+    response: any,
+    ttlSeconds: number,
+  ): Promise<void> {
     try {
       await setKey(`idempotency:${key}`, response, ttlSeconds);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis setIdempotencyResponse failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis setIdempotencyResponse failed, using fallback cache: ${error.message}`,
+      );
       this.fallbackCache.set(`idempotency:${key}`, {
         value: response,
         expiry: Date.now() + ttlSeconds * 1000,
@@ -1210,7 +1494,10 @@ export class RedisService {
    * Record metric for OTP success or failure, and record verification latency.
    * Logs a warning if the verification failure rate is high (>15%) over a sample of at least 10 attempts.
    */
-  async recordOtpMetric(type: 'success' | 'failure', latencyMs?: number): Promise<void> {
+  async recordOtpMetric(
+    type: 'success' | 'failure',
+    latencyMs?: number,
+  ): Promise<void> {
     try {
       const typeKey = `otp:metrics:${type}`;
       await redis.incr(typeKey);
@@ -1229,7 +1516,9 @@ export class RedisService {
       if (total >= 10) {
         const failureRate = failureCount / total;
         if (failureRate > 0.15) {
-          this.logger.warn(`[Observability Alert] OTP Verification Failure Rate is high: ${(failureRate * 100).toFixed(1)}% (${failureCount}/${total})`);
+          this.logger.warn(
+            `[Observability Alert] OTP Verification Failure Rate is high: ${(failureRate * 100).toFixed(1)}% (${failureCount}/${total})`,
+          );
         }
       }
     } catch (err: any) {
@@ -1288,10 +1577,15 @@ export class RedisService {
       return count <= maxUnique;
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis trackDeviceFingerprint failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis trackDeviceFingerprint failed, using fallback cache: ${error.message}`,
+      );
       let entry = this.ipNumbersFallback.get(fingerprint);
       if (!entry || entry.expiry < Date.now()) {
-        entry = { numbers: new Set<string>(), expiry: Date.now() + windowSeconds * 1000 };
+        entry = {
+          numbers: new Set<string>(),
+          expiry: Date.now() + windowSeconds * 1000,
+        };
         this.ipNumbersFallback.set(fingerprint, entry);
       }
       entry.numbers.add(target);
@@ -1308,7 +1602,9 @@ export class RedisService {
       return await getKey(key);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis getKey failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis getKey failed, using fallback cache: ${error.message}`,
+      );
       const item = this.fallbackCache.get(key);
       if (!item) return null;
       if (item.expiry < Date.now()) {
@@ -1328,7 +1624,9 @@ export class RedisService {
       await setKey(key, value, ttlSeconds);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis setKey failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis setKey failed, using fallback cache: ${error.message}`,
+      );
       this.fallbackCache.set(key, {
         value,
         expiry: Date.now() + ttlSeconds * 1000,
@@ -1345,7 +1643,9 @@ export class RedisService {
       await delKey(key);
     } catch (error: any) {
       this.requireSharedState();
-      this.logger.warn(`Redis deleteKey failed, using fallback cache: ${error.message}`);
+      this.logger.warn(
+        `Redis deleteKey failed, using fallback cache: ${error.message}`,
+      );
       this.fallbackCache.delete(key);
     }
   }

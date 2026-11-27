@@ -19,7 +19,7 @@ import * as path from 'path';
 import * as bcrypt from 'bcrypt';
 import { randomUUID } from 'crypto';
 import { hasCurrentDigilockerVerification, validateDigilockerIdentity } from './digilocker-validation';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 
 /**
  * File upload data structure

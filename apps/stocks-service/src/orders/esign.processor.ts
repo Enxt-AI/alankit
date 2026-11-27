@@ -1,6 +1,6 @@
 import { InjectQueue } from '@nestjs/bull';
 import { Injectable, OnModuleInit, BeforeApplicationShutdown } from '@nestjs/common';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 import { ConfigService } from '@nestjs/config';
 import type { Job, Queue } from 'bull';
 import { OrdersService } from './orders.service';

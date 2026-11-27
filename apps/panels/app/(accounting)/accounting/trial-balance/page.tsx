@@ -26,10 +26,7 @@ import {
 } from "@/components/ui/table";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import {
-  fetchLedgers,
-  Ledger,
-} from "@/lib/accounting-api";
+import { fetchLedgers, Ledger } from "@/lib/accounting-api";
 
 // ── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -71,7 +68,9 @@ const TALLY_PARENT_ORDER: Record<string, number> = {
   "Indirect Income": 11,
 };
 
-const getTallyGroupMapping = (ledger: Ledger): { parent: string; sub: string } => {
+const getTallyGroupMapping = (
+  ledger: Ledger,
+): { parent: string; sub: string } => {
   if (ledger.group) {
     const groupName = ledger.group.name;
     const groupUnder = ledger.group.under;
@@ -84,31 +83,78 @@ const getTallyGroupMapping = (ledger: Ledger): { parent: string; sub: string } =
 
     if (lowerUnder.includes("capital") || lowerName.includes("capital")) {
       parent = "Capital Account";
-    } else if (lowerUnder.includes("loan") || lowerName.includes("loan") || (lowerUnder.includes("liability") && (lowerUnder.includes("secured") || lowerUnder.includes("unsecured"))) || lowerName.includes("od")) {
+    } else if (
+      lowerUnder.includes("loan") ||
+      lowerName.includes("loan") ||
+      (lowerUnder.includes("liability") &&
+        (lowerUnder.includes("secured") || lowerUnder.includes("unsecured"))) ||
+      lowerName.includes("od")
+    ) {
       parent = "Loans (Liability)";
-    } else if (lowerUnder.includes("liabilit") || lowerName.includes("creditor") || lowerName.includes("tax") || lowerName.includes("provision") || lowerName.includes("suspense")) {
+    } else if (
+      lowerUnder.includes("liabilit") ||
+      lowerName.includes("creditor") ||
+      lowerName.includes("tax") ||
+      lowerName.includes("provision") ||
+      lowerName.includes("suspense")
+    ) {
       parent = "Current Liabilities";
-    } else if ((lowerUnder.includes("asset") && lowerUnder.includes("fixed")) || lowerName.includes("fixed asset") || lowerName.includes("land") || lowerName.includes("building") || lowerName.includes("machinery") || lowerName.includes("furniture")) {
+    } else if (
+      (lowerUnder.includes("asset") && lowerUnder.includes("fixed")) ||
+      lowerName.includes("fixed asset") ||
+      lowerName.includes("land") ||
+      lowerName.includes("building") ||
+      lowerName.includes("machinery") ||
+      lowerName.includes("furniture")
+    ) {
       parent = "Fixed Assets";
-    } else if ((lowerUnder.includes("asset") && lowerUnder.includes("current")) || lowerName.includes("debtor") || lowerName.includes("bank") || lowerName.includes("cash") || lowerName.includes("stock")) {
+    } else if (
+      (lowerUnder.includes("asset") && lowerUnder.includes("current")) ||
+      lowerName.includes("debtor") ||
+      lowerName.includes("bank") ||
+      lowerName.includes("cash") ||
+      lowerName.includes("stock")
+    ) {
       parent = "Current Assets";
-    } else if (lowerUnder.includes("purchase") || lowerName.includes("purchase")) {
+    } else if (
+      lowerUnder.includes("purchase") ||
+      lowerName.includes("purchase")
+    ) {
       parent = "Purchase Accounts";
     } else if (lowerUnder.includes("sale") || lowerName.includes("sale")) {
       parent = "Sales Accounts";
-    } else if (lowerUnder.includes("direct expense") || lowerName.includes("direct expense")) {
+    } else if (
+      lowerUnder.includes("direct expense") ||
+      lowerName.includes("direct expense")
+    ) {
       parent = "Direct Expenses";
-    } else if (lowerUnder.includes("indirect expense") || lowerName.includes("indirect expense") || lowerName.includes("expense") || lowerName.includes("charges")) {
+    } else if (
+      lowerUnder.includes("indirect expense") ||
+      lowerName.includes("indirect expense") ||
+      lowerName.includes("expense") ||
+      lowerName.includes("charges")
+    ) {
       parent = "Indirect Expenses";
-    } else if (lowerUnder.includes("direct income") || lowerName.includes("direct income")) {
+    } else if (
+      lowerUnder.includes("direct income") ||
+      lowerName.includes("direct income")
+    ) {
       parent = "Direct Income";
-    } else if (lowerUnder.includes("indirect income") || lowerName.includes("indirect income") || lowerName.includes("income") || lowerName.includes("revenue")) {
+    } else if (
+      lowerUnder.includes("indirect income") ||
+      lowerName.includes("indirect income") ||
+      lowerName.includes("income") ||
+      lowerName.includes("revenue")
+    ) {
       parent = "Indirect Income";
     }
 
     if (lowerName.includes("debtor") || lowerName.includes("receivable")) {
       sub = "Sundry Debtors";
-    } else if (lowerName.includes("creditor") || lowerName.includes("payable")) {
+    } else if (
+      lowerName.includes("creditor") ||
+      lowerName.includes("payable")
+    ) {
       sub = "Sundry Creditors";
     } else if (lowerName.includes("bank account")) {
       sub = "Bank Accounts";
@@ -149,13 +195,19 @@ const getTallyGroupMapping = (ledger: Ledger): { parent: string; sub: string } =
     return { parent: "Sales Accounts", sub: "Sales Accounts" };
   }
 
-  if (nameLower.includes("vendor") || nameLower.includes("supplier") || nameLower.includes("creditor") || nameLower.includes("llp") || nameLower.includes("private limited") || nameLower.includes("pvt ltd")) {
+  if (
+    nameLower.includes("vendor") ||
+    nameLower.includes("supplier") ||
+    nameLower.includes("creditor") ||
+    nameLower.includes("llp") ||
+    nameLower.includes("private limited") ||
+    nameLower.includes("pvt ltd")
+  ) {
     return { parent: "Current Liabilities", sub: "Sundry Creditors" };
   }
 
   return { parent: "Current Assets", sub: "Sundry Debtors" };
 };
-
 
 // ── Types ─────────────────────────────────────────────────────────────────────
 
@@ -172,7 +224,10 @@ interface TrialBalanceRow {
   closingCr: number;
 }
 
-import { fetchTrialBalance, TrialBalanceRow as ApiTrialBalanceRow } from "@/lib/accounting-api";
+import {
+  fetchTrialBalance,
+  TrialBalanceRow as ApiTrialBalanceRow,
+} from "@/lib/accounting-api";
 
 // ── Component ─────────────────────────────────────────────────────────────────
 
@@ -223,8 +278,10 @@ export default function TrialBalancePage() {
     const calculatedRows = rawApiRows.map((r) => {
       // Create a dummy ledger object for getTallyGroupMapping
       const dummyLedger = { name: r.ledgerName, type: r.type as any };
-      const { parent, sub } = getTallyGroupMapping(dummyLedger as unknown as Ledger);
-      
+      const { parent, sub } = getTallyGroupMapping(
+        dummyLedger as unknown as Ledger,
+      );
+
       const isSun = viewMode === "Sun";
       const ledgerCode = isSun ? r.sunCode || "—" : r.ledgerCode || "—";
       const ledgerName = isSun ? r.sunName || r.ledgerName : r.ledgerName;
@@ -245,10 +302,10 @@ export default function TrialBalancePage() {
 
     // 2. Separate stock rows and non-stock rows
     const stockRows = calculatedRows.filter(
-      (r) => r.type === "STOCK" || r.ledgerCode === "STOCK-AGG"
+      (r) => r.type === "STOCK" || r.ledgerCode === "STOCK-AGG",
     );
     const nonStockRows = calculatedRows.filter(
-      (r) => r.type !== "STOCK" && r.ledgerCode !== "STOCK-AGG"
+      (r) => r.type !== "STOCK" && r.ledgerCode !== "STOCK-AGG",
     );
 
     // 3. Aggregate all stock rows into a single Stock-in-Hand ledger
@@ -342,7 +399,7 @@ export default function TrialBalancePage() {
         (r) =>
           r.ledgerName.toLowerCase().includes(q) ||
           r.ledgerCode.toLowerCase().includes(q) ||
-          r.subGroup.toLowerCase().includes(q)
+          r.subGroup.toLowerCase().includes(q),
       );
     }
 
@@ -353,7 +410,8 @@ export default function TrialBalancePage() {
       if (sortField === "parentGroup") {
         const orderA = TALLY_PARENT_ORDER[a.parentGroup] ?? 99;
         const orderB = TALLY_PARENT_ORDER[b.parentGroup] ?? 99;
-        if (orderA !== orderB) return sortAsc ? orderA - orderB : orderB - orderA;
+        if (orderA !== orderB)
+          return sortAsc ? orderA - orderB : orderB - orderA;
         return a.ledgerName.localeCompare(b.ledgerName);
       }
 
@@ -366,7 +424,14 @@ export default function TrialBalancePage() {
       valB = valB ?? 0;
       return sortAsc ? valA - valB : valB - valA;
     });
-  }, [tbRows, searchQuery, selectedGroup, sortField, sortAsc, showZeroBalances]);
+  }, [
+    tbRows,
+    searchQuery,
+    selectedGroup,
+    sortField,
+    sortAsc,
+    showZeroBalances,
+  ]);
 
   // ── Unique groups ────────────────────────────────────────────────────────────
 
@@ -374,7 +439,7 @@ export default function TrialBalancePage() {
     const groups = new Set<string>();
     tbRows.forEach((row) => groups.add(row.parentGroup));
     return Array.from(groups).sort(
-      (a, b) => (TALLY_PARENT_ORDER[a] ?? 99) - (TALLY_PARENT_ORDER[b] ?? 99)
+      (a, b) => (TALLY_PARENT_ORDER[a] ?? 99) - (TALLY_PARENT_ORDER[b] ?? 99),
     );
   }, [tbRows]);
 
@@ -390,13 +455,21 @@ export default function TrialBalancePage() {
         closingDr: acc.closingDr + row.closingDr,
         closingCr: acc.closingCr + row.closingCr,
       }),
-      { openingDr: 0, openingCr: 0, debit: 0, credit: 0, closingDr: 0, closingCr: 0 }
+      {
+        openingDr: 0,
+        openingCr: 0,
+        debit: 0,
+        credit: 0,
+        closingDr: 0,
+        closingCr: 0,
+      },
     );
   }, [tbRows]);
 
   // Is the Trial Balance balanced?
   const isPeriodBalanced = Math.abs(totals.debit - totals.credit) < 0.01;
-  const isClosingBalanced = Math.abs(totals.closingDr - totals.closingCr) < 0.01;
+  const isClosingBalanced =
+    Math.abs(totals.closingDr - totals.closingCr) < 0.01;
   const isBalanced = isPeriodBalanced && isClosingBalanced;
 
   // ── Format helpers ───────────────────────────────────────────────────────────
@@ -442,8 +515,10 @@ export default function TrialBalancePage() {
     const codeType = viewMode === "Sun" ? "Sun" : "Defult";
 
     const rowsData: any[][] = [
-      ["SMC INVESTECH PRIVATE LIMITED"],
-      ["3Rd Floor,C-98, Noida,Sector-2,Gautam Budh Nagar, Noida,Uttar Pradesh,201301"],
+      [" INVESTECH PRIVATE LIMITED"],
+      [
+        "3Rd Floor,C-98, Noida,Sector-2,Gautam Budh Nagar, Noida,Uttar Pradesh,201301",
+      ],
       ["CIN"],
       ["Pan"],
       ["GST"],
@@ -454,7 +529,15 @@ export default function TrialBalancePage() {
       ["Date Range", `${formattedFromDate} to ${formattedToDate}`],
       ["Defult/Sun Code", codeType],
       [],
-      ["Ledger Group", "LedgerCode", "Ledger Name", "Opening Balance", "Debit", "Cedit", "Closing"],
+      [
+        "Ledger Group",
+        "LedgerCode",
+        "Ledger Name",
+        "Opening Balance",
+        "Debit",
+        "Cedit",
+        "Closing",
+      ],
     ];
 
     let totalOpening = 0;
@@ -497,7 +580,8 @@ export default function TrialBalancePage() {
 
   const exportXLSX = () => {
     if (filteredAndSortedRows.length === 0) return;
-    const { rowsData, formattedFromDate, formattedToDate, codeType } = buildExportData();
+    const { rowsData, formattedFromDate, formattedToDate, codeType } =
+      buildExportData();
 
     const worksheet = XLSX.utils.aoa_to_sheet(rowsData);
 
@@ -517,13 +601,14 @@ export default function TrialBalancePage() {
 
     XLSX.writeFile(
       workbook,
-      `trial_balance_${codeType.toLowerCase()}_${formattedFromDate.replace(/\//g, "-")}_to_${formattedToDate.replace(/\//g, "-")}.xlsx`
+      `trial_balance_${codeType.toLowerCase()}_${formattedFromDate.replace(/\//g, "-")}_to_${formattedToDate.replace(/\//g, "-")}.xlsx`,
     );
   };
 
   const exportCSV = () => {
     if (filteredAndSortedRows.length === 0) return;
-    const { rowsData, formattedFromDate, formattedToDate, codeType } = buildExportData();
+    const { rowsData, formattedFromDate, formattedToDate, codeType } =
+      buildExportData();
 
     const csvContent = rowsData
       .map((row) =>
@@ -536,7 +621,7 @@ export default function TrialBalancePage() {
             }
             return str;
           })
-          .join(",")
+          .join(","),
       )
       .join("\n");
 
@@ -546,7 +631,7 @@ export default function TrialBalancePage() {
     link.href = url;
     link.setAttribute(
       "download",
-      `trial_balance_${codeType.toLowerCase()}_${formattedFromDate.replace(/\//g, "-")}_to_${formattedToDate.replace(/\//g, "-")}.csv`
+      `trial_balance_${codeType.toLowerCase()}_${formattedFromDate.replace(/\//g, "-")}_to_${formattedToDate.replace(/\//g, "-")}.csv`,
     );
     document.body.appendChild(link);
     link.click();
@@ -566,12 +651,22 @@ export default function TrialBalancePage() {
   // ── Grouped rows ─────────────────────────────────────────────────────────────
 
   const groupedRows = useMemo(() => {
-    const groups: { group: string; rows: TrialBalanceRow[]; subtotalDr: number; subtotalCr: number }[] = [];
+    const groups: {
+      group: string;
+      rows: TrialBalanceRow[];
+      subtotalDr: number;
+      subtotalCr: number;
+    }[] = [];
     let currentGroup = "";
     filteredAndSortedRows.forEach((row) => {
       if (row.parentGroup !== currentGroup) {
         currentGroup = row.parentGroup;
-        groups.push({ group: currentGroup, rows: [], subtotalDr: 0, subtotalCr: 0 });
+        groups.push({
+          group: currentGroup,
+          rows: [],
+          subtotalDr: 0,
+          subtotalCr: 0,
+        });
       }
       const last = groups[groups.length - 1];
       if (last) {
@@ -664,7 +759,7 @@ export default function TrialBalancePage() {
         <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
           <div className="space-y-1.5">
             <h1 className="text-xl font-extrabold text-slate-800">
-              SMC Investech Private Limited
+              Investech Private Limited
             </h1>
             <p className="text-xs font-semibold text-slate-500 max-w-xl leading-relaxed">
               3Rd Floor, C-98, Noida, Sector-2, Gautam Budh Nagar, Uttar
@@ -710,8 +805,7 @@ export default function TrialBalancePage() {
                 {fromDate
                   ? new Date(fromDate).toLocaleDateString("en-GB")
                   : "—"}{" "}
-                to{" "}
-                {toDate ? new Date(toDate).toLocaleDateString("en-GB") : "—"}
+                to {toDate ? new Date(toDate).toLocaleDateString("en-GB") : "—"}
               </span>
             </div>
 
@@ -770,7 +864,8 @@ export default function TrialBalancePage() {
                 </span>
               </div>
               <p className="text-xs text-slate-500 font-medium mt-0.5">
-                Opening balances are automatically calculated from all approved entries prior to From Date.
+                Opening balances are automatically calculated from all approved
+                entries prior to From Date.
               </p>
             </div>
           </div>
@@ -843,7 +938,9 @@ export default function TrialBalancePage() {
               <p className="text-[10px] font-extrabold uppercase tracking-widest text-slate-500">
                 {s.label}
               </p>
-              <p className={`text-xl font-black tracking-tight mt-1.5 ${s.color}`}>
+              <p
+                className={`text-xl font-black tracking-tight mt-1.5 ${s.color}`}
+              >
                 {s.value}
               </p>
             </Card>
@@ -942,7 +1039,11 @@ export default function TrialBalancePage() {
                   <ColHead label="Ledger Name" field="ledgerName" />
                   <ColHead label="Tally Group" field="parentGroup" />
                   <ColHead label="Debit (Dr)" field="closingDr" align="right" />
-                  <ColHead label="Credit (Cr)" field="closingCr" align="right" />
+                  <ColHead
+                    label="Credit (Cr)"
+                    field="closingCr"
+                    align="right"
+                  />
                 </TableRow>
               </TableHeader>
 
@@ -982,10 +1083,14 @@ export default function TrialBalancePage() {
                               </TableCell>
                               <TableCell className="py-2.5 border-r border-slate-100/50" />
                               <TableCell className="py-2.5 text-right font-mono font-bold text-xs text-rose-600/90 border-r border-slate-100/50">
-                                {group.subtotalDr > 0 ? fmt(group.subtotalDr) : "—"}
+                                {group.subtotalDr > 0
+                                  ? fmt(group.subtotalDr)
+                                  : "—"}
                               </TableCell>
                               <TableCell className="py-2.5 text-right pr-5 font-mono font-bold text-xs text-teal-600/90">
-                                {group.subtotalCr > 0 ? fmt(group.subtotalCr) : "—"}
+                                {group.subtotalCr > 0
+                                  ? fmt(group.subtotalCr)
+                                  : "—"}
                               </TableCell>
                             </TableRow>
                           </React.Fragment>
@@ -1022,7 +1127,9 @@ export default function TrialBalancePage() {
                       >
                         <span
                           className={`inline-flex items-center gap-2 ${
-                            isClosingBalanced ? "text-emerald-700" : "text-rose-700"
+                            isClosingBalanced
+                              ? "text-emerald-700"
+                              : "text-rose-700"
                           }`}
                         >
                           {isClosingBalanced ? (
@@ -1041,12 +1148,14 @@ export default function TrialBalancePage() {
                       >
                         Closing Dr{" "}
                         {isClosingBalanced ? (
-                          <span className="text-emerald-600">= Closing Cr ✓</span>
+                          <span className="text-emerald-600">
+                            = Closing Cr ✓
+                          </span>
                         ) : (
                           <span className="text-rose-600">
                             ≠ Closing Cr (diff:{" "}
                             {fmtTotal(
-                              Math.abs(totals.closingDr - totals.closingCr)
+                              Math.abs(totals.closingDr - totals.closingCr),
                             )}
                             )
                           </span>

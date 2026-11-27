@@ -13,16 +13,16 @@ export function cn(...inputs: ClassValue[]) {
 export function formatCurrencyINR(value: number | null | undefined): string {
   // Handle null, undefined, NaN, or non-finite values
   if (value == null || !Number.isFinite(value)) {
-    return new Intl.NumberFormat('en-IN', {
-      style: 'currency',
-      currency: 'INR',
+    return new Intl.NumberFormat("en-IN", {
+      style: "currency",
+      currency: "INR",
       maximumFractionDigits: 2,
     }).format(0);
   }
-  
-  return new Intl.NumberFormat('en-IN', {
-    style: 'currency',
-    currency: 'INR',
+
+  return new Intl.NumberFormat("en-IN", {
+    style: "currency",
+    currency: "INR",
     maximumFractionDigits: 2,
   }).format(value);
 }
@@ -33,10 +33,10 @@ export function formatCurrencyINR(value: number | null | undefined): string {
  * @returns Formatted date string
  */
 export function formatDate(dateString: string): string {
-  return new Date(dateString).toLocaleDateString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
+  return new Date(dateString).toLocaleDateString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
   });
 }
 
@@ -46,12 +46,12 @@ export function formatDate(dateString: string): string {
  * @returns Formatted date and time string
  */
 export function formatDateTime(dateString: string): string {
-  return new Date(dateString).toLocaleString('en-US', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-    hour: 'numeric',
-    minute: '2-digit',
+  return new Date(dateString).toLocaleString("en-US", {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    hour: "numeric",
+    minute: "2-digit",
     hour12: true,
   });
 }
@@ -68,9 +68,11 @@ export function getStorageUrl(url: string | null | undefined): string {
   if (/^https?:\/\//i.test(url)) {
     try {
       const parsed = new URL(url);
-      const isFirstParty = parsed.hostname === "unlistedstox.com" ||
-        parsed.hostname.endsWith(".unlistedstox.com") ||
-        (typeof window !== "undefined" && parsed.hostname === window.location.hostname);
+      const isFirstParty =
+        parsed.hostname === "unlistedstocks.com" ||
+        parsed.hostname.endsWith(".unlistedstocks.com") ||
+        (typeof window !== "undefined" &&
+          parsed.hostname === window.location.hostname);
       if (isFirstParty && parsed.pathname.startsWith("/storage/")) {
         url = `${parsed.pathname}${parsed.search}${parsed.hash}`;
       }
@@ -88,4 +90,3 @@ export function getStorageUrl(url: string | null | undefined): string {
   }
   return clean;
 }
-

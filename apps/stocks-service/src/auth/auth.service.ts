@@ -4,7 +4,7 @@ import {
   UnauthorizedException,
   NotFoundException,
 } from '@nestjs/common';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 import { PrismaService } from '../prisma/prisma.service';
 import { EmailService } from 'email-service';
 import * as bcrypt from 'bcrypt';

@@ -1,7 +1,14 @@
 "use client";
 
 import Link from "next/link";
-import { Users, TrendingUp, ArrowRight, IndianRupee, Layers, UserCheck } from "lucide-react";
+import {
+  Users,
+  TrendingUp,
+  ArrowRight,
+  IndianRupee,
+  Layers,
+  UserCheck,
+} from "lucide-react";
 import { StockPricingTable } from "@/components/shared/stock-pricing-table";
 import { useRmStocks } from "@/hooks/use-stocks";
 import { useDistributorSalesStats } from "@/hooks/use-sales";
@@ -23,13 +30,16 @@ export default function BranchDashboard() {
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-2 border-b border-slate-200/80">
         <div>
           <div className="flex items-center gap-2.5">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-900 whitespace-nowrap">Dashboard Overview</h1>
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900 whitespace-nowrap">
+              Dashboard Overview
+            </h1>
             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-emerald-50 text-emerald-700 border border-emerald-200/60 whitespace-nowrap">
-              SMC Branch Network
+              Branch Network
             </span>
           </div>
           <p className="text-slate-500 text-sm mt-1 whitespace-nowrap">
-            Manage your Relationship Managers network and monitor sales performance.
+            Manage your Relationship Managers network and monitor sales
+            performance.
           </p>
         </div>
 
@@ -47,64 +57,96 @@ export default function BranchDashboard() {
         {/* Card 1: Total Relationship Managers */}
         <div className="bg-white p-5 rounded-xl border border-slate-200/90 shadow-sm hover:shadow transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Active Managers</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+              Active Managers
+            </span>
             <div className="p-2 bg-indigo-50 text-indigo-600 rounded-lg">
               <UserCheck className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3">
             <h3 className="text-2xl font-bold text-slate-900 whitespace-nowrap">
-              {isRmsLoading ? <span className="animate-pulse bg-slate-200 h-8 w-12 rounded inline-block"></span> : `${activeRmsCount} / ${rms.length}`}
+              {isRmsLoading ? (
+                <span className="animate-pulse bg-slate-200 h-8 w-12 rounded inline-block"></span>
+              ) : (
+                `${activeRmsCount} / ${rms.length}`
+              )}
             </h3>
-            <p className="text-xs text-slate-500 mt-1 whitespace-nowrap">Active RM team members</p>
+            <p className="text-xs text-slate-500 mt-1 whitespace-nowrap">
+              Active RM team members
+            </p>
           </div>
         </div>
 
         {/* Card 2: Total Transactions */}
         <div className="bg-white p-5 rounded-xl border border-slate-200/90 shadow-sm hover:shadow transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Total Transactions</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+              Total Transactions
+            </span>
             <div className="p-2 bg-blue-50 text-blue-600 rounded-lg">
               <Layers className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3">
             <h3 className="text-2xl font-bold text-slate-900 whitespace-nowrap">
-              {isStatsLoading ? <span className="animate-pulse bg-slate-200 h-8 w-12 rounded inline-block"></span> : totalTransactions}
+              {isStatsLoading ? (
+                <span className="animate-pulse bg-slate-200 h-8 w-12 rounded inline-block"></span>
+              ) : (
+                totalTransactions
+              )}
             </h3>
-            <p className="text-xs text-slate-500 mt-1 whitespace-nowrap">Completed client orders</p>
+            <p className="text-xs text-slate-500 mt-1 whitespace-nowrap">
+              Completed client orders
+            </p>
           </div>
         </div>
 
         {/* Card 3: Total Revenue Margin */}
         <div className="bg-white p-5 rounded-xl border border-slate-200/90 shadow-sm hover:shadow transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Total Revenue</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+              Total Revenue
+            </span>
             <div className="p-2 bg-emerald-50 text-emerald-600 rounded-lg">
               <IndianRupee className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3">
             <h3 className="text-2xl font-bold text-slate-900 font-mono whitespace-nowrap">
-              {isStatsLoading ? <span className="animate-pulse bg-slate-200 h-8 w-20 rounded inline-block"></span> : `₹${totalRevenue.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              {isStatsLoading ? (
+                <span className="animate-pulse bg-slate-200 h-8 w-20 rounded inline-block"></span>
+              ) : (
+                `₹${totalRevenue.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              )}
             </h3>
-            <p className="text-xs text-slate-500 mt-1 whitespace-nowrap">Gross margin across RMs</p>
+            <p className="text-xs text-slate-500 mt-1 whitespace-nowrap">
+              Gross margin across RMs
+            </p>
           </div>
         </div>
 
         {/* Card 4: Branch Share */}
         <div className="bg-white p-5 rounded-xl border border-slate-200/90 shadow-sm hover:shadow transition-shadow">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">Branch Share</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider whitespace-nowrap">
+              Branch Share
+            </span>
             <div className="p-2 bg-amber-50 text-amber-600 rounded-lg">
               <TrendingUp className="h-4 w-4" />
             </div>
           </div>
           <div className="mt-3">
             <h3 className="text-2xl font-bold text-blue-700 font-mono whitespace-nowrap">
-              {isStatsLoading ? <span className="animate-pulse bg-slate-200 h-8 w-20 rounded inline-block"></span> : `₹${branchShare.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
+              {isStatsLoading ? (
+                <span className="animate-pulse bg-slate-200 h-8 w-20 rounded inline-block"></span>
+              ) : (
+                `₹${branchShare.toLocaleString("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`
+              )}
             </h3>
-            <p className="text-xs text-slate-500 mt-1 whitespace-nowrap">{stats?.revenueSharePercentage ?? 62.5}% credited share</p>
+            <p className="text-xs text-slate-500 mt-1 whitespace-nowrap">
+              {stats?.revenueSharePercentage ?? 62.5}% credited share
+            </p>
           </div>
         </div>
       </div>
@@ -112,8 +154,8 @@ export default function BranchDashboard() {
       {/* Quick Access Navigation */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         {/* Card A: Relationship Managers */}
-        <Link 
-          href="/branch/rms" 
+        <Link
+          href="/branch/rms"
           className="group flex items-center justify-between p-5 bg-white border border-slate-200/90 rounded-xl shadow-sm hover:border-emerald-500 hover:shadow-md transition-all"
         >
           <div className="flex items-center gap-4">
@@ -125,7 +167,8 @@ export default function BranchDashboard() {
                 Relationship Managers
               </h3>
               <p className="text-xs text-slate-500 mt-0.5 whitespace-nowrap">
-                Provision new RM credentials, inspect assigned accounts, and monitor statuses.
+                Provision new RM credentials, inspect assigned accounts, and
+                monitor statuses.
               </p>
             </div>
           </div>
@@ -133,8 +176,8 @@ export default function BranchDashboard() {
         </Link>
 
         {/* Card B: Sales Tracking */}
-        <Link 
-          href="/branch/sales" 
+        <Link
+          href="/branch/sales"
           className="group flex items-center justify-between p-5 bg-white border border-slate-200/90 rounded-xl shadow-sm hover:border-emerald-500 hover:shadow-md transition-all"
         >
           <div className="flex items-center gap-4">
@@ -146,7 +189,8 @@ export default function BranchDashboard() {
                 Sales Tracking & Analytics
               </h3>
               <p className="text-xs text-slate-500 mt-0.5 whitespace-nowrap">
-                Review RM conversions, performance leaderboards, and revenue distributions.
+                Review RM conversions, performance leaderboards, and revenue
+                distributions.
               </p>
             </div>
           </div>

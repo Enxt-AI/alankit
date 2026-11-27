@@ -1,4 +1,4 @@
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 
 const logger = new PinoNestLogger('stocks-service', 'SeoRevalidationHelper');
 

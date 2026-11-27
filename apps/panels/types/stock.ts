@@ -5,7 +5,7 @@
 
 /** A single row in the slab pricing table. */
 export interface DiscountSlab {
-  minAmount: number;    // Minimum amount (inclusive) for this slab to apply
+  minAmount: number; // Minimum amount (inclusive) for this slab to apply
   pricePerShare: number; // Effective price per share when slab matches
 }
 
@@ -29,7 +29,7 @@ export interface Stock {
   minimumPurchaseQuantity?: number | null;
   maximumPurchaseQuantity?: number | null;
   logoUrl: string | null; // Optional logo URL
-  internalLendingPrice?: number | null; // Floor price for SMC RMs
+  internalLendingPrice?: number | null; // Floor price for  RMs
   externalLendingPrice?: number | null; // Floor price for Distributor RMs
   tags: string[]; // Array of tags for categorization (always present, possibly empty)
   categoryId?: string | null; // Relation to StockCategory
@@ -84,7 +84,7 @@ export interface StockDocument {
   stockId: string;
   name: string;
   url: string;
-  type: 'ANNUAL' | 'QUARTERLY' | 'RESEARCH';
+  type: "ANNUAL" | "QUARTERLY" | "RESEARCH";
   uploadedAt: string;
   updatedAt: string;
 }
@@ -154,13 +154,13 @@ export interface UpdateStockDto {
 export interface CreateDocumentDto {
   name: string;
   url: string;
-  type: 'ANNUAL' | 'QUARTERLY' | 'RESEARCH';
+  type: "ANNUAL" | "QUARTERLY" | "RESEARCH";
 }
 
 export interface UpdateDocumentDto {
   name?: string;
   url?: string;
-  type?: 'ANNUAL' | 'QUARTERLY' | 'RESEARCH';
+  type?: "ANNUAL" | "QUARTERLY" | "RESEARCH";
 }
 
 /**
@@ -203,7 +203,7 @@ export interface UpcomingStockDocument {
   upcomingStockId: string;
   name: string;
   url: string;
-  type: 'ANNUAL' | 'QUARTERLY' | 'RESEARCH';
+  type: "ANNUAL" | "QUARTERLY" | "RESEARCH";
   uploadedAt: string;
   updatedAt: string;
 }
@@ -235,11 +235,11 @@ export interface UpdateUpcomingStockDto {
 export interface CreateUpcomingDocumentDto {
   name: string;
   url: string;
-  type: 'ANNUAL' | 'QUARTERLY' | 'RESEARCH';
+  type: "ANNUAL" | "QUARTERLY" | "RESEARCH";
 }
 
 export interface UpdateUpcomingDocumentDto {
   name?: string;
   url?: string;
-  type?: 'ANNUAL' | 'QUARTERLY' | 'RESEARCH';
+  type?: "ANNUAL" | "QUARTERLY" | "RESEARCH";
 }

@@ -1,20 +1,20 @@
-# Alankit (Unlisted Stox) - Local Development
+# Alankit (Unlisted stocks) - Local Development
 
 Monorepo with NestJS backend services and Next.js frontends.
 
 ## Services & Ports
 
-| Service | Type | Port |
-|---|---|---|
-| auth-service | Backend | 3002 |
-| stocks-service | Backend | 3003 |
-| payments-service | Backend | 3004 |
-| storage-service | Backend | 3005 |
-| ticketing-service | Backend | 3001 |
-| alankit | Frontend | 3000 |
-| panels | Frontend | 4000 |
-| rm-distributors | Frontend | 8000 |
-| nginx (optional gateway) | Proxy | 80 |
+| Service                  | Type     | Port |
+| ------------------------ | -------- | ---- |
+| auth-service             | Backend  | 3002 |
+| stocks-service           | Backend  | 3003 |
+| payments-service         | Backend  | 3004 |
+| storage-service          | Backend  | 3005 |
+| ticketing-service        | Backend  | 3001 |
+| alankit                  | Frontend | 3000 |
+| panels                   | Frontend | 4000 |
+| rm-distributors          | Frontend | 8000 |
+| nginx (optional gateway) | Proxy    | 80   |
 
 ## Prerequisites
 

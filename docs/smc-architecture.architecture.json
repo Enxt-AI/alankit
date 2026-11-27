@@ -2,42 +2,25 @@
   "schema_version": 1,
   "diagram_type": "architecture",
   "meta": {
-    "title": "SMC Unlisted Stox — Platform Architecture",
+    "title": " Unlisted stocks — Platform Architecture",
     "quality_profile": "showcase",
     "views": [
       {
         "id": "public-path",
         "label": "Public request path",
-        "focus": [
-          "clients",
-          "nginx",
-          "web",
-          "stocks",
-          "postgres"
-        ],
+        "focus": ["clients", "nginx", "web", "stocks", "postgres"],
         "note": "Investor traffic from edge to catalog and orders."
       },
       {
         "id": "ops-path",
         "label": "Ops and money path",
-        "focus": [
-          "portals",
-          "tickets",
-          "payments",
-          "storage",
-          "external"
-        ],
+        "focus": ["portals", "tickets", "payments", "storage", "external"],
         "note": "Back-office, support tickets and Cashfree payments."
       },
       {
         "id": "platform",
         "label": "Platform backbone",
-        "focus": [
-          "auth",
-          "postgres",
-          "redis",
-          "storage"
-        ],
+        "focus": ["auth", "postgres", "redis", "storage"],
         "note": "Identity, Postgres, Redis cache and queues."
       }
     ]
@@ -48,28 +31,16 @@
       "type": "external",
       "label": "Clients",
       "sublabel": "Browser / PWA / Mobile",
-      "pos": [
-        40,
-        40
-      ],
-      "size": [
-        180,
-        70
-      ]
+      "pos": [40, 40],
+      "size": [180, 70]
     },
     {
       "id": "nginx",
       "type": "cloud",
       "label": "Nginx Gateway",
       "sublabel": "WAF + cache + rate limit",
-      "pos": [
-        300,
-        40
-      ],
-      "size": [
-        180,
-        70
-      ],
+      "pos": [300, 40],
+      "size": [180, 70],
       "tag": ":80 / :90"
     },
     {
@@ -77,42 +48,24 @@
       "type": "frontend",
       "label": "Web App",
       "sublabel": "Next.js public :3000",
-      "pos": [
-        560,
-        40
-      ],
-      "size": [
-        180,
-        70
-      ]
+      "pos": [560, 40],
+      "size": [180, 70]
     },
     {
       "id": "portals",
       "type": "frontend",
       "label": "Ops Portals",
       "sublabel": "Panels :4000 + RM :8000",
-      "pos": [
-        820,
-        40
-      ],
-      "size": [
-        180,
-        70
-      ]
+      "pos": [820, 40],
+      "size": [180, 70]
     },
     {
       "id": "auth",
       "type": "security",
       "label": "Auth Service",
       "sublabel": "NestJS OTP + JWT :3002",
-      "pos": [
-        40,
-        220
-      ],
-      "size": [
-        180,
-        70
-      ],
+      "pos": [40, 220],
+      "size": [180, 70],
       "tag": "OTP + JWT"
     },
     {
@@ -120,70 +73,40 @@
       "type": "backend",
       "label": "Stocks Service",
       "sublabel": "Catalog + baskets :3003",
-      "pos": [
-        300,
-        220
-      ],
-      "size": [
-        180,
-        70
-      ]
+      "pos": [300, 220],
+      "size": [180, 70]
     },
     {
       "id": "tickets",
       "type": "backend",
       "label": "Ticketing Service",
       "sublabel": "Support + labels :3001",
-      "pos": [
-        560,
-        220
-      ],
-      "size": [
-        180,
-        70
-      ]
+      "pos": [560, 220],
+      "size": [180, 70]
     },
     {
       "id": "payments",
       "type": "backend",
       "label": "Payments Service",
       "sublabel": "Cashfree + Bull :3004",
-      "pos": [
-        820,
-        220
-      ],
-      "size": [
-        180,
-        70
-      ]
+      "pos": [820, 220],
+      "size": [180, 70]
     },
     {
       "id": "storage",
       "type": "backend",
       "label": "Storage Service",
       "sublabel": "Upload + MinIO S3 :3005",
-      "pos": [
-        300,
-        400
-      ],
-      "size": [
-        180,
-        70
-      ]
+      "pos": [300, 400],
+      "size": [180, 70]
     },
     {
       "id": "postgres",
       "type": "database",
       "label": "PostgreSQL",
       "sublabel": "Main + ticketing databases",
-      "pos": [
-        40,
-        400
-      ],
-      "size": [
-        180,
-        70
-      ],
+      "pos": [40, 400],
+      "size": [180, 70],
       "tag": ":5432"
     },
     {
@@ -191,14 +114,8 @@
       "type": "database",
       "label": "Redis 7",
       "sublabel": "Cache + sessions + Bull",
-      "pos": [
-        560,
-        400
-      ],
-      "size": [
-        180,
-        70
-      ],
+      "pos": [560, 400],
+      "size": [180, 70],
       "tag": ":6379"
     },
     {
@@ -206,14 +123,8 @@
       "type": "external",
       "label": "External Providers",
       "sublabel": "Cashfree + Netcore Cloud + Google",
-      "pos": [
-        820,
-        400
-      ],
-      "size": [
-        180,
-        70
-      ]
+      "pos": [820, 400],
+      "size": [180, 70]
     }
   ],
   "boundaries": [
@@ -255,14 +166,8 @@
       "fromSide": "top",
       "toSide": "top",
       "via": [
-        [
-          390,
-          12
-        ],
-        [
-          910,
-          12
-        ]
+        [390, 12],
+        [910, 12]
       ]
     },
     {
@@ -287,14 +192,8 @@
       "fromSide": "bottom",
       "toSide": "top",
       "via": [
-        [
-          390,
-          150
-        ],
-        [
-          910,
-          150
-        ]
+        [390, 150],
+        [910, 150]
       ]
     },
     {
@@ -307,10 +206,7 @@
       "from": "auth",
       "to": "postgres",
       "label": "SQL",
-      "labelAt": [
-        170,
-        348
-      ]
+      "labelAt": [170, 348]
     },
     {
       "id": "stocks-cache",
@@ -325,10 +221,7 @@
       "to": "external",
       "label": "Cashfree",
       "variant": "security",
-      "labelAt": [
-        946,
-        348
-      ]
+      "labelAt": [946, 348]
     }
   ],
   "cards": [

@@ -37,7 +37,7 @@ model Ticket {
   
   // ===== Multi-Application Support (Agnostic Design) =====
   // Identifies which parent app raised the ticket
-  // Examples: "smc-unlisted", "mutual-fund", etc.
+  // Examples: "-unlisted", "mutual-fund", etc.
   source      String?
   
   // ===== User Tracking =====

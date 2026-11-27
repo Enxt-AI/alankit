@@ -1,5 +1,5 @@
 import { Controller, Get, Query, ValidationPipe, UseGuards } from '@nestjs/common';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 import { ReportService } from './reports.service';
 import { QueryStatsDto } from './dto/query-stats.dto';
 import { SupportJwtAuthGuard } from '../auth/guards/support-jwt-auth.guard';

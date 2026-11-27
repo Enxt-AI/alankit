@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { OBFUSCATED_COOKIE_NAMES } from 'cookie-crypto';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 
 const service = 'auth-service';
 const ctx = 'GlobalExceptionFilter';
@@ -27,25 +27,37 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     if (exception instanceof UnauthorizedException) {
       this.logger.warn(
-        { event: 'access.unauthorized', method: request.method, url: request.url },
+        {
+          event: 'access.unauthorized',
+          method: request.method,
+          url: request.url,
+        },
         `401 Unauthorized on ${request.method} ${request.url}: ${exception.message}`,
       );
 
       const url = request.url || '';
       let cookieToClear: string | null = null;
 
-      if (url.includes('/auth/admin/')) cookieToClear = OBFUSCATED_COOKIE_NAMES.ADMIN_PANEL_TOKEN;
-      else if (url.includes('/auth/cms/')) cookieToClear = OBFUSCATED_COOKIE_NAMES.CMS_PANEL_TOKEN;
-      else if (url.includes('/auth/support/')) cookieToClear = OBFUSCATED_COOKIE_NAMES.SUPPORT_PANEL_TOKEN;
-      else if (url.includes('/auth/marketing/')) cookieToClear = OBFUSCATED_COOKIE_NAMES.MARKETING_PANEL_TOKEN;
-      else if (url.includes('/auth/accounting/')) cookieToClear = OBFUSCATED_COOKIE_NAMES.ACCOUNTING_PANEL_TOKEN;
-      else if (url.includes('/auth/operation/')) cookieToClear = OBFUSCATED_COOKIE_NAMES.OPERATION_PANEL_TOKEN;
+      if (url.includes('/auth/admin/'))
+        cookieToClear = OBFUSCATED_COOKIE_NAMES.ADMIN_PANEL_TOKEN;
+      else if (url.includes('/auth/cms/'))
+        cookieToClear = OBFUSCATED_COOKIE_NAMES.CMS_PANEL_TOKEN;
+      else if (url.includes('/auth/support/'))
+        cookieToClear = OBFUSCATED_COOKIE_NAMES.SUPPORT_PANEL_TOKEN;
+      else if (url.includes('/auth/marketing/'))
+        cookieToClear = OBFUSCATED_COOKIE_NAMES.MARKETING_PANEL_TOKEN;
+      else if (url.includes('/auth/accounting/'))
+        cookieToClear = OBFUSCATED_COOKIE_NAMES.ACCOUNTING_PANEL_TOKEN;
+      else if (url.includes('/auth/operation/'))
+        cookieToClear = OBFUSCATED_COOKIE_NAMES.OPERATION_PANEL_TOKEN;
 
       if (cookieToClear) {
         response.clearCookie(cookieToClear, {
           httpOnly: true,
           sameSite: 'lax',
-          secure: process.env.NODE_ENV === 'production' && process.env.SECURE_COOKIES !== 'false',
+          secure:
+            process.env.NODE_ENV === 'production' &&
+            process.env.SECURE_COOKIES !== 'false',
           path: '/',
         });
       }
@@ -64,7 +76,12 @@ export class GlobalExceptionFilter implements ExceptionFilter {
     } else {
       const err = exception as any;
       this.logger.error(
-        { event: 'server.internal_error', method: request.method, url: request.url, err },
+        {
+          event: 'server.internal_error',
+          method: request.method,
+          url: request.url,
+          err,
+        },
         `Unhandled Exception on ${request.method} ${request.url}: ${err?.message || err}`,
       );
 
@@ -74,7 +91,10 @@ export class GlobalExceptionFilter implements ExceptionFilter {
 
     if (status >= 500) {
       message = 'An internal server error occurred. Please try again later.';
-    } else if (!(exception instanceof HttpException) && typeof message === 'string') {
+    } else if (
+      !(exception instanceof HttpException) &&
+      typeof message === 'string'
+    ) {
       const lower = message.toLowerCase();
       if (
         lower.includes('prisma') ||

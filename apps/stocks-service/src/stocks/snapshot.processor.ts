@@ -1,6 +1,6 @@
 import { Processor, Process } from '@nestjs/bull';
 import type { Job } from 'bull';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 import { StocksService } from './stocks.service';
 
 @Processor('snapshots')

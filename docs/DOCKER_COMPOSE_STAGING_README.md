@@ -1,10 +1,11 @@
 # Docker Compose Staging Deployment
 
-This document provides instructions for deploying the SMC Unlisted Stox application to a staging environment using Docker Compose.
+This document provides instructions for deploying the Unlisted stocks application to a staging environment using Docker Compose.
 
 ## Architecture Overview
 
 The staging deployment consists of:
+
 - **5 backend services**: auth, stocks, ticketing, payments, and storage
 - **1 e-sign worker**
 - **No frontend services**: web, panels, and RM/distributors are not included
@@ -24,21 +25,24 @@ The staging deployment consists of:
 1. Create `.env.staging` file in the repository root (copy from `.env.staging.example`)
 2. See [docs/ENVIRONMENT_SETUP.md](./docs/ENVIRONMENT_SETUP.md) for detailed setup instructions for each service
 3. Ensure all required environment variables are set (use the checklist in ENVIRONMENT_SETUP.md)
-4. Note: Frontend environment variables (NEXT_PUBLIC_*) must be set separately in Vercel dashboard
+4. Note: Frontend environment variables (NEXT*PUBLIC*\*) must be set separately in Vercel dashboard
 
 ## Deployment Commands
 
 ### Build Images
+
 ```bash
 docker-compose --env-file .env.staging -f docker-compose.staging.yml build
 ```
 
 ### Start Services
+
 ```bash
 docker-compose --env-file .env.staging -f docker-compose.staging.yml up -d
 ```
 
 ### View Logs
+
 ```bash
 # All services
 docker-compose --env-file .env.staging -f docker-compose.staging.yml logs -f
@@ -48,6 +52,7 @@ docker-compose --env-file .env.staging -f docker-compose.staging.yml logs -f aut
 ```
 
 ### Stop Services
+
 ```bash
 docker-compose --env-file .env.staging -f docker-compose.staging.yml down
 ```
@@ -55,6 +60,7 @@ docker-compose --env-file .env.staging -f docker-compose.staging.yml down
 ### Health Checks
 
 #### Nginx Health Check
+
 ```bash
 curl http://localhost/health
 # Expected: Gateway OK
@@ -68,6 +74,7 @@ Replace `<server-ip>` with the server's IP address:
 - The root URL and frontend paths return 404 because no frontend is included in this staging stack.
 
 #### Individual Service Health Checks
+
 ```bash
 # Auth Service
 curl http://localhost/api/auth/health
@@ -90,11 +97,13 @@ All endpoints are prefixed with `/api` and routed through Nginx:
 ## Resource Monitoring
 
 ### Memory Usage
+
 ```bash
 docker stats --no-stream
 ```
 
 ### Container Health
+
 ```bash
 docker-compose --env-file .env.staging -f docker-compose.staging.yml ps
 ```
@@ -102,39 +111,44 @@ docker-compose --env-file .env.staging -f docker-compose.staging.yml ps
 ## Troubleshooting
 
 ### Memory Issues
+
 - Check memory usage: `docker stats`
 - Verify limits: Services are limited to 250MB each, Nginx to 100MB
 - Total expected usage: ~850MB with 150MB buffer for OS
 
 ### Port Conflicts
+
 - Verify ports are available: `netstat -tulpn | grep :80`
 - Change port mapping in `docker-compose.staging.yml` if needed
 
 ### Build Failures
+
 - Check Dockerfile paths are correct
 - Ensure build context includes all required packages
 - Verify `.dockerignore` isn't excluding necessary files
 
 ### Network Issues
+
 - Check network creation: `docker network ls | grep staging`
 - Inspect service connectivity: `docker-compose --env-file .env.staging -f docker-compose.staging.yml exec nginx ping auth-service`
 - Nginx resolves backend container names dynamically; restarting a backend should not require an Nginx reload.
 
 ### Health Check Failures
+
 - Check service logs: `docker-compose --env-file .env.staging -f docker-compose.staging.yml logs [service-name]`
 - Verify endpoints are responding: `docker-compose --env-file .env.staging -f docker-compose.staging.yml exec [service-name] curl http://localhost:[port]/api/health`
 
 ## Service Details
 
-| Service | Container Port | Memory | Health Endpoint | Description |
-|---------|---------------|--------|-----------------|-------------|
-| nginx | 80 (only public port) | 100MB | `/health` | Reverse proxy |
-| auth-service | 3002 (internal) | 250MB | `/api/health` | Authentication |
-| stocks-service | 3003 (internal) | 250MB | `/api/health` | Stock management |
-| ticketing-service | 3001 (internal) | 250MB | `/api/health` | Support tickets |
-| payments-service | 3004 (internal) | 250MB | `/api/health` | Payments |
-| storage-service | 3005 (internal) | 250MB | `/api/health` | File storage |
-| esign-worker | internal | — | — | E-sign background worker |
+| Service           | Container Port        | Memory | Health Endpoint | Description              |
+| ----------------- | --------------------- | ------ | --------------- | ------------------------ |
+| nginx             | 80 (only public port) | 100MB  | `/health`       | Reverse proxy            |
+| auth-service      | 3002 (internal)       | 250MB  | `/api/health`   | Authentication           |
+| stocks-service    | 3003 (internal)       | 250MB  | `/api/health`   | Stock management         |
+| ticketing-service | 3001 (internal)       | 250MB  | `/api/health`   | Support tickets          |
+| payments-service  | 3004 (internal)       | 250MB  | `/api/health`   | Payments                 |
+| storage-service   | 3005 (internal)       | 250MB  | `/api/health`   | File storage             |
+| esign-worker      | internal              | —      | —               | E-sign background worker |
 
 ## Logs Location
 
@@ -145,16 +159,19 @@ docker-compose --env-file .env.staging -f docker-compose.staging.yml ps
 ## Cleanup
 
 ### Remove Containers and Networks
+
 ```bash
 docker-compose --env-file .env.staging -f docker-compose.staging.yml down
 ```
 
 ### Remove Images and Volumes
+
 ```bash
 docker-compose --env-file .env.staging -f docker-compose.staging.yml down -v --rmi all
 ```
 
 ### Complete Cleanup
+
 ```bash
 docker system prune -a --volumes
 ```

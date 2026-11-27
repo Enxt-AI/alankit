@@ -1,25 +1,25 @@
-# CI/CD Plan — smc-unlisted-stox (Staging on VPN-only server)
+# CI/CD Plan — -unlisted-stocks (Staging on VPN-only server)
 
 > Status: AGREED PLAN (from grill rounds Q1–Q14). Staging is the main env. `develop → staging auto-deploy`. `main → CI only`.
 > Constraint: server reachable only via FortiClient VPN. GitHub-hosted runners **cannot** SSH in.
 
 ## 1. Agreed decisions
 
-| # | Decision | Choice |
-|---|----------|--------|
-| 1 | CI platform | GitHub Actions |
-| 2 | Env mapping | `develop` → staging deploy. `main` / PRs → checks only |
-| 3 | VPN traversal | Push to GHCR from hosted runners + **lightweight self-hosted runner on the server** (outbound-only, VPN-safe). No inbound SSH |
-| 4 | Artifact strategy | CI builds + pushes to GHCR. Server only pulls |
-| 5 | Frontend fate | In scope: all 8 images from `docker-compose.staging.yml` (auth, stocks, ticketing, payments, storage, web:3000, panels:4000, rm-distributors:8000). nginx stays `fabiocicerchia/nginx-lua:1.25.3-alpine` + mounted `nginx.conf` |
-| 6 | Quality gates | `pnpm install → turbo lint + check-types + build` required before push |
-| 7 | Secrets | Real `.env` lives on server, never committed. CI only holds registry creds + non-secret `NEXT_PUBLIC_*` build-args |
-| 8 | Runner | Self-hosted `linux,X64` with labels `self-hosted,staging` on the staging box |
-| 9 | Tagging | Push both `ghcr.io/<org>/<svc>:sha-<shortsha>` (immutable) + `:staging` (moving). Manual rollback via `TAG=sha-xxx compose up` |
-| 10 | Compose | New `docker-compose.deploy.yml` (pull-only, no `build:`). Keep `docker-compose.staging.yml` for local build flow |
-| 12 | Migrations | Server-side `prisma migrate deploy` before `compose up`. Never from hosted runner |
-| 13 | Registry auth | CI push via `GITHUB_TOKEN` (`packages: write`). Server pull via read-only `GHCR_PULL_TOKEN` in `~/.docker/config.json` |
-| 14 | Prod | Not now. Design leaves `TAG` + env plumbing ready for prod later |
+| #   | Decision          | Choice                                                                                                                                                                                                                          |
+| --- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 1   | CI platform       | GitHub Actions                                                                                                                                                                                                                  |
+| 2   | Env mapping       | `develop` → staging deploy. `main` / PRs → checks only                                                                                                                                                                          |
+| 3   | VPN traversal     | Push to GHCR from hosted runners + **lightweight self-hosted runner on the server** (outbound-only, VPN-safe). No inbound SSH                                                                                                   |
+| 4   | Artifact strategy | CI builds + pushes to GHCR. Server only pulls                                                                                                                                                                                   |
+| 5   | Frontend fate     | In scope: all 8 images from `docker-compose.staging.yml` (auth, stocks, ticketing, payments, storage, web:3000, panels:4000, rm-distributors:8000). nginx stays `fabiocicerchia/nginx-lua:1.25.3-alpine` + mounted `nginx.conf` |
+| 6   | Quality gates     | `pnpm install → turbo lint + check-types + build` required before push                                                                                                                                                          |
+| 7   | Secrets           | Real `.env` lives on server, never committed. CI only holds registry creds + non-secret `NEXT_PUBLIC_*` build-args                                                                                                              |
+| 8   | Runner            | Self-hosted `linux,X64` with labels `self-hosted,staging` on the staging box                                                                                                                                                    |
+| 9   | Tagging           | Push both `ghcr.io/<org>/<svc>:sha-<shortsha>` (immutable) + `:staging` (moving). Manual rollback via `TAG=sha-xxx compose up`                                                                                                  |
+| 10  | Compose           | New `docker-compose.deploy.yml` (pull-only, no `build:`). Keep `docker-compose.staging.yml` for local build flow                                                                                                                |
+| 12  | Migrations        | Server-side `prisma migrate deploy` before `compose up`. Never from hosted runner                                                                                                                                               |
+| 13  | Registry auth     | CI push via `GITHUB_TOKEN` (`packages: write`). Server pull via read-only `GHCR_PULL_TOKEN` in `~/.docker/config.json`                                                                                                          |
+| 14  | Prod              | Not now. Design leaves `TAG` + env plumbing ready for prod later                                                                                                                                                                |
 
 ## 2. Architecture
 
@@ -71,10 +71,10 @@ jobs:
 - `docker/setup-buildx-action` + `docker/build-push-action` per service (matrix of 8):
   - `auth-service` ← `apps/auth-service/Dockerfile`, build-arg `DATABASE_URL=dummy-for-prisma-generate` (real value only used at runtime; see §6)
   - `stocks-service`, `ticketing-service` (+ `TICKETING_DATABASE_URL` dummy), `payments-service`, `storage-service` (no DB arg), `web` (`NEXT_PUBLIC_GTM_ID`), `panels`, `rm-distributors`
-  - `context: .`, `push: true`, `tags: ghcr.io/unlistedstox/<svc>:sha-<sha>,ghcr.io/unlistedstox/<svc>:staging`, `cache-from/to: type=gha`
+  - `context: .`, `push: true`, `tags: ghcr.io/unlistedstocks/<svc>:sha-<sha>,ghcr.io/unlistedstocks/<svc>:staging`, `cache-from/to: type=gha`
 - Emit `SHA` as output / artifact for deploy job.
 
-> Org name: lower-case `unlistedstox` (GHCR requires lowercase). Confirm org/repo owner before first push.
+> Org name: lower-case `unlistedstocks` (GHCR requires lowercase). Confirm org/repo owner before first push.
 
 ### 3.3 `.github/workflows/deploy-staging.yml` (self-hosted)
 
@@ -93,7 +93,7 @@ jobs:
         with: { ref: develop }
       # TAG = sha of the triggering commit (pass via workflow_run head_sha)
       - run: echo "TAG=sha-${SHA}" >> $GITHUB_ENV
-      - run: ./scripts/deploy-staging.sh  # migrate + pull + up + healthcheck
+      - run: ./scripts/deploy-staging.sh # migrate + pull + up + healthcheck
 ```
 
 Alternative simpler trigger: `push: branches: [develop]` directly on the self-hosted workflow (runner picks it up via outbound poll). Prefer `workflow_run` to guarantee images exist first.
@@ -104,7 +104,7 @@ Copy of `docker-compose.staging.yml` with every `build:` block replaced by:
 
 ```yaml
 auth-service:
-  image: ghcr.io/unlistedstox/auth-service:${TAG:-staging}
+  image: ghcr.io/unlistedstocks/auth-service:${TAG:-staging}
   # … keep container_name, env_file, environment, depends_on, networks, healthcheck, mem_limit
 ```
 
@@ -117,11 +117,11 @@ Same for stocks, ticketing, payments, storage, web, panels, rm-distributors. Kee
 set -euo pipefail
 : "${TAG:?TAG=sha-xxx required}"
 docker login ghcr.io -u <bot-user> -p "$GHCR_PULL_TOKEN"  # or pre-logged in
-docker network inspect smc-staging-network >/dev/null 2>&1 || docker network create smc-staging-network
+docker network inspect -staging-network >/dev/null 2>&1 || docker network create -staging-network
 
 # 1. Migrations (server-side, has DB network access)
 # run per Prisma package that has migrations, e.g.:
-# docker run --rm --network smc-staging-network --env-file .env ghcr.io/unlistedstox/stocks-service:$TAG pnpm --filter db-unlistedstock exec prisma migrate deploy
+# docker run --rm --network -staging-network --env-file .env ghcr.io/unlistedstocks/stocks-service:$TAG pnpm --filter db-unlistedstock exec prisma migrate deploy
 # repeat for ticketing DB package
 
 # 2. Pull + up
@@ -142,23 +142,23 @@ docker image prune -af --filter "until=168h" || true
 
 ## 4. Secrets
 
-| Where | Key | Value / source |
-|-------|-----|----------------|
-| GitHub repo → Actions secrets | `GHCR_PULL_TOKEN` (optional, only if deploy job needs login) | Fine-grained PAT, `read:packages` only, expiry 90d |
-| GitHub → push job | `GITHUB_TOKEN` (automatic) | Needs `packages: write` permission |
-| Server `~/.docker/config.json` | `ghcr.io` auth | `docker login ghcr.io -u <bot> -p $GHCR_PULL_TOKEN` once |
-| Server `/opt/smc/.env` (or repo root `.env`, never committed) | All runtime secrets | Copy from `.env.staging.example`: `JWT_SECRET, COOKIE_SECRET, COOKIE_ENCRYPTION_KEY, DATABASE_URL, TICKETING_DATABASE_URL, REDIS_*, TWILIO_*, SMS_GATEWAY_*, GOOGLE_*, SENDGRID_*, CASHFREE_*, MINIO_*`, ports |
-| Server `apps/{web,panels,rm-distributors}/.env` | Frontend runtime | `BACKEND_ORIGIN=http://nginx`, `MINIO_*` |
-| CI build-args (non-secret) | `NEXT_PUBLIC_GTM_ID`, `NEXT_PUBLIC_*` | Repo variables, baked at build time |
+| Where                                                      | Key                                                          | Value / source                                                                                                                                                                                                 |
+| ---------------------------------------------------------- | ------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GitHub repo → Actions secrets                              | `GHCR_PULL_TOKEN` (optional, only if deploy job needs login) | Fine-grained PAT, `read:packages` only, expiry 90d                                                                                                                                                             |
+| GitHub → push job                                          | `GITHUB_TOKEN` (automatic)                                   | Needs `packages: write` permission                                                                                                                                                                             |
+| Server `~/.docker/config.json`                             | `ghcr.io` auth                                               | `docker login ghcr.io -u <bot> -p $GHCR_PULL_TOKEN` once                                                                                                                                                       |
+| Server `/opt//.env` (or repo root `.env`, never committed) | All runtime secrets                                          | Copy from `.env.staging.example`: `JWT_SECRET, COOKIE_SECRET, COOKIE_ENCRYPTION_KEY, DATABASE_URL, TICKETING_DATABASE_URL, REDIS_*, TWILIO_*, SMS_GATEWAY_*, GOOGLE_*, SENDGRID_*, CASHFREE_*, MINIO_*`, ports |
+| Server `apps/{web,panels,rm-distributors}/.env`            | Frontend runtime                                             | `BACKEND_ORIGIN=http://nginx`, `MINIO_*`                                                                                                                                                                       |
+| CI build-args (non-secret)                                 | `NEXT_PUBLIC_GTM_ID`, `NEXT_PUBLIC_*`                        | Repo variables, baked at build time                                                                                                                                                                            |
 
 Rotation owner: server `.env` edited over SSH-after-VPN by backend lead. CI secrets rotated in GitHub UI.
 
 ## 5. Server one-time setup
 
-1. Docker Engine 24+ + Compose v2, `docker network create smc-staging-network`.
-2. Checkout repo to `/opt/smc-unlisted-stox`, `git checkout develop`, place `.env` + `apps/*/.env` (chmod 600).
+1. Docker Engine 24+ + Compose v2, `docker network create -staging-network`.
+2. Checkout repo to `/opt/-unlisted-stocks`, `git checkout develop`, place `.env` + `apps/*/.env` (chmod 600).
 3. `docker login ghcr.io` with read-only token.
-4. Install self-hosted runner (as `svc-smc` user, `systemd` service):
+4. Install self-hosted runner (as `svc-` user, `systemd` service):
    `Settings → Actions → Runners → New self-hosted runner → Linux X64`, labels `staging`, work dir `/_work`.
 5. Verify egress: `curl -sI https://ghcr.io` works while FortiClient connected.
 6. Test: `TAG=staging docker compose -f docker-compose.deploy.yml pull && up -d`.
@@ -174,7 +174,7 @@ Rotation owner: server `.env` edited over SSH-after-VPN by backend lead. CI secr
 
 ```bash
 # list recent:
-docker images 'ghcr.io/unlistedstox/*' --format '{{.Repository}}:{{.Tag}} {{.CreatedSince}}' | sort
+docker images 'ghcr.io/unlistedstocks/*' --format '{{.Repository}}:{{.Tag}} {{.CreatedSince}}' | sort
 # roll back:
 TAG=sha-<prev_good> docker compose -f docker-compose.deploy.yml up -d
 curl -sf http://127.0.0.1:80/health && curl -sf http://127.0.0.1:90/health
@@ -188,7 +188,7 @@ CI checks only. No deploy workflow watches `main`. When prod is needed later: du
 
 ## 9. Implementation checklist
 
-- [ ] Lowercase GHCR org confirmed (`unlistedstox`?)
+- [ ] Lowercase GHCR org confirmed (`unlistedstocks`?)
 - [ ] Create `GHCR_PULL_TOKEN` (read-only) + `docker login` on server
 - [ ] Install + label self-hosted runner, `systemd` enable
 - [ ] Write `ci.yml`, `build-push.yml`, `deploy-staging.yml`, `docker-compose.deploy.yml`, `scripts/deploy-staging.sh`

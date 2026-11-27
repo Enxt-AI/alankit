@@ -16,7 +16,7 @@ import {
   UsePipes,
   ValidationPipe,
 } from '@nestjs/common';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 import { MarketingService, MarketingAdminStats } from './marketing.service';
 import { WebhookService } from './webhook.service';
 import { MarketingJwtAuthGuard } from '../auth/guards/marketing-jwt-auth.guard';

@@ -6,7 +6,7 @@
   "status": "pass",
   "visualReview": "pending",
   "artifact": {
-    "path": "D:\\SMC_2\\smc-unlisted-stox\\docs\\smc-architecture.html",
+    "path": "D:\\_2\\-unlisted-stocks\\docs\\-architecture.html",
     "sha256": "6ba986b6f9106ee64f7e6d57b97c5b42e8b1a9317132e268a4e3f63c3fc9520a",
     "bytes": 814646
   },
@@ -440,7 +440,7 @@
         "viewerChromeActive": true,
         "viewerChromeOk": true,
         "resolvedTheme": "light",
-        "file": "smc-architecture.visual-check.1440x900.light.png"
+        "file": "-architecture.visual-check.1440x900.light.png"
       },
       {
         "width": 1440,
@@ -472,7 +472,7 @@
         "viewerChromeActive": true,
         "viewerChromeOk": true,
         "resolvedTheme": "dark",
-        "file": "smc-architecture.visual-check.1440x900.dark.png"
+        "file": "-architecture.visual-check.1440x900.dark.png"
       },
       {
         "width": 2048,
@@ -504,7 +504,7 @@
         "viewerChromeActive": true,
         "viewerChromeOk": true,
         "resolvedTheme": "light",
-        "file": "smc-architecture.visual-check.2048x1320.light.png"
+        "file": "-architecture.visual-check.2048x1320.light.png"
       },
       {
         "width": 2048,
@@ -536,13 +536,13 @@
         "viewerChromeActive": true,
         "viewerChromeOk": true,
         "resolvedTheme": "dark",
-        "file": "smc-architecture.visual-check.2048x1320.dark.png"
+        "file": "-architecture.visual-check.2048x1320.dark.png"
       }
     ],
-    "contactSheet": "smc-architecture.visual-check.html"
+    "contactSheet": "-architecture.visual-check.html"
   },
   "sidecars": {
-    "receipt": "smc-architecture.visual-check.json",
-    "contactSheet": "smc-architecture.visual-check.html"
+    "receipt": "-architecture.visual-check.json",
+    "contactSheet": "-architecture.visual-check.html"
   }
 }

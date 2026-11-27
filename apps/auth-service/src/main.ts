@@ -10,11 +10,13 @@ import cors from '@fastify/cors';
 import { validateEncryptionKey } from 'cookie-crypto';
 import { ConfigService } from '@nestjs/config';
 import { GlobalExceptionFilter } from './common/filters/global-exception.filter';
-import { createPinoLogger, createFastifyLogger,
+import {
+  createPinoLogger,
+  createFastifyLogger,
   registerRequestIdHook,
   registerHttpAccessHook,
   buildValidationLog,
-} from '@smc/logger';
+} from '@/logger';
 
 async function bootstrap() {
   const logger = createPinoLogger('auth-service');
@@ -31,9 +33,7 @@ async function bootstrap() {
   await app.register(fastifyCookie);
 
   await app.register(cors, {
-    origin: [
-      process.env.FRONTEND_URL as string
-    ],
+    origin: [process.env.FRONTEND_URL as string],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
     allowedHeaders: [
@@ -53,7 +53,10 @@ async function bootstrap() {
     ],
   });
 
-  logger.info({ event: 'cors.configured' }, `CORS enabled for ${process.env.FRONTEND_URL || 'http://localhost:3000'} with credentials`);
+  logger.info(
+    { event: 'cors.configured' },
+    `CORS enabled for ${process.env.FRONTEND_URL || 'http://localhost:3000'} with credentials`,
+  );
 
   app.setGlobalPrefix('api');
 
@@ -73,7 +76,9 @@ async function bootstrap() {
 
         const detailedErrors = errors.map((err) => ({
           field: err.property,
-          message: err.constraints ? Object.values(err.constraints)[0] : 'Invalid input format',
+          message: err.constraints
+            ? Object.values(err.constraints)[0]
+            : 'Invalid input format',
         }));
 
         return new BadRequestException({
@@ -90,20 +95,29 @@ async function bootstrap() {
   registerRequestIdHook(fastifyInstance);
   registerHttpAccessHook(fastifyInstance);
 
-  fastifyInstance.addHook('onSend', (request: any, reply: any, payload: any, done: () => void) => {
-    reply.removeHeader('x-powered-by');
-    reply.removeHeader('X-Powered-By');
-    reply.removeHeader('server');
-    reply.removeHeader('Server');
-    done();
-  });
+  fastifyInstance.addHook(
+    'onSend',
+    (request: any, reply: any, payload: any, done: () => void) => {
+      reply.removeHeader('x-powered-by');
+      reply.removeHeader('X-Powered-By');
+      reply.removeHeader('server');
+      reply.removeHeader('Server');
+      done();
+    },
+  );
 
   app.useGlobalFilters(new GlobalExceptionFilter());
 
   const PORT = process.env.PORT || 3002;
   await app.listen(PORT, '0.0.0.0');
 
-  logger.info({ event: 'service.start' }, `Auth Service running on http://localhost:${PORT}/api`);
-  logger.info({ event: 'database.connect' }, `Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not Configured'}`);
+  logger.info(
+    { event: 'service.start' },
+    `Auth Service running on http://localhost:${PORT}/api`,
+  );
+  logger.info(
+    { event: 'database.connect' },
+    `Database: ${process.env.DATABASE_URL ? 'Connected' : 'Not Configured'}`,
+  );
 }
 bootstrap();

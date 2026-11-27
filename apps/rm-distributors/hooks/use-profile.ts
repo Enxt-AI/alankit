@@ -43,12 +43,20 @@ export function usePortalProfile(portalType: "branch" | "distributor" | "rm") {
       const data = await res.json();
       if (portalType === "rm") {
         if (data.success && data.rm) {
-          const branchOrNetwork = data.rm.branch?.name || data.rm.distributor?.name;
+          const branchOrNetwork =
+            data.rm.branch?.name || data.rm.distributor?.name;
           return {
             name: data.rm.name,
             email: data.rm.email,
-            type: data.rm.type === "INTERNAL_RM" ? "Internal Relationship Manager" : "Distributor Relationship Manager",
-            branchName: branchOrNetwork || (data.rm.type === "DISTRIBUTOR_RM" ? "SMC Distributor Partner" : "SMC Global Securities Ltd."),
+            type:
+              data.rm.type === "INTERNAL_RM"
+                ? "Internal Relationship Manager"
+                : "Distributor Relationship Manager",
+            branchName:
+              branchOrNetwork ||
+              (data.rm.type === "DISTRIBUTOR_RM"
+                ? " Distributor Partner"
+                : " Global Securities Ltd."),
           };
         }
       } else {

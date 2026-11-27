@@ -8,9 +8,13 @@ export default function DesktopRequired() {
           <Laptop className="w-8 h-8" />
         </div>
         <div className="space-y-2">
-          <h1 className="text-xl font-bold tracking-tight text-slate-900">Desktop Only System</h1>
+          <h1 className="text-xl font-bold tracking-tight text-slate-900">
+            Desktop Only System
+          </h1>
           <p className="text-sm text-slate-500 leading-relaxed">
-            SMC Internal Systems are strictly restricted and optimized for desktop computer screens only. Mobile and tablet access is disabled for security and operational layout constraints.
+            Internal Systems are strictly restricted and optimized for desktop
+            computer screens only. Mobile and tablet access is disabled for
+            security and operational layout constraints.
           </p>
         </div>
         <div className="text-xs text-slate-400 border-t border-slate-50 pt-4">

@@ -59,7 +59,7 @@ export class CreateTicketDto {
   @IsString()
   @IsOptional()
   @MaxLength(100)
-  source?: string; // Source app: smc-unlisted, mutual-fund, etc.
+  source?: string; // Source app: -unlisted, mutual-fund, etc.
 
   @IsString()
   @IsOptional()

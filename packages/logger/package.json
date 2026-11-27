@@ -1,7 +1,7 @@
 {
-  "name": "@smc/logger",
+  "name": "@/logger",
   "version": "1.0.0",
-  "description": "Shared structured pino logger for all SMC NestJS services",
+  "description": "Shared structured pino logger for all  NestJS services",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "exports": {

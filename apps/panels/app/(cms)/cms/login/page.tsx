@@ -1,19 +1,33 @@
-'use client';
+"use client";
 
-import { useState, useEffect, useRef, useCallback } from 'react';
-import { useRouter } from 'next/navigation';
-import Link from 'next/link';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { notify } from '@/components/ui/floating-notification';
-import { Lock, Mail, Loader2, ArrowLeft, ShieldCheck, Eye, EyeOff } from 'lucide-react';
+import { useState, useEffect, useRef, useCallback } from "react";
+import { useRouter } from "next/navigation";
+import Link from "next/link";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import { notify } from "@/components/ui/floating-notification";
+import {
+  Lock,
+  Mail,
+  Loader2,
+  ArrowLeft,
+  ShieldCheck,
+  Eye,
+  EyeOff,
+} from "lucide-react";
 
-import { useCMSAuth } from '@/hooks/use-cms-auth';
-import { useAuthStore } from '@/store/auth-store';
-import { adminLoginSchema, type AdminLoginFormValues } from '@/lib/validations/admin-login-schema';
-import { cmsOtpSchema, type CmsOTPFormValues } from '@/lib/validations/otp-schema';
+import { useCMSAuth } from "@/hooks/use-cms-auth";
+import { useAuthStore } from "@/store/auth-store";
+import {
+  adminLoginSchema,
+  type AdminLoginFormValues,
+} from "@/lib/validations/admin-login-schema";
+import {
+  cmsOtpSchema,
+  type CmsOTPFormValues,
+} from "@/lib/validations/otp-schema";
 
-import { ForgotPasswordModal } from '@/components/auth/ForgotPasswordModal';
+import { ForgotPasswordModal } from "@/components/auth/ForgotPasswordModal";
 
 import {
   Form,
@@ -22,10 +36,10 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
-} from '@/components/ui/form';
-import { Input } from '@/components/ui/input';
-import { Button } from '@/components/ui/button';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+} from "@/components/ui/form";
+import { Input } from "@/components/ui/input";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 
 export default function CMSLoginPage() {
   const router = useRouter();
@@ -34,11 +48,19 @@ export default function CMSLoginPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isForgotPasswordOpen, setIsForgotPasswordOpen] = useState(false);
   const [step, setStep] = useState<1 | 2>(1);
-  const [savedCredentials, setSavedCredentials] = useState<AdminLoginFormValues | null>(null);
+  const [savedCredentials, setSavedCredentials] =
+    useState<AdminLoginFormValues | null>(null);
 
   // OTP state - 6 individual digits
-  const [otpValues, setOtpValues] = useState<string[]>(['', '', '', '', '', '']);
-  const [otpError, setOtpError] = useState('');
+  const [otpValues, setOtpValues] = useState<string[]>([
+    "",
+    "",
+    "",
+    "",
+    "",
+    "",
+  ]);
+  const [otpError, setOtpError] = useState("");
 
   // Resend OTP state
   const [resendCooldown, setResendCooldown] = useState(0);
@@ -56,7 +78,7 @@ export default function CMSLoginPage() {
   // Redirect to dashboard if already authenticated
   useEffect(() => {
     if (cmsAdmin && !error && step === 1) {
-      router.replace('/cms/dashboard');
+      router.replace("/cms/dashboard");
     }
   }, [cmsAdmin, error, router, step]);
 
@@ -79,7 +101,7 @@ export default function CMSLoginPage() {
     setResendCooldown(30);
     if (cooldownRef.current) clearInterval(cooldownRef.current);
     cooldownRef.current = setInterval(() => {
-      setResendCooldown(prev => {
+      setResendCooldown((prev) => {
         if (prev <= 1) {
           if (cooldownRef.current) clearInterval(cooldownRef.current);
           return 0;
@@ -95,13 +117,13 @@ export default function CMSLoginPage() {
     setIsResending(true);
     try {
       await cmsLogin(savedCredentials.email, savedCredentials.password);
-      notify.success('A new OTP has been sent to your email.');
-      setOtpValues(['', '', '', '', '', '']);
-      setOtpError('');
+      notify.success("A new OTP has been sent to your email.");
+      setOtpValues(["", "", "", "", "", ""]);
+      setOtpError("");
       inputRefs.current[0]?.focus();
       startResendCooldown();
     } catch (error: any) {
-      notify.error(error.message || 'Failed to resend OTP. Please try again.');
+      notify.error(error.message || "Failed to resend OTP. Please try again.");
     } finally {
       setIsResending(false);
     }
@@ -111,32 +133,32 @@ export default function CMSLoginPage() {
   const form = useForm<AdminLoginFormValues>({
     resolver: zodResolver(adminLoginSchema as any),
     defaultValues: {
-      email: '',
-      password: '',
+      email: "",
+      password: "",
     },
-    mode: 'onSubmit',
+    mode: "onSubmit",
   });
 
   // Form setup for OTP (kept for potential future use)
   const otpForm = useForm<CmsOTPFormValues>({
     resolver: zodResolver(cmsOtpSchema),
     defaultValues: {
-      otp: '',
+      otp: "",
     },
-    mode: 'onSubmit',
+    mode: "onSubmit",
   });
 
   // OTP input handlers
   const handleOtpChange = useCallback((index: number, value: string) => {
     // Only allow single digits
-    const digit = value.replace(/[^0-9]/g, '').slice(-1);
-    
-    setOtpValues(prev => {
+    const digit = value.replace(/[^0-9]/g, "").slice(-1);
+
+    setOtpValues((prev) => {
       const next = [...prev];
       next[index] = digit;
       return next;
     });
-    setOtpError('');
+    setOtpError("");
 
     // Auto-advance to next input
     if (digit && index < 5) {
@@ -144,43 +166,49 @@ export default function CMSLoginPage() {
     }
   }, []);
 
-  const handleOtpKeyDown = useCallback((index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Backspace') {
-      if (!otpValues[index] && index > 0) {
-        // If current field is empty, go back and clear previous
-        setOtpValues(prev => {
-          const next = [...prev];
-          next[index - 1] = '';
-          return next;
-        });
+  const handleOtpKeyDown = useCallback(
+    (index: number, e: React.KeyboardEvent<HTMLInputElement>) => {
+      if (e.key === "Backspace") {
+        if (!otpValues[index] && index > 0) {
+          // If current field is empty, go back and clear previous
+          setOtpValues((prev) => {
+            const next = [...prev];
+            next[index - 1] = "";
+            return next;
+          });
+          inputRefs.current[index - 1]?.focus();
+        } else {
+          // Clear current field
+          setOtpValues((prev) => {
+            const next = [...prev];
+            next[index] = "";
+            return next;
+          });
+        }
+      } else if (e.key === "ArrowLeft" && index > 0) {
         inputRefs.current[index - 1]?.focus();
-      } else {
-        // Clear current field
-        setOtpValues(prev => {
-          const next = [...prev];
-          next[index] = '';
-          return next;
-        });
+      } else if (e.key === "ArrowRight" && index < 5) {
+        inputRefs.current[index + 1]?.focus();
       }
-    } else if (e.key === 'ArrowLeft' && index > 0) {
-      inputRefs.current[index - 1]?.focus();
-    } else if (e.key === 'ArrowRight' && index < 5) {
-      inputRefs.current[index + 1]?.focus();
-    }
-  }, [otpValues]);
+    },
+    [otpValues],
+  );
 
   const handleOtpPaste = useCallback((e: React.ClipboardEvent) => {
     e.preventDefault();
-    const pastedData = e.clipboardData.getData('text').replace(/[^0-9]/g, '').slice(0, 6);
+    const pastedData = e.clipboardData
+      .getData("text")
+      .replace(/[^0-9]/g, "")
+      .slice(0, 6);
     if (pastedData) {
-      const newValues = ['', '', '', '', '', ''];
+      const newValues = ["", "", "", "", "", ""];
       for (let i = 0; i < pastedData.length && i < 6; i++) {
-        newValues[i] = pastedData[i] ?? '';
+        newValues[i] = pastedData[i] ?? "";
       }
       setOtpValues(newValues);
-      setOtpError('');
+      setOtpError("");
       // Focus the next empty field or the last field
-      const nextEmpty = newValues.findIndex(v => !v);
+      const nextEmpty = newValues.findIndex((v) => !v);
       inputRefs.current[nextEmpty === -1 ? 5 : nextEmpty]?.focus();
     }
   }, []);
@@ -193,14 +221,14 @@ export default function CMSLoginPage() {
       if (response && response.requiresOtp) {
         setSavedCredentials(values);
         setStep(2);
-        notify.success('OTP sent to your email.');
+        notify.success("OTP sent to your email.");
       } else {
-        notify.success('Login successful!');
-        router.replace('/cms/dashboard');
+        notify.success("Login successful!");
+        router.replace("/cms/dashboard");
       }
     } catch (error: any) {
-      notify.error(error.message || 'Login failed. Please try again.');
-      form.setValue('password', '');
+      notify.error(error.message || "Login failed. Please try again.");
+      form.setValue("password", "");
     } finally {
       setIsSubmitting(false);
     }
@@ -209,22 +237,28 @@ export default function CMSLoginPage() {
   // Submit handler for Step 2 (OTP)
   async function handleOtpSubmit(e: React.FormEvent) {
     e.preventDefault();
-    const otp = otpValues.join('');
-    
+    const otp = otpValues.join("");
+
     if (otp.length !== 6 || !/^[0-9]{6}$/.test(otp)) {
-      setOtpError('OTP must be exactly 6 digits');
+      setOtpError("OTP must be exactly 6 digits");
       return;
     }
 
     if (!savedCredentials) return;
     setIsSubmitting(true);
     try {
-      await cmsVerifyOtp(savedCredentials.email, savedCredentials.password, otp);
-      notify.success('Login successful!');
-      router.replace('/cms/dashboard');
+      await cmsVerifyOtp(
+        savedCredentials.email,
+        savedCredentials.password,
+        otp,
+      );
+      notify.success("Login successful!");
+      router.replace("/cms/dashboard");
     } catch (error: any) {
-      notify.error(error.message || 'OTP verification failed. Please try again.');
-      setOtpValues(['', '', '', '', '', '']);
+      notify.error(
+        error.message || "OTP verification failed. Please try again.",
+      );
+      setOtpValues(["", "", "", "", "", ""]);
       inputRefs.current[0]?.focus();
     } finally {
       setIsSubmitting(false);
@@ -234,8 +268,8 @@ export default function CMSLoginPage() {
   // Handle back to login step
   const handleBackToLogin = () => {
     setStep(1);
-    setOtpValues(['', '', '', '', '', '']);
-    setOtpError('');
+    setOtpValues(["", "", "", "", "", ""]);
+    setOtpError("");
     otpForm.reset();
   };
 
@@ -245,7 +279,9 @@ export default function CMSLoginPage() {
       <div className="flex min-h-screen items-center justify-center bg-[#FAFBFC]">
         <div className="text-center">
           <Loader2 className="mx-auto h-8 w-8 animate-spin text-[#16A34A] mb-4" />
-          <p className="text-[#64748B] font-medium text-sm">Redirecting to dashboard...</p>
+          <p className="text-[#64748B] font-medium text-sm">
+            Redirecting to dashboard...
+          </p>
         </div>
       </div>
     );
@@ -262,43 +298,56 @@ export default function CMSLoginPage() {
         Back to Workspaces
       </Link>
 
-      <div 
-        className="w-full max-w-[440px] bg-white border border-neutral-200/40 rounded-[24px] p-8 shadow-[0_8px_30px_rgba(15,23,42,0.04)]"
-      >
+      <div className="w-full max-w-[440px] bg-white border border-neutral-200/40 rounded-[24px] p-8 shadow-[0_8px_30px_rgba(15,23,42,0.04)]">
         {/* Header */}
         <div className="flex flex-col items-center justify-center space-y-4 text-center mb-8">
           <div className="w-12 h-12 rounded-[14px] bg-[#ECFDF5] text-[#16A34A] flex items-center justify-center border border-[#16A34A]/10">
-            {step === 1 ? <Lock className="h-5 w-5" /> : <ShieldCheck className="h-5 w-5" />}
+            {step === 1 ? (
+              <Lock className="h-5 w-5" />
+            ) : (
+              <ShieldCheck className="h-5 w-5" />
+            )}
           </div>
           <div>
             <h1 className="text-2xl font-bold text-[#0F172A] tracking-tight">
-              {step === 1 ? 'SMC CMS Login' : 'Two-Factor Verification'}
+              {step === 1 ? " CMS Login" : "Two-Factor Verification"}
             </h1>
             <p className="text-sm font-medium text-[#64748B] mt-1">
-              {step === 1 
-                ? 'Sign in to access the Content Management System' 
-                : 'Enter the 6-digit code sent to your email'}
+              {step === 1
+                ? "Sign in to access the Content Management System"
+                : "Enter the 6-digit code sent to your email"}
             </p>
           </div>
         </div>
 
         <div className="space-y-4">
           {error && (
-            <Alert variant="destructive" className="rounded-2xl border-red-200 bg-red-50/50 text-red-800">
-              <AlertDescription className="text-xs font-semibold">{error}</AlertDescription>
+            <Alert
+              variant="destructive"
+              className="rounded-2xl border-red-200 bg-red-50/50 text-red-800"
+            >
+              <AlertDescription className="text-xs font-semibold">
+                {error}
+              </AlertDescription>
             </Alert>
           )}
 
           {step === 1 ? (
             <Form {...form}>
-              <form onSubmit={form.handleSubmit(onSubmit)} autoComplete="on" className="space-y-5">
+              <form
+                onSubmit={form.handleSubmit(onSubmit)}
+                autoComplete="on"
+                className="space-y-5"
+              >
                 {/* Email Field */}
                 <FormField
                   control={form.control}
                   name="email"
                   render={({ field }) => (
                     <FormItem className="space-y-1.5">
-                      <FormLabel className="font-semibold text-xs text-[#0F172A] uppercase tracking-wider">Email address</FormLabel>
+                      <FormLabel className="font-semibold text-xs text-[#0F172A] uppercase tracking-wider">
+                        Email address
+                      </FormLabel>
                       <FormControl>
                         <div className="relative">
                           <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#64748B]" />
@@ -325,7 +374,9 @@ export default function CMSLoginPage() {
                   render={({ field }) => (
                     <FormItem className="space-y-1.5">
                       <div className="flex items-center justify-between">
-                        <FormLabel className="font-semibold text-xs text-[#0F172A] uppercase tracking-wider">Password</FormLabel>
+                        <FormLabel className="font-semibold text-xs text-[#0F172A] uppercase tracking-wider">
+                          Password
+                        </FormLabel>
                         <button
                           type="button"
                           onClick={() => setIsForgotPasswordOpen(true)}
@@ -384,12 +435,17 @@ export default function CMSLoginPage() {
             <form onSubmit={handleOtpSubmit} className="space-y-6">
               {/* Custom OTP Input */}
               <div className="space-y-4">
-                <div className="flex items-center justify-center gap-2" onPaste={handleOtpPaste}>
+                <div
+                  className="flex items-center justify-center gap-2"
+                  onPaste={handleOtpPaste}
+                >
                   {/* First group of 3 */}
                   {[0, 1, 2].map((index) => (
                     <input
                       key={index}
-                      ref={(el) => { inputRefs.current[index] = el; }}
+                      ref={(el) => {
+                        inputRefs.current[index] = el;
+                      }}
                       type="text"
                       inputMode="numeric"
                       autoComplete="one-time-code"
@@ -399,24 +455,28 @@ export default function CMSLoginPage() {
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
                       disabled={isSubmitting}
                       className={`w-12 h-14 text-center text-xl font-semibold rounded-xl border-2 bg-white text-[#0F172A] outline-none transition-all duration-200
-                        ${otpValues[index] 
-                          ? 'border-[#16A34A] ring-2 ring-[#16A34A]/20' 
-                          : 'border-neutral-200 hover:border-neutral-300'}
+                        ${
+                          otpValues[index]
+                            ? "border-[#16A34A] ring-2 ring-[#16A34A]/20"
+                            : "border-neutral-200 hover:border-neutral-300"
+                        }
                         focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20
                         disabled:opacity-50 disabled:cursor-not-allowed`}
                     />
                   ))}
-                  
+
                   {/* Separator */}
                   <div className="w-3 flex items-center justify-center">
                     <div className="w-2 h-2 rounded-full bg-neutral-300" />
                   </div>
-                  
+
                   {/* Second group of 3 */}
                   {[3, 4, 5].map((index) => (
                     <input
                       key={index}
-                      ref={(el) => { inputRefs.current[index] = el; }}
+                      ref={(el) => {
+                        inputRefs.current[index] = el;
+                      }}
                       type="text"
                       inputMode="numeric"
                       autoComplete="one-time-code"
@@ -426,9 +486,11 @@ export default function CMSLoginPage() {
                       onKeyDown={(e) => handleOtpKeyDown(index, e)}
                       disabled={isSubmitting}
                       className={`w-12 h-14 text-center text-xl font-semibold rounded-xl border-2 bg-white text-[#0F172A] outline-none transition-all duration-200
-                        ${otpValues[index] 
-                          ? 'border-[#16A34A] ring-2 ring-[#16A34A]/20' 
-                          : 'border-neutral-200 hover:border-neutral-300'}
+                        ${
+                          otpValues[index]
+                            ? "border-[#16A34A] ring-2 ring-[#16A34A]/20"
+                            : "border-neutral-200 hover:border-neutral-300"
+                        }
                         focus:border-[#16A34A] focus:ring-2 focus:ring-[#16A34A]/20
                         disabled:opacity-50 disabled:cursor-not-allowed`}
                     />
@@ -437,7 +499,9 @@ export default function CMSLoginPage() {
 
                 {/* Error message */}
                 {otpError && (
-                  <p className="text-center text-xs text-red-500 font-medium">{otpError}</p>
+                  <p className="text-center text-xs text-red-500 font-medium">
+                    {otpError}
+                  </p>
                 )}
               </div>
 
@@ -461,7 +525,10 @@ export default function CMSLoginPage() {
                 <div className="flex items-center justify-center">
                   {resendCooldown > 0 ? (
                     <p className="text-xs font-medium text-[#64748B]">
-                      Resend OTP in <span className="text-[#16A34A] font-bold tabular-nums">{resendCooldown}s</span>
+                      Resend OTP in{" "}
+                      <span className="text-[#16A34A] font-bold tabular-nums">
+                        {resendCooldown}s
+                      </span>
                     </p>
                   ) : (
                     <button
@@ -470,12 +537,16 @@ export default function CMSLoginPage() {
                       disabled={isResending || isSubmitting}
                       className="flex items-center gap-1.5 text-xs font-semibold text-[#16A34A] hover:text-[#15803D] disabled:text-[#94A3B8] disabled:cursor-not-allowed transition-colors duration-200"
                     >
-                      {isResending && <Loader2 className="h-3.5 w-3.5 animate-spin" />}
-                      {isResending ? 'Sending...' : "Didn't receive the code? Resend OTP"}
+                      {isResending && (
+                        <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                      )}
+                      {isResending
+                        ? "Sending..."
+                        : "Didn't receive the code? Resend OTP"}
                     </button>
                   )}
                 </div>
-                
+
                 <Button
                   type="button"
                   variant="ghost"

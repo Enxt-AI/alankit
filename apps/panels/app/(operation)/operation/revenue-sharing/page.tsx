@@ -1,22 +1,22 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { 
-  Percent, 
-  Loader2, 
-  AlertCircle, 
-  TrendingUp, 
-  IndianRupee, 
-  Share2, 
+import {
+  Percent,
+  Loader2,
+  AlertCircle,
+  TrendingUp,
+  IndianRupee,
+  Share2,
   CheckCircle2,
   Minus,
-  Plus
+  Plus,
 } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
-import { 
-  getRevenueSharingSettings, 
-  updateRevenueSharingSettings 
+import {
+  getRevenueSharingSettings,
+  updateRevenueSharingSettings,
 } from "@/lib/settings-api";
 import { useAuthStore } from "@/store/auth-store";
 
@@ -71,7 +71,10 @@ function PercentageStepper({
       setTextVal(String(min));
       onChange(min);
     } else {
-      const clamped = Math.min(max, Math.max(min, Math.round(parsed * 100) / 100));
+      const clamped = Math.min(
+        max,
+        Math.max(min, Math.round(parsed * 100) / 100),
+      );
       setTextVal(String(clamped));
       onChange(clamped);
     }
@@ -122,8 +125,9 @@ function PercentageStepper({
 
 export default function RevenueSharingPage() {
   const { operationAdmin } = useAuthStore();
-  const isSuperAdmin = operationAdmin?.role === 'SUPER_ADMIN';
-  const hasRevenueSharing = operationAdmin?.permissions?.includes('revenue_sharing') || isSuperAdmin;
+  const isSuperAdmin = operationAdmin?.role === "SUPER_ADMIN";
+  const hasRevenueSharing =
+    operationAdmin?.permissions?.includes("revenue_sharing") || isSuperAdmin;
 
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -150,9 +154,15 @@ export default function RevenueSharingPage() {
         <div className="rounded-full bg-amber-50 p-4 border border-amber-200/60 mb-4">
           <AlertCircle className="h-10 w-10 text-amber-500" />
         </div>
-        <h2 className="text-2xl font-bold text-[#0F172A] tracking-tight">Access Restricted</h2>
+        <h2 className="text-2xl font-bold text-[#0F172A] tracking-tight">
+          Access Restricted
+        </h2>
         <p className="text-sm font-medium text-[#64748B] mt-2 max-w-md">
-          You do not have the <span className="font-semibold text-neutral-800">Revenue Sharing</span> permission required to view or configure revenue sharing settings.
+          You do not have the{" "}
+          <span className="font-semibold text-neutral-800">
+            Revenue Sharing
+          </span>{" "}
+          permission required to view or configure revenue sharing settings.
         </p>
       </div>
     );
@@ -191,7 +201,9 @@ export default function RevenueSharingPage() {
         revenuePercentage: internalRevenue,
         incentivePercentage: internalIncentive,
       });
-      setSuccessMsg("Internal RM revenue sharing update submitted for approval.");
+      setSuccessMsg(
+        "Internal RM revenue sharing update submitted for approval.",
+      );
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
       setError(err.message || "Failed to update settings.");
@@ -210,7 +222,9 @@ export default function RevenueSharingPage() {
         type: "EXTERNAL",
         revenuePercentage: externalRevenue,
       });
-      setSuccessMsg("External Distributor revenue sharing update submitted for approval.");
+      setSuccessMsg(
+        "External Distributor revenue sharing update submitted for approval.",
+      );
       setTimeout(() => setSuccessMsg(null), 4000);
     } catch (err: any) {
       setError(err.message || "Failed to update settings.");
@@ -224,7 +238,9 @@ export default function RevenueSharingPage() {
       <div className="flex h-screen items-center justify-center">
         <div className="flex flex-col items-center gap-3">
           <Loader2 className="h-8 w-8 animate-spin text-[#16A34A]" />
-          <p className="text-sm font-medium text-slate-500">Loading settings...</p>
+          <p className="text-sm font-medium text-slate-500">
+            Loading settings...
+          </p>
         </div>
       </div>
     );
@@ -234,7 +250,9 @@ export default function RevenueSharingPage() {
     <div className="flex-1 overflow-auto p-6 space-y-6 max-w-5xl">
       {/* Header */}
       <div className="flex flex-col gap-1">
-        <h1 className="text-3xl font-bold tracking-tight text-[#0F172A]">Revenue Sharing</h1>
+        <h1 className="text-3xl font-bold tracking-tight text-[#0F172A]">
+          Revenue Sharing
+        </h1>
         <p className="text-sm font-medium text-[#64748B]">
           Configure revenue sharing percentages. Revenue is calculated as:{" "}
           <code className="bg-slate-100 px-1.5 py-0.5 rounded text-xs font-mono text-slate-700 font-bold">
@@ -260,14 +278,15 @@ export default function RevenueSharingPage() {
 
       {/* Grid container */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-        
         {/* Card 1: Internal Revenue Sharing */}
         <div className="bg-white rounded-3xl border border-slate-150/60 shadow-xl shadow-slate-100 p-8 flex flex-col justify-between">
           <form onSubmit={handleApplyInternal} className="space-y-6">
             <div className="border-b pb-4">
-              <h2 className="text-lg font-bold text-slate-900">Internal Revenue Sharing - Our SMC RMs</h2>
+              <h2 className="text-lg font-bold text-slate-900">
+                Internal Revenue Sharing - Our RMs
+              </h2>
               <p className="text-xs text-slate-400 mt-1 font-medium">
-                Set revenue split rules for internal SMC Relationship Managers.
+                Set revenue split rules for internal Relationship Managers.
               </p>
             </div>
 
@@ -317,7 +336,9 @@ export default function RevenueSharingPage() {
         <div className="bg-white rounded-3xl border border-slate-150/60 shadow-xl shadow-slate-100 p-8 flex flex-col justify-between">
           <form onSubmit={handleApplyExternal} className="space-y-6">
             <div className="border-b pb-4">
-              <h2 className="text-lg font-bold text-slate-900">External Revenue Sharing- Distributor</h2>
+              <h2 className="text-lg font-bold text-slate-900">
+                External Revenue Sharing- Distributor
+              </h2>
               <p className="text-xs text-slate-400 mt-1 font-medium">
                 Set revenue split rules for external partner distributors.
               </p>
@@ -352,7 +373,6 @@ export default function RevenueSharingPage() {
             </div>
           </form>
         </div>
-
       </div>
     </div>
   );

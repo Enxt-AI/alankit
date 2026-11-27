@@ -292,7 +292,7 @@ model Stock {
   // If no slab matches, the base `price` is used.
   discountSlabs           Json?
   // Lending price floors (per-share). Coupons cannot bring effective price below these.
-  // Internal = SMC's own RMs; External = Distributor RMs
+  // Internal = 's own RMs; External = Distributor RMs
   internalLendingPrice    Float?
   externalLendingPrice    Float?
   logoUrl                 String?
@@ -840,7 +840,7 @@ model Branch {
   passwordHash String
   status       String @default("ACTIVE") // ACTIVE, INACTIVE
 
-  // Classification: EQUITY, DISTRIBUTION, WEALTH, STOXKART, OTHER
+  // Classification: EQUITY, DISTRIBUTION, WEALTH, stocksKART, OTHER
   classification      String?
   classificationLabel String? // Custom label when classification = OTHER ("Add New")
   zone                String? // EQUITY
@@ -849,7 +849,7 @@ model Branch {
   branchManager       String? // EQUITY
   territory           String? // DISTRIBUTION
   territoryHead       String? // DISTRIBUTION
-  reportingManager    String? // WEALTH, STOXKART, OTHER
+  reportingManager    String? // WEALTH, stocksKART, OTHER
 
   internalRMs InternalRM[]
 

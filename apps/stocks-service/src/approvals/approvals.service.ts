@@ -2,7 +2,7 @@ import { Injectable, NotFoundException, BadRequestException } from '@nestjs/comm
 import { delKey } from 'redis-service';
 import { PrismaService } from '../prisma/prisma.service';
 import { StocksService } from '../stocks/stocks.service';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 
 @Injectable()
 export class ApprovalsService {

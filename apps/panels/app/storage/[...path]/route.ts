@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
-import { OBFUSCATED_COOKIE_NAMES, ORIGINAL_COOKIE_NAMES } from "cookie-crypto/constants";
+import {
+  OBFUSCATED_COOKIE_NAMES,
+  ORIGINAL_COOKIE_NAMES,
+} from "cookie-crypto/constants";
 import { decryptToken } from "cookie-crypto";
 import { withBasePath } from "@/lib/base-path";
 
@@ -103,7 +106,7 @@ function getCandidateBaseUrls(): string[] {
 
     // Docker internal container hostnames
     add("http://minio:9000");
-    add("http://smc-minio:9000");
+    add("http://-minio:9000");
     add("http://host-gateway:9000");
 
     // Storage service fallback (port 3005)
@@ -142,10 +145,16 @@ function getCandidateBaseUrls(): string[] {
  * avoiding internal container IPs like 0.0.0.0:4000.
  */
 function getPublicOrigin(request: NextRequest): string {
-  const forwardedHost = request.headers.get("x-forwarded-host") || request.headers.get("host");
+  const forwardedHost =
+    request.headers.get("x-forwarded-host") || request.headers.get("host");
   const forwardedProto = request.headers.get("x-forwarded-proto") || "https";
 
-  if (forwardedHost && !forwardedHost.includes("0.0.0.0") && !forwardedHost.includes("127.0.0.1") && !forwardedHost.includes("localhost")) {
+  if (
+    forwardedHost &&
+    !forwardedHost.includes("0.0.0.0") &&
+    !forwardedHost.includes("127.0.0.1") &&
+    !forwardedHost.includes("localhost")
+  ) {
     return `${forwardedProto}://${forwardedHost}`;
   }
 
@@ -159,7 +168,7 @@ function getPublicOrigin(request: NextRequest): string {
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: Promise<{ path: string[] }> | { path: string[] } }
+  { params }: { params: Promise<{ path: string[] }> | { path: string[] } },
 ) {
   // Await the params if it is a promise (Next.js 15/16), otherwise use it directly
   const resolvedParams = params instanceof Promise ? await params : params;
@@ -184,15 +193,18 @@ export async function GET(
     }
 
     // For API calls, scripts, or non-HTML requests, return 401 Unauthorized
-    return new NextResponse("Unauthorized: You must be logged into the panel to access this document.", {
-      status: 401,
-      headers: {
-        "Content-Type": "text/plain;charset=UTF-8",
-        "Cache-Control": "no-store, no-cache, must-revalidate",
-        Pragma: "no-cache",
-        Expires: "0",
+    return new NextResponse(
+      "Unauthorized: You must be logged into the panel to access this document.",
+      {
+        status: 401,
+        headers: {
+          "Content-Type": "text/plain;charset=UTF-8",
+          "Cache-Control": "no-store, no-cache, must-revalidate",
+          Pragma: "no-cache",
+          Expires: "0",
+        },
       },
-    });
+    );
   }
 
   const filePath = pathParts.join("/");
@@ -250,7 +262,8 @@ export async function GET(
         if (contentLength) responseHeaders.set("Content-Length", contentLength);
 
         const contentDisposition = response.headers.get("content-disposition");
-        if (contentDisposition) responseHeaders.set("Content-Disposition", contentDisposition);
+        if (contentDisposition)
+          responseHeaders.set("Content-Disposition", contentDisposition);
 
         const acceptRanges = response.headers.get("accept-ranges");
         if (acceptRanges) responseHeaders.set("Accept-Ranges", acceptRanges);
@@ -263,11 +276,17 @@ export async function GET(
 
         // Sensitive documents must never be cached publicly or persisted in browser disk cache across logouts
         if (isSensitive) {
-          responseHeaders.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+          responseHeaders.set(
+            "Cache-Control",
+            "private, no-cache, no-store, must-revalidate",
+          );
           responseHeaders.set("Pragma", "no-cache");
           responseHeaders.set("Expires", "0");
         } else {
-          responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
+          responseHeaders.set(
+            "Cache-Control",
+            "public, max-age=31536000, immutable",
+          );
         }
 
         return new NextResponse(response.body, {
@@ -284,11 +303,17 @@ export async function GET(
         if (etag) responseHeaders.set("ETag", etag);
 
         if (isSensitive) {
-          responseHeaders.set("Cache-Control", "private, no-cache, no-store, must-revalidate");
+          responseHeaders.set(
+            "Cache-Control",
+            "private, no-cache, no-store, must-revalidate",
+          );
           responseHeaders.set("Pragma", "no-cache");
           responseHeaders.set("Expires", "0");
         } else {
-          responseHeaders.set("Cache-Control", "public, max-age=31536000, immutable");
+          responseHeaders.set(
+            "Cache-Control",
+            "public, max-age=31536000, immutable",
+          );
         }
 
         return new NextResponse(null, {
@@ -316,7 +341,9 @@ export async function GET(
       if (cachedWorkingBaseUrl === base) {
         cachedWorkingBaseUrl = null;
       }
-      console.warn(`[StorageProxy] Failed candidate ${targetUrl}: ${err?.message || err}`);
+      console.warn(
+        `[StorageProxy] Failed candidate ${targetUrl}: ${err?.message || err}`,
+      );
     }
   }
 
@@ -325,18 +352,26 @@ export async function GET(
     return new NextResponse(lastResponse.body, {
       status: lastResponse.status,
       headers: {
-        "Content-Type": lastResponse.headers.get("Content-Type") || "text/plain;charset=UTF-8",
+        "Content-Type":
+          lastResponse.headers.get("Content-Type") ||
+          "text/plain;charset=UTF-8",
       },
     });
   }
 
   // All endpoints failed
-  console.error(`[StorageProxy] All storage endpoints failed for ${filePath}:`, lastError);
-  return new NextResponse(`Proxy Error: ${lastError?.message || "Storage backend unreachable"}`, {
-    status: 502,
-    headers: {
-      "Content-Type": "text/plain;charset=UTF-8",
-      "Cache-Control": "no-store, no-cache, must-revalidate",
+  console.error(
+    `[StorageProxy] All storage endpoints failed for ${filePath}:`,
+    lastError,
+  );
+  return new NextResponse(
+    `Proxy Error: ${lastError?.message || "Storage backend unreachable"}`,
+    {
+      status: 502,
+      headers: {
+        "Content-Type": "text/plain;charset=UTF-8",
+        "Cache-Control": "no-store, no-cache, must-revalidate",
+      },
     },
-  });
+  );
 }

@@ -1,8 +1,8 @@
-'use client';
+"use client";
 
-import { useEffect, useState } from 'react';
-import Image from 'next/image';
-import { withBasePath } from '@/lib/base-path';
+import { useEffect, useState } from "react";
+import Image from "next/image";
+import { withBasePath } from "@/lib/base-path";
 
 export default function SplashScreen() {
   const [show, setShow] = useState(true);
@@ -10,9 +10,11 @@ export default function SplashScreen() {
 
   useEffect(() => {
     setIsClient(true);
-    
+
     // Check if running in PWA (standalone mode) and mobile
-    const isStandalone = window.matchMedia('(display-mode: standalone)').matches || (window.navigator as any).standalone === true;
+    const isStandalone =
+      window.matchMedia("(display-mode: standalone)").matches ||
+      (window.navigator as any).standalone === true;
     const isMobile = window.innerWidth <= 768;
 
     // Only show if it's PWA and mobile, otherwise immediately hide
@@ -37,7 +39,7 @@ export default function SplashScreen() {
     <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-white transition-opacity duration-500">
       <div className="relative h-64 w-64 max-w-[80vw]">
         <Image
-          src={withBasePath('/unlisted-stox-logo.gif')}
+          src={withBasePath("/unlisted-stocks-logo.gif")}
           alt="Loading..."
           fill
           className="object-contain"

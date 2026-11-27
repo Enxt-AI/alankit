@@ -15,7 +15,8 @@ import { cn } from "@/lib/utils";
 const panels = [
   {
     title: "Admin Console",
-    description: "System configuration, user management, and platform oversight.",
+    description:
+      "System configuration, user management, and platform oversight.",
     href: "/admin/login",
     icon: ShieldCheck,
   },
@@ -45,7 +46,8 @@ const panels = [
   },
   {
     title: "Operation Panel",
-    description: "Manage logistics, task workflows, and operational efficiency.",
+    description:
+      "Manage logistics, task workflows, and operational efficiency.",
     href: "/operation/login",
     icon: Settings,
   },
@@ -58,13 +60,14 @@ export default function PanelsLandingPage() {
         {/* Header */}
         <div className="mb-10">
           <p className="text-[12px] uppercase tracking-wider text-gray-500 font-medium mb-3">
-            SMC Internal Systems
+            Internal Systems
           </p>
           <h1 className="text-4xl md:text-[44px] font-bold tracking-tight text-gray-900 mb-4 leading-tight">
             Select Your <span className="text-[#16a34a]">Workspace</span>
           </h1>
           <p className="text-[14px] text-gray-500">
-            Access secure internal tools and management consoles. Authorized personnel only.
+            Access secure internal tools and management consoles. Authorized
+            personnel only.
           </p>
         </div>
 
@@ -104,7 +107,8 @@ export default function PanelsLandingPage() {
         {/* Footer */}
         <div className="mt-8 text-center text-[12px] text-gray-400">
           <p>
-            &copy; {new Date().getFullYear()} SMC Unlisted Stox. All rights reserved.
+            &copy; {new Date().getFullYear()} Unlisted stocks. All rights
+            reserved.
           </p>
         </div>
       </div>

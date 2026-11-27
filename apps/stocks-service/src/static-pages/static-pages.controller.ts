@@ -9,7 +9,7 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 import { Request as ExpressRequest } from 'express';
 import { StaticPagesService } from './static-pages.service';
 import { CreateStaticPageDto } from './dto/create-static-page.dto';

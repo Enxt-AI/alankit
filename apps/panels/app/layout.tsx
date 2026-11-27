@@ -11,9 +11,9 @@ const plusJakartaSans = localFont({
 });
 
 export const metadata: Metadata = {
-  title: "SMC Unlisted Stocks - Invest in Unlisted Shares",
+  title: " Unlisted Stocks - Invest in Unlisted Shares",
   description:
-    "Trade unlisted stocks with SMC. Explore exclusive investment opportunities in pre-IPO companies.",
+    "Trade unlisted stocks with . Explore exclusive investment opportunities in pre-IPO companies.",
   formatDetection: {
     telephone: false,
   },
@@ -93,4 +93,3 @@ export default function RootLayout({
     </html>
   );
 }
-

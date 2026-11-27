@@ -31,7 +31,7 @@ export class VersioningService {
   ) {
     const adminContext = this.adminContextService.getContext();
     const createdById = adminContext?.adminId || 'system';
-    const createdByEmail = adminContext?.email || 'system@smc.internal';
+    const createdByEmail = adminContext?.email || 'system@.internal';
     const createdByRole = adminContext?.role || 'ADMIN';
 
     // Get the next version number

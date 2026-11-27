@@ -1,4 +1,4 @@
-# Code Review Graph - SMC Unlisted Stox
+# Code Review Graph - Unlisted stocks
 
 > Auto-generated architectural documentation for code reviewers
 > Last Updated: 2025-06-25
@@ -22,7 +22,9 @@
 ## Project Overview
 
 ### Project Type
+
 **Full-Stack Monorepo** - Unlisted stock trading platform built with:
+
 - **Frontend**: Next.js 16 (React 19) - Multiple web applications
 - **Backend**: NestJS microservices
 - **Database**: PostgreSQL with Prisma ORM
@@ -30,7 +32,9 @@
 - **Build System**: Turborepo with pnpm workspaces
 
 ### Business Domain
+
 An online platform for trading unlisted/pre-IPO stocks featuring:
+
 - User authentication (email/OTP, phone-first)
 - KYC verification and document management
 - Stock listings, baskets, and portfolios
@@ -40,21 +44,22 @@ An online platform for trading unlisted/pre-IPO stocks featuring:
 - Support ticketing system
 
 ### Key Technologies
-| Layer | Technology |
-|-------|------------|
-| Package Manager | pnpm 9.0.0 |
-| Build System | Turborepo 2.5.8 |
-| Frontend Framework | Next.js 16.1.4 |
-| UI Library | React 19.2.3 |
-| Backend Framework | NestJS 11.1.8 |
-| Database ORM | Prisma 6.18.0 |
-| Database | PostgreSQL |
-| Cache/Queue | Redis, Bull |
-| Object Storage | MinIO (S3-compatible) |
-| Payment Gateway | Cashfree |
-| Styling | TailwindCSS 3.4 |
-| State Management | Zustand |
-| HTTP Client | Axios |
+
+| Layer              | Technology            |
+| ------------------ | --------------------- |
+| Package Manager    | pnpm 9.0.0            |
+| Build System       | Turborepo 2.5.8       |
+| Frontend Framework | Next.js 16.1.4        |
+| UI Library         | React 19.2.3          |
+| Backend Framework  | NestJS 11.1.8         |
+| Database ORM       | Prisma 6.18.0         |
+| Database           | PostgreSQL            |
+| Cache/Queue        | Redis, Bull           |
+| Object Storage     | MinIO (S3-compatible) |
+| Payment Gateway    | Cashfree              |
+| Styling            | TailwindCSS 3.4       |
+| State Management   | Zustand               |
+| HTTP Client        | Axios                 |
 
 ---
 
@@ -214,22 +219,22 @@ graph TD
     classDef app fill:#e1f5fe,stroke:#01579b
     classDef pkg fill:#f3e5f5,stroke:#4a148c
     classDef db fill:#fff3e0,stroke:#e65100
-    
+
     class WEB,PANELS,RM_DIST,AUTH,STOCKS,TICKETS,PAYMENTS,STORAGE app
     class DB_MAIN,DB_TICKET,REDIS,EMAIL,COOKIE,SHARED,STATS,UI,ESLINT,TS_CONFIG pkg
 ```
 
 ### Package Dependency Matrix
 
-| Package | db-unlistedstock | db-ticketing | redis-service | email-service | cookie-crypto | shared-types | stats-types |
-|---------|-------------------|--------------|---------------|---------------|---------------|--------------|-------------|
-| auth-service | **X** | - | **X** | **X** | **X** | - | - |
-| stocks-service | **X** | - | **X** | **X** | **X** | - | - |
-| ticketing-service | **X** | **X** | - | **X** | **X** | **X** | **X** |
-| payments-service | **X** | - | - | **X** | **X** | - | - |
-| storage-service | - | - | - | - | **X** | - | - |
-| web | - | - | - | - | **X** | - | **X** |
-| panels | - | - | - | - | **X** | - | **X** |
+| Package           | db-unlistedstock | db-ticketing | redis-service | email-service | cookie-crypto | shared-types | stats-types |
+| ----------------- | ---------------- | ------------ | ------------- | ------------- | ------------- | ------------ | ----------- |
+| auth-service      | **X**            | -            | **X**         | **X**         | **X**         | -            | -           |
+| stocks-service    | **X**            | -            | **X**         | **X**         | **X**         | -            | -           |
+| ticketing-service | **X**            | **X**        | -             | **X**         | **X**         | **X**        | **X**       |
+| payments-service  | **X**            | -            | -             | **X**         | **X**         | -            | -           |
+| storage-service   | -                | -            | -             | -             | **X**         | -            | -           |
+| web               | -                | -            | -             | -             | **X**         | -            | **X**       |
+| panels            | -                | -            | -             | -             | **X**         | -            | **X**       |
 
 ---
 
@@ -238,9 +243,11 @@ graph TD
 ### 1. Frontend Applications
 
 #### 1.1 Web App (`apps/web`)
+
 **Purpose**: Customer-facing platform for stock trading
 
 **Key Directories**:
+
 ```
 apps/web/
 +-- app/                    # Next.js App Router pages
@@ -267,14 +274,17 @@ apps/web/
 ```
 
 **Critical Files**:
+
 - `middleware.ts` - Route protection and auth state management
 - `lib/api-client.ts` - HTTP client with SSR/CSR handling
 - `app/layout.tsx` - Root layout with providers
 
 #### 1.2 Panels App (`apps/panels`)
+
 **Purpose**: Multi-tenant admin dashboard for different roles
 
 **Route Groups**:
+
 ```
 apps/panels/app/
 +-- (admin)/               # Admin panel - user management, RM, settings
@@ -286,11 +296,13 @@ apps/panels/app/
 ```
 
 **Key Features**:
+
 - Role-based access control per panel
 - Separate authentication flow per role
 - Audit logging for admin actions
 
 #### 1.3 RM-Distributors App (`apps/rm-distributors`)
+
 **Purpose**: Dashboard for relationship managers and distributors
 
 ---
@@ -298,6 +310,7 @@ apps/panels/app/
 ### 2. Backend Services
 
 #### 2.1 Auth Service (`apps/auth-service`)
+
 **Purpose**: Authentication and session management
 
 **Modules**:
@@ -309,6 +322,7 @@ apps/panels/app/
 | `prisma` | Database access |
 
 **Key Endpoints**:
+
 - `POST /api/auth/phone-otp/request` - Request OTP
 - `POST /api/auth/phone-otp/verify` - Verify OTP
 - `GET /api/auth/profile` - Get user profile
@@ -316,6 +330,7 @@ apps/panels/app/
 - `POST /api/auth/cms/login` - CMS login
 
 #### 2.2 Stocks Service (`apps/stocks-service`)
+
 **Purpose**: Core business logic for stock trading
 
 **Modules**:
@@ -339,32 +354,39 @@ apps/panels/app/
 | `seo-metadata` | SEO management |
 
 **Key Features**:
+
 - Bull queues for async processing (revalidation, snapshots)
 - Cron scheduling for periodic tasks
 - Global JWT auth guard with `@Public()` decorator
 
 #### 2.3 Ticketing Service (`apps/ticketing-service`)
+
 **Purpose**: Support ticket system
 
 **Database**: Separate PostgreSQL database (`db-ticketing`)
 
 **Features**:
+
 - Ticket CRUD with label management
 - Agent assignment and SLA tracking
 - Support ticket comments
 
 #### 2.4 Payments Service (`apps/payments-service`)
+
 **Purpose**: Payment processing with Cashfree
 
 **Features**:
+
 - Payment order creation
 - Webhook handling for payment status
 - Multiple payment attempts tracking
 
 #### 2.5 Storage Service (`apps/storage-service`)
+
 **Purpose**: File upload and storage via MinIO
 
 **Features**:
+
 - S3-compatible file upload
 - Pre-signed URL generation
 - Bucket management
@@ -375,39 +397,41 @@ apps/panels/app/
 
 #### 3.1 Database Packages
 
-| Package | Database | Usage |
-|---------|----------|-------|
-| `db-unlistedstock` | PostgreSQL (main) | Users, Stocks, Orders, Portfolio, KYC, Accounting |
-| `db-ticketing` | PostgreSQL (ticketing) | Tickets, Labels, Comments |
+| Package            | Database               | Usage                                             |
+| ------------------ | ---------------------- | ------------------------------------------------- |
+| `db-unlistedstock` | PostgreSQL (main)      | Users, Stocks, Orders, Portfolio, KYC, Accounting |
+| `db-ticketing`     | PostgreSQL (ticketing) | Tickets, Labels, Comments                         |
 
 **Key Exports**:
+
 ```typescript
 // db-unlistedstock
-export { PrismaClient } from './generated/prisma';
-export { ADMIN_PERMISSIONS } from './constants/admin-permissions';
+export { PrismaClient } from "./generated/prisma";
+export { ADMIN_PERMISSIONS } from "./constants/admin-permissions";
 
 // db-ticketing
-export { PrismaClient as TicketingPrismaClient } from './generated/prisma';
+export { PrismaClient as TicketingPrismaClient } from "./generated/prisma";
 ```
 
 #### 3.2 Service Packages
 
-| Package | Purpose |
-|---------|---------|
-| `redis-service` | Redis client for caching, sessions, OTP storage |
+| Package         | Purpose                                            |
+| --------------- | -------------------------------------------------- |
+| `redis-service` | Redis client for caching, sessions, OTP storage    |
 | `email-service` | NestJS module for sending emails via Netcore Cloud |
-| `cookie-crypto` | AES-256-GCM encryption for HTTP cookies |
+| `cookie-crypto` | AES-256-GCM encryption for HTTP cookies            |
 
 #### 3.3 Type Packages
 
-| Package | Purpose |
-|---------|---------|
+| Package        | Purpose                                                      |
+| -------------- | ------------------------------------------------------------ |
 | `shared-types` | Common TypeScript interfaces (SupportTicketStats, KYC types) |
-| `stats-types` | Statistics and analytics interfaces |
+| `stats-types`  | Statistics and analytics interfaces                          |
 
 #### 3.4 UI Package
 
 `@repo/ui` contains shared React components:
+
 - `button.tsx` - Button component
 - `card.tsx` - Card component
 - `code.tsx` - Code display component
@@ -432,7 +456,7 @@ sequenceDiagram
     Nginx->>AuthService: Proxy request
     AuthService->>Redis: Store OTP with TTL
     AuthService->>User: Send OTP via SMS (Twilio)
-    
+
     User->>WebApp: Enter OTP
     WebApp->>Nginx: POST /api/auth/phone-otp/verify
     Nginx->>AuthService: Proxy request
@@ -456,18 +480,18 @@ sequenceDiagram
     User->>WebApp: Select stock, quantity
     WebApp->>StocksService: GET /api/stocks/:id
     StocksService-->>WebApp: Stock details
-    
+
     User->>WebApp: Place order
     WebApp->>StocksService: POST /api/orders
     StocksService->>StocksService: Validate KYC/Demat
     StocksService->>StocksService: eSign document
     StocksService-->>WebApp: Order created
-    
+
     WebApp->>PaymentsService: POST /api/payments/order
     PaymentsService->>Cashfree: Create payment order
     Cashfree-->>PaymentsService: Payment session
     PaymentsService-->>WebApp: Payment URL
-    
+
     User->>Cashfree: Complete payment
     Cashfree->>PaymentsService: Webhook (payment success)
     PaymentsService->>StocksService: Update order status
@@ -476,29 +500,32 @@ sequenceDiagram
 ### Core Files to Review
 
 #### High Priority (Authentication/Security)
-| File | Risk Level | Reason |
-|------|------------|--------|
-| `apps/auth-service/src/auth/auth.service.ts` | **Critical** | Auth logic, token generation |
-| `apps/auth-service/src/auth/guards/*.ts` | **Critical** | Route protection |
-| `packages/cookie-crypto/src/index.ts` | **Critical** | Cookie encryption |
-| `apps/web/middleware.ts` | **Critical** | Route protection |
-| `apps/web/lib/api-client.ts` | **High** | HTTP client, token handling |
-| `nginx.conf` | **High** | Rate limiting, security headers |
+
+| File                                         | Risk Level   | Reason                          |
+| -------------------------------------------- | ------------ | ------------------------------- |
+| `apps/auth-service/src/auth/auth.service.ts` | **Critical** | Auth logic, token generation    |
+| `apps/auth-service/src/auth/guards/*.ts`     | **Critical** | Route protection                |
+| `packages/cookie-crypto/src/index.ts`        | **Critical** | Cookie encryption               |
+| `apps/web/middleware.ts`                     | **Critical** | Route protection                |
+| `apps/web/lib/api-client.ts`                 | **High**     | HTTP client, token handling     |
+| `nginx.conf`                                 | **High**     | Rate limiting, security headers |
 
 #### High Priority (Business Logic)
-| File | Risk Level | Reason |
-|------|------------|--------|
-| `apps/stocks-service/src/orders/orders.service.ts` | **Critical** | Order placement, validation |
-| `apps/stocks-service/src/kyc/kyc.service.ts` | **Critical** | KYC verification |
-| `apps/payments-service/src/payments/payment.service.ts` | **Critical** | Payment processing |
-| `packages/db-unlistedstock/prisma/schema.prisma` | **Critical** | Data model |
+
+| File                                                    | Risk Level   | Reason                      |
+| ------------------------------------------------------- | ------------ | --------------------------- |
+| `apps/stocks-service/src/orders/orders.service.ts`      | **Critical** | Order placement, validation |
+| `apps/stocks-service/src/kyc/kyc.service.ts`            | **Critical** | KYC verification            |
+| `apps/payments-service/src/payments/payment.service.ts` | **Critical** | Payment processing          |
+| `packages/db-unlistedstock/prisma/schema.prisma`        | **Critical** | Data model                  |
 
 #### Medium Priority
-| File | Risk Level | Reason |
-|------|------------|--------|
-| `apps/stocks-service/src/accounting/*.ts` | **Medium** | Financial calculations |
-| `apps/stocks-service/src/portfolio/portfolio.service.ts` | **Medium** | User holdings |
-| `apps/ticketing-service/src/tickets/*.ts` | **Medium** | Support workflow |
+
+| File                                                     | Risk Level | Reason                 |
+| -------------------------------------------------------- | ---------- | ---------------------- |
+| `apps/stocks-service/src/accounting/*.ts`                | **Medium** | Financial calculations |
+| `apps/stocks-service/src/portfolio/portfolio.service.ts` | **Medium** | User holdings          |
+| `apps/ticketing-service/src/tickets/*.ts`                | **Medium** | Support workflow       |
 
 ---
 
@@ -512,19 +539,19 @@ graph TD
     B -->|OTP Sent| C[Verify OTP]
     C --> D[User Created]
     D --> E[KYC Flow]
-    
+
     E --> F[Pan Verification]
     F --> G[Aadhaar/DigiLocker]
     G --> H[Bank Details]
     H --> I{KYC Status}
-    
+
     I -->|Rejected| J[Retry KYC]
     I -->|Verified| K[KYC Complete]
-    
+
     K --> L[Demat Account Linking]
     L --> M[Bank Account Verification]
     M --> N[Ready to Trade]
-    
+
     style A fill:#e8f5e9
     style K fill:#c8e6c9
     style N fill:#a5d6a7
@@ -537,26 +564,26 @@ graph TD
     A[Select Stock] --> B{Check Stock Status}
     B -->|Out of Stock| C[Show Interest Form]
     B -->|Available| D[Order Form]
-    
+
     D --> E{Check User Status}
     E -->|KYC Pending| F[Redirect to KYC]
     E -->|Demat Pending| G[Redirect to Demat]
     E -->|Verified| H[Calculate Price]
-    
+
     H --> I[Apply Coupon?]
     I -->|Yes| J[Validate Coupon]
     J --> K[Apply Discount]
     I -->|No| K
-    
+
     K --> L[eSign Document]
     L --> M[Initialize Payment]
     M --> N{Payment Status}
-    
+
     N -->|Failed| O[Retry Payment]
     N -->|Success| P[Allocate Shares]
     P --> Q[Update Portfolio]
     Q --> R[Order Complete]
-    
+
     style R fill:#c8e6c9
 ```
 
@@ -566,30 +593,30 @@ graph TD
 
 ### Nginx Route Configuration
 
-| Route Pattern | Upstream Service | Notes |
-|---------------|------------------|-------|
-| `/api/auth/admin/*` | stocks-service | Panel auth handled by stocks-service |
-| `/api/auth/cms/*` | stocks-service | Panel auth handled by stocks-service |
-| `/api/auth/support/*` | stocks-service | Panel auth handled by stocks-service |
-| `/api/auth/marketing/*` | stocks-service | Panel auth handled by stocks-service |
-| `/api/auth/operation/*` | stocks-service | Panel auth handled by stocks-service |
-| `/api/auth/*` | auth-service | User auth |
-| `/api/stocks/*` | stocks-service | Stock endpoints |
-| `/api/baskets/*` | stocks-service | Basket endpoints |
-| `/api/content/*` | stocks-service | News/articles |
-| `/api/tickets/*` | ticketing-service | Support tickets |
-| `/api/labels/*` | ticketing-service | Ticket labels |
-| `/api/payments/*` | payments-service | Payment processing |
-| `/api/upload/*` | storage-service | File uploads |
-| `/storage/*` | minio | Static file serving |
-| `/*` | nextjs_frontend | Next.js app |
+| Route Pattern           | Upstream Service  | Notes                                |
+| ----------------------- | ----------------- | ------------------------------------ |
+| `/api/auth/admin/*`     | stocks-service    | Panel auth handled by stocks-service |
+| `/api/auth/cms/*`       | stocks-service    | Panel auth handled by stocks-service |
+| `/api/auth/support/*`   | stocks-service    | Panel auth handled by stocks-service |
+| `/api/auth/marketing/*` | stocks-service    | Panel auth handled by stocks-service |
+| `/api/auth/operation/*` | stocks-service    | Panel auth handled by stocks-service |
+| `/api/auth/*`           | auth-service      | User auth                            |
+| `/api/stocks/*`         | stocks-service    | Stock endpoints                      |
+| `/api/baskets/*`        | stocks-service    | Basket endpoints                     |
+| `/api/content/*`        | stocks-service    | News/articles                        |
+| `/api/tickets/*`        | ticketing-service | Support tickets                      |
+| `/api/labels/*`         | ticketing-service | Ticket labels                        |
+| `/api/payments/*`       | payments-service  | Payment processing                   |
+| `/api/upload/*`         | storage-service   | File uploads                         |
+| `/storage/*`            | minio             | Static file serving                  |
+| `/*`                    | nextjs_frontend   | Next.js app                          |
 
 ### Rate Limiting
 
-| Zone | Rate | Burst | Applied To |
-|------|------|-------|------------|
-| `auth_limit` | 10 req/min | 5 | Auth endpoints (login, verify) |
-| `api_limit` | 100 req/sec | 20 | API endpoints |
+| Zone         | Rate        | Burst | Applied To                     |
+| ------------ | ----------- | ----- | ------------------------------ |
+| `auth_limit` | 10 req/min  | 5     | Auth endpoints (login, verify) |
+| `api_limit`  | 100 req/sec | 20    | API endpoints                  |
 
 ---
 
@@ -606,7 +633,7 @@ erDiagram
     User ||--o{ KycDocument : uploads
     User ||--o| Ledger : has
     User ||--o{ StockInterest : expresses
-    
+
     Stock ||--o{ Order : ordered_in
     Stock ||--o{ Portfolio : held_in
     Stock ||--o{ StockPrice : has_price
@@ -616,20 +643,20 @@ erDiagram
     Stock ||--o{ Coupon : applies_to
     Stock ||--o{ InventoryMovement : tracked_by
     Stock ||--o| Ledger : has_ledger
-    
+
     StockBasket ||--o{ BasketConstituent : contains
     StockBasket ||--o{ Order : ordered_in
-    
+
     Order ||--o{ PaymentAttempt : has_attempts
     Order ||--o| Coupon : uses
-    
+
     Admin ||--o{ Stock : creates
     Admin ||--o{ StockBasket : creates
     Admin ||--o{ AuditLog : generates
-    
+
     RelationshipManager ||--o{ Coupon : generates
     Distributor ||--o{ RelationshipManager : manages
-    
+
     Voucher ||--o{ VoucherEntry : has_entries
     VoucherEntry }o--|| Ledger : posts_to
     Ledger }o--|| Stock : tracks_stock
@@ -638,15 +665,15 @@ erDiagram
 
 ### Key Models Summary
 
-| Model | Purpose | Critical Fields |
-|-------|---------|-----------------|
-| `User` | Customer accounts | `kycStatus`, `dematStatus`, `phone` |
-| `Stock` | Unlisted stocks | `cin`, `isin`, `price`, `stockQuantity` |
-| `Order` | Purchase orders | `status`, `paymentStatus`, `esignStatus` |
-| `Portfolio` | User holdings | `quantity`, `avgPrice` |
-| `Ledger` | Accounting accounts | `type`, `currentBalance` |
-| `Voucher` | Financial transactions | `type`, `status`, `totalAmount` |
-| `Admin` | Panel users | `role`, `permissions` |
+| Model       | Purpose                | Critical Fields                          |
+| ----------- | ---------------------- | ---------------------------------------- |
+| `User`      | Customer accounts      | `kycStatus`, `dematStatus`, `phone`      |
+| `Stock`     | Unlisted stocks        | `cin`, `isin`, `price`, `stockQuantity`  |
+| `Order`     | Purchase orders        | `status`, `paymentStatus`, `esignStatus` |
+| `Portfolio` | User holdings          | `quantity`, `avgPrice`                   |
+| `Ledger`    | Accounting accounts    | `type`, `currentBalance`                 |
+| `Voucher`   | Financial transactions | `type`, `status`, `totalAmount`          |
+| `Admin`     | Panel users            | `role`, `permissions`                    |
 
 ---
 
@@ -659,12 +686,10 @@ erDiagram
   - [ ] OTP rate limiting (consider adding more granular limits)
   - [ ] Session management and concurrent sessions
   - [ ] Password hashing (bcrypt) verification
-  
 - [ ] **Authorization**
   - [ ] Role-based access control implementation
   - [ ] Permission checks in guards
   - [ ] Public route decorator usage
-  
 - [ ] **Data Protection**
   - [ ] Cookie encryption (AES-256-GCM) key rotation plan
   - [ ] HTTPS enforcement
@@ -676,11 +701,9 @@ erDiagram
   - [ ] Index usage verification (check slow queries)
   - [ ] N+1 query prevention
   - [ ] Connection pool configuration
-  
 - [ ] **Caching**
   - [ ] Redis cache invalidation strategy
   - [ ] Nginx cache bypass for authenticated users
-  
 - [ ] **API**
   - [ ] SSR timeout handling (5s timeout)
   - [ ] Request payload size limits
@@ -692,12 +715,10 @@ erDiagram
   - [ ] Graceful degradation for service failures
   - [ ] User-friendly error messages
   - [ ] Error logging without sensitive data
-  
 - [ ] **Type Safety**
   - [ ] TypeScript strict mode enabled
   - [ ] Zod validation on API inputs
   - [ ] Prisma type safety
-  
 - [ ] **Testing**
   - [ ] E2E tests for critical paths (auth, orders)
   - [ ] Unit tests for business logic
@@ -709,12 +730,10 @@ erDiagram
   - [ ] Container resource limits (mem_limit)
   - [ ] Health check endpoints
   - [ ] Log rotation configuration
-  
 - [ ] **Nginx**
   - [ ] Security headers presence
   - [ ] Rate limiting configuration
   - [ ] SSL/TLS configuration (external)
-  
 - [ ] **Database**
   - [ ] Migration management
   - [ ] Backup strategy
@@ -726,25 +745,25 @@ erDiagram
 
 ### Project Size Overview
 
-| Category | Count |
-|----------|-------|
+| Category               | Count |
+| ---------------------- | ----- |
 | Total TypeScript Files | ~200+ |
-| Frontend Apps | 3 |
-| Backend Services | 5 |
-| Shared Packages | 10 |
-| Database Models | 40+ |
-| API Endpoints | 100+ |
-| React Components | 100+ |
+| Frontend Apps          | 3     |
+| Backend Services       | 5     |
+| Shared Packages        | 10    |
+| Database Models        | 40+   |
+| API Endpoints          | 100+  |
+| React Components       | 100+  |
 
 ### Largest Files by LOC
 
-| File | Purpose |
-|------|---------|
-| `packages/db-unlistedstock/prisma/schema.prisma` | Database schema (1400+ lines) |
-| `apps/web/lib/api-client.ts` | HTTP client (230+ lines) |
-| `nginx.conf` | Reverse proxy config (320+ lines) |
-| `apps/web/next.config.js` | Next.js config (340+ lines) |
+| File                                             | Purpose                           |
+| ------------------------------------------------ | --------------------------------- |
+| `packages/db-unlistedstock/prisma/schema.prisma` | Database schema (1400+ lines)     |
+| `apps/web/lib/api-client.ts`                     | HTTP client (230+ lines)          |
+| `nginx.conf`                                     | Reverse proxy config (320+ lines) |
+| `apps/web/next.config.js`                        | Next.js config (340+ lines)       |
 
 ---
 
-*Generated for code review purposes. Update this document when significant architectural changes occur.*
+_Generated for code review purposes. Update this document when significant architectural changes occur._

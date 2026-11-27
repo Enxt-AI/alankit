@@ -26,7 +26,7 @@ import { MarketingJwtAuthGuard } from './guards/marketing-jwt-auth.guard';
 import { AccountingJwtAuthGuard } from './guards/accounting-jwt-auth.guard';
 import { OperationJwtAuthGuard } from './guards/operation-jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 
 @Controller('auth')
 export class AuthController {
@@ -488,7 +488,7 @@ export class AuthController {
   }
 
   // NOTE: RM login/logout/verify endpoints were removed as part of RM system deprecation.
-  // SMC will build RM functionality as a separate project.
+  //  will build RM functionality as a separate project.
 
   /**
    * POST /api/auth/accounting/login

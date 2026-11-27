@@ -9,7 +9,6 @@ import { stripBasePath, withBasePath } from "./lib/base-path";
  * Edge Runtime does NOT support Node.js built-in modules.
  */
 
-
 // ============================================
 // TYPES & CONFIGURATION
 // ============================================
@@ -42,7 +41,10 @@ const ROUTE_CONFIGS: RouteConfig[] = [
   // RM Portal (Accepts both Internal and Distributor RMs)
   {
     pathPrefix: "/rm",
-    tokenNames: [OBFUSCATED_COOKIE_NAMES.INTERNAL_RM_PANEL_TOKEN, OBFUSCATED_COOKIE_NAMES.DISTRIBUTOR_RM_PANEL_TOKEN],
+    tokenNames: [
+      OBFUSCATED_COOKIE_NAMES.INTERNAL_RM_PANEL_TOKEN,
+      OBFUSCATED_COOKIE_NAMES.DISTRIBUTOR_RM_PANEL_TOKEN,
+    ],
     loginPath: "/login/rm",
     dashboardPath: "/rm",
     allowedTypes: ["INTERNAL_RM", "DISTRIBUTOR_RM"],
@@ -85,16 +87,25 @@ export default async function proxy(request: NextRequest) {
   const pathname = stripBasePath(request.nextUrl.pathname);
 
   // Handle explicit cookie clear
-  if (pathname.includes("/login") && request.nextUrl.searchParams.get("clear") === "true") {
+  if (
+    pathname.includes("/login") &&
+    request.nextUrl.searchParams.get("clear") === "true"
+  ) {
     const url = request.nextUrl.clone();
     url.search = ""; // remove ?clear=true
     const response = NextResponse.redirect(url);
-    // Delete both host-only cookies and cookies scoped to COOKIE_DOMAIN (e.g. .unlistedstox.com)
+    // Delete both host-only cookies and cookies scoped to COOKIE_DOMAIN (e.g. .unlistedstocks.com)
     const cookieDomain = process.env.COOKIE_DOMAIN || undefined;
     const clearCookie = (name: string) => {
       response.cookies.delete(name);
       if (cookieDomain) {
-        response.cookies.set({ name, value: "", path: "/", domain: cookieDomain, maxAge: 0 });
+        response.cookies.set({
+          name,
+          value: "",
+          path: "/",
+          domain: cookieDomain,
+          maxAge: 0,
+        });
       }
     };
     if (pathname.includes("/distributor")) {
@@ -112,7 +123,10 @@ export default async function proxy(request: NextRequest) {
   const config = ROUTE_CONFIGS.find((c) => pathname.startsWith(c.pathPrefix));
 
   // If the user is on a login page
-  const isLoginPage = pathname === "/login/distributor" || pathname === "/login/rm" || pathname === "/login/branch";
+  const isLoginPage =
+    pathname === "/login/distributor" ||
+    pathname === "/login/rm" ||
+    pathname === "/login/branch";
 
   if (isLoginPage) {
     // Check ONLY the configuration for the specific login page the user is trying to access

@@ -1,5 +1,5 @@
 {
-  "name": "smc-unlisted-stox",
+  "name": "-unlisted-stocks",
   "private": true,
   "scripts": {
     "build": "turbo run build",

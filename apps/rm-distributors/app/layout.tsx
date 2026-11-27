@@ -3,8 +3,9 @@ import "./globals.css";
 import { Providers } from "./providers";
 
 export const metadata: Metadata = {
-  title: "RM & Distributors | Unlisted Stox",
-  description: "Advanced relationship management and distributor dashboard for Unlisted Stox.",
+  title: "RM & Distributors | Unlisted stocks",
+  description:
+    "Advanced relationship management and distributor dashboard for Unlisted stocks.",
   icons: {
     icon: [
       {

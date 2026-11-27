@@ -1,14 +1,18 @@
 ### 1. Clean Slate (Optional)
+
 If you ever need to completely wipe your local database and start fresh, run this to delete the state:
+
 ```powershell
 Remove-Item -Recurse -Force .\.state\postgres-data
 ```
 
 ### 2. Boot up the Entire Stack with Docker (Staging / Production)
+
 Make sure Docker is running, then boot the entire unified stack (Backend services + Frontend apps + Databases + NGINX):
+
 ```bash
 # Create staging network if not already created
-docker network create smc-staging-network
+docker network create -staging-network
 
 # Start all backend services, databases, and frontends (web, panels, rm-distributors)
 docker compose up -d redis
@@ -17,13 +21,15 @@ docker compose -f docker-compose.staging.yml up --build -d
 ```
 
 > **Note on Environment Variables in Containers:**
-> Ensure `BACKEND_ORIGIN=http://smc-nginx-staging` is set in:
+> Ensure `BACKEND_ORIGIN=http://-nginx-staging` is set in:
+>
 > - `apps/web/.env`
 > - `apps/panels/.env`
 > - `apps/rm-distributors/.env`
-> so containerized Next.js apps route API requests to NGINX internally over Docker's network.
+>   so containerized Next.js apps route API requests to NGINX internally over Docker's network.
 
 ### 2.1 Sync Database Schema (Important)
+
 After the containers are up, if you have new schema changes (or if this is your first time), you **must** sync the database schema. Otherwise, you will encounter `500 Internal Server Errors` (e.g. `The column X does not exist`).
 
 Run these commands on your host machine to push the Prisma schema to the PostgreSQL container:
@@ -53,12 +59,15 @@ Remove-Item Env:\DIRECT_DATABASE_URL
 ### 3. Local Development Setup (Running outside Docker)
 
 #### Install Monorepo Dependencies
+
 ```powershell
 $env:PUPPETEER_SKIP_DOWNLOAD="true"; pnpm install
 ```
 
 #### Push Schema & Seed Main Database
+
 Point your local Prisma CLI to `localhost:5432` to push schema and seed data:
+
 ```powershell
 Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser
 
@@ -72,6 +81,7 @@ pnpm --filter db-unlistedstock exec npx ts-node src/seed.ts
 ```
 
 #### Push Schema & Seed Ticketing Database
+
 ```powershell
 $env:TICKETING_DATABASE_URL="postgresql://postgres:postgres@127.0.0.1:5432/ticketing_system"
 
@@ -89,16 +99,19 @@ Remove-Item Env:\TICKETING_DATABASE_URL
 When running locally on your host machine (outside Docker), ensure `BACKEND_ORIGIN=http://127.0.0.1` or set the respective service URLs:
 
 **Main Web Application (Port 3000):**
+
 ```powershell
 pnpm --filter web run dev
 ```
 
 **Panels Application (Port 4000):**
+
 ```powershell
 pnpm --filter panels run dev
 ```
 
 **RM & Distributors Portal (Port 8000):**
+
 ```powershell
 pnpm --filter rm-distributors run dev
 ```

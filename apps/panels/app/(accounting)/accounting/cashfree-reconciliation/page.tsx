@@ -64,13 +64,32 @@ function exportToCSV(data: any[], filename: string) {
 
   const rows = data.map((item) => [
     item.orderId || item.id || item.orderNumber || "",
-    item.cfOrderId || item.cashfreeOrderId || item.paymentData?.order_id || item.paymentData?.cf_order_id || "—",
-    item.transactionId || item.cfPaymentId || item.cashfreePaymentId || item.paymentData?.cf_payment_id || item.paymentData?.payment_id || "—",
-    item.bankReference || item.paymentData?.bank_reference || item.paymentData?.settlement_utr || item.paymentData?.utr || "—",
+    item.cfOrderId ||
+      item.cashfreeOrderId ||
+      item.paymentData?.order_id ||
+      item.paymentData?.cf_order_id ||
+      "—",
+    item.transactionId ||
+      item.cfPaymentId ||
+      item.cashfreePaymentId ||
+      item.paymentData?.cf_payment_id ||
+      item.paymentData?.payment_id ||
+      "—",
+    item.bankReference ||
+      item.paymentData?.bank_reference ||
+      item.paymentData?.settlement_utr ||
+      item.paymentData?.utr ||
+      "—",
     item.amount ?? item.totalAmount ?? 0,
     item.paymentMethod || item.paymentData?.payment_method || "Cashfree",
-    item.reconciliationStatus || item.paymentData?.reconciliation?.status || item.paymentData?.reconciliation_status || "RECONCILED",
-    item.reconciliationDate || item.paymentData?.reconciliation?.reconciliation_date || item.paymentData?.reconciliation_date || (item.createdAt ? new Date(item.createdAt).toISOString() : ""),
+    item.reconciliationStatus ||
+      item.paymentData?.reconciliation?.status ||
+      item.paymentData?.reconciliation_status ||
+      "RECONCILED",
+    item.reconciliationDate ||
+      item.paymentData?.reconciliation?.reconciliation_date ||
+      item.paymentData?.reconciliation_date ||
+      (item.createdAt ? new Date(item.createdAt).toISOString() : ""),
   ]);
 
   const csvContent = [
@@ -78,10 +97,11 @@ function exportToCSV(data: any[], filename: string) {
     ...rows.map((row) =>
       row
         .map((field) => {
-          const str = field === null || field === undefined ? "" : String(field);
+          const str =
+            field === null || field === undefined ? "" : String(field);
           return `"${str.replace(/"/g, '""')}"`;
         })
-        .join(",")
+        .join(","),
     ),
   ].join("\n");
 
@@ -115,7 +135,9 @@ export default function CashfreeReconciliationPage() {
   const [rightSearch, setRightSearch] = useState("");
 
   // Data states
-  const [activeUnreconciledOrders, setActiveUnreconciledOrders] = useState<any[]>([]);
+  const [activeUnreconciledOrders, setActiveUnreconciledOrders] = useState<
+    any[]
+  >([]);
   const [reconciliationHistory, setReconciliationHistory] = useState<any[]>([]);
   const [lastRunResult, setLastRunResult] = useState<any | null>(null);
   const [selectedRowId, setSelectedRowId] = useState<string | null>(null);
@@ -155,10 +177,15 @@ export default function CashfreeReconciliationPage() {
 
     setIsReconciling(true);
     try {
-      const result = await runManualReconciliationAdmin(selectedDate, "ACCOUNTANT");
+      const result = await runManualReconciliationAdmin(
+        selectedDate,
+        "ACCOUNTANT",
+      );
       setLastRunResult(result);
       await loadData();
-      alert(`Reconciliation Completed!\nReconciled: ${result.reconciledCount}\nFailed: ${result.failedCount}`);
+      alert(
+        `Reconciliation Completed!\nReconciled: ${result.reconciledCount}\nFailed: ${result.failedCount}`,
+      );
     } catch (err: any) {
       console.error("Reconciliation run failed:", err);
       alert("Reconciliation run failed: " + (err.message || "Unknown error"));
@@ -171,25 +198,37 @@ export default function CashfreeReconciliationPage() {
   const leftWindowOrders = useMemo(() => {
     return activeUnreconciledOrders.filter((order) => {
       let pData = order.paymentData || {};
-      if (typeof pData === "string") { try { pData = JSON.parse(pData); } catch (e) {} }
+      if (typeof pData === "string") {
+        try {
+          pData = JSON.parse(pData);
+        } catch (e) {}
+      }
 
-      const recStatus = pData.reconciliation?.status || pData.reconciliation_status;
+      const recStatus =
+        pData.reconciliation?.status || pData.reconciliation_status;
       if (recStatus === "RECONCILED") return false;
 
       // Exclude failed / cancelled orders since uncollected payment attempts are never deposited into bank
       const status = (order.paymentStatus || order.status || "").toUpperCase();
-      if (status === "FAILED" || status === "CANCELLED" || status === "EXPIRED") return false;
+      if (status === "FAILED" || status === "CANCELLED" || status === "EXPIRED")
+        return false;
 
       // Filter by Target Date if selectedDate is set
       if (selectedDate && order.createdAt) {
-        const orderDateStr = new Date(order.createdAt).toISOString().split("T")[0];
+        const orderDateStr = new Date(order.createdAt)
+          .toISOString()
+          .split("T")[0];
         if (orderDateStr !== selectedDate) return false;
       }
 
       if (leftSearch) {
         const q = leftSearch.toLowerCase();
-        const matchesId = (order.orderNumber || order.id || "").toLowerCase().includes(q);
-        const matchesName = (order.user?.fullName || "").toLowerCase().includes(q);
+        const matchesId = (order.orderNumber || order.id || "")
+          .toLowerCase()
+          .includes(q);
+        const matchesName = (order.user?.fullName || "")
+          .toLowerCase()
+          .includes(q);
         return matchesId || matchesName;
       }
       return true;
@@ -198,31 +237,57 @@ export default function CashfreeReconciliationPage() {
 
   // Right Window Filter (Cashfree Gateway Records - Filtered by selectedDate & Search)
   const rightWindowStatements = useMemo(() => {
-    const rawRecords = lastRunResult?.reportData || activeUnreconciledOrders.map((order) => {
-      let pData = order.paymentData || {};
-      if (typeof pData === "string") { try { pData = JSON.parse(pData); } catch (e) {} }
-      return {
-        orderId: order.orderNumber || order.id,
-        createdAt: order.createdAt,
-        orderStatus: order.paymentStatus || order.status,
-        cfOrderId: order.cashfreeOrderId || pData.order_id || pData.cf_order_id || "—",
-        transactionId: pData.cf_payment_id || pData.payment_id || order.cashfreePaymentId || "—",
-        amount: Number(order.totalAmount || 0),
-        bankReference: pData.bank_reference || pData.settlement_utr || pData.utr || "PENDING",
-        paymentMethod: pData.payment_method || "Cashfree",
-        cashfreeStatus: pData.reconciliation?.cashfreeStatus || "SUCCESS",
-        reconciliationStatus: pData.reconciliation?.status || pData.reconciliation_status || "PENDING",
-        mismatchReason: pData.reconciliation?.mismatch_reason || pData.reconciliation_remark || "",
-      };
-    });
+    const rawRecords =
+      lastRunResult?.reportData ||
+      activeUnreconciledOrders.map((order) => {
+        let pData = order.paymentData || {};
+        if (typeof pData === "string") {
+          try {
+            pData = JSON.parse(pData);
+          } catch (e) {}
+        }
+        return {
+          orderId: order.orderNumber || order.id,
+          createdAt: order.createdAt,
+          orderStatus: order.paymentStatus || order.status,
+          cfOrderId:
+            order.cashfreeOrderId || pData.order_id || pData.cf_order_id || "—",
+          transactionId:
+            pData.cf_payment_id ||
+            pData.payment_id ||
+            order.cashfreePaymentId ||
+            "—",
+          amount: Number(order.totalAmount || 0),
+          bankReference:
+            pData.bank_reference ||
+            pData.settlement_utr ||
+            pData.utr ||
+            "PENDING",
+          paymentMethod: pData.payment_method || "Cashfree",
+          cashfreeStatus: pData.reconciliation?.cashfreeStatus || "SUCCESS",
+          reconciliationStatus:
+            pData.reconciliation?.status ||
+            pData.reconciliation_status ||
+            "PENDING",
+          mismatchReason:
+            pData.reconciliation?.mismatch_reason ||
+            pData.reconciliation_remark ||
+            "",
+        };
+      });
 
     return rawRecords.filter((st: any) => {
       if (st.reconciliationStatus === "RECONCILED") return false;
 
       // Exclude failed / cancelled orders since uncollected payment attempts are never deposited into bank
       const status = (st.orderStatus || "").toUpperCase();
-      if (status === "FAILED" || status === "CANCELLED" || status === "EXPIRED") return false;
-      if (st.mismatchReason && st.mismatchReason.includes("Local FAILED vs Cashfree FAILED")) return false;
+      if (status === "FAILED" || status === "CANCELLED" || status === "EXPIRED")
+        return false;
+      if (
+        st.mismatchReason &&
+        st.mismatchReason.includes("Local FAILED vs Cashfree FAILED")
+      )
+        return false;
 
       // Filter by Target Date if selectedDate is set
       if (selectedDate && st.createdAt) {
@@ -248,14 +313,24 @@ export default function CashfreeReconciliationPage() {
     return (allOrdersList || [])
       .filter((order) => {
         let pData = order.paymentData || {};
-        if (typeof pData === "string") { try { pData = JSON.parse(pData); } catch (e) {} }
-        const status = pData.reconciliation?.status || pData.reconciliation_status;
-        const isReconciled = status === "RECONCILED" || order.paymentStatus === "PAID" || order.status === "COMPLETED";
+        if (typeof pData === "string") {
+          try {
+            pData = JSON.parse(pData);
+          } catch (e) {}
+        }
+        const status =
+          pData.reconciliation?.status || pData.reconciliation_status;
+        const isReconciled =
+          status === "RECONCILED" ||
+          order.paymentStatus === "PAID" ||
+          order.status === "COMPLETED";
         if (!isReconciled) return false;
 
         // Filter strictly by the Order's actual Transaction Date (createdAt)
         if (selectedDate && order.createdAt) {
-          const txnDateStr = new Date(order.createdAt).toISOString().split("T")[0];
+          const txnDateStr = new Date(order.createdAt)
+            .toISOString()
+            .split("T")[0];
           if (txnDateStr !== selectedDate) return false;
         }
 
@@ -263,15 +338,28 @@ export default function CashfreeReconciliationPage() {
       })
       .map((order) => {
         let pData = order.paymentData || {};
-        if (typeof pData === "string") { try { pData = JSON.parse(pData); } catch (e) {} }
+        if (typeof pData === "string") {
+          try {
+            pData = JSON.parse(pData);
+          } catch (e) {}
+        }
         return {
           orderId: order.orderNumber || order.id,
-          cfOrderId: order.cashfreeOrderId || pData.order_id || pData.cf_order_id || "—",
-          transactionId: pData.cf_payment_id || pData.payment_id || order.cashfreePaymentId || "—",
-          bankReference: pData.bank_reference || pData.settlement_utr || pData.utr || "—",
+          cfOrderId:
+            order.cashfreeOrderId || pData.order_id || pData.cf_order_id || "—",
+          transactionId:
+            pData.cf_payment_id ||
+            pData.payment_id ||
+            order.cashfreePaymentId ||
+            "—",
+          bankReference:
+            pData.bank_reference || pData.settlement_utr || pData.utr || "—",
           amount: Number(order.totalAmount || 0),
           paymentMethod: pData.payment_method || "Cashfree",
-          reconciliationStatus: pData.reconciliation?.status || pData.reconciliation_status || "RECONCILED",
+          reconciliationStatus:
+            pData.reconciliation?.status ||
+            pData.reconciliation_status ||
+            "RECONCILED",
           reconciliationDate: order.createdAt || order.updatedAt,
           user: order.user,
         };
@@ -286,7 +374,9 @@ export default function CashfreeReconciliationPage() {
       let dateKey = "Unknown Date";
       if (item.reconciliationDate) {
         try {
-          const dStr = new Date(item.reconciliationDate).toISOString().split("T")[0];
+          const dStr = new Date(item.reconciliationDate)
+            .toISOString()
+            .split("T")[0];
           if (dStr) dateKey = dStr;
         } catch (e) {}
       }
@@ -296,16 +386,23 @@ export default function CashfreeReconciliationPage() {
       groups.set(dateKey, existing);
     }
 
-    const sortedDates = Array.from(groups.keys()).sort((a, b) => (a < b ? 1 : -1));
+    const sortedDates = Array.from(groups.keys()).sort((a, b) =>
+      a < b ? 1 : -1,
+    );
 
     return sortedDates.map((dateStr) => {
       const items = groups.get(dateStr) || [];
       const totalAmt = items.reduce((sum, i) => sum + Number(i.amount || 0), 0);
       return {
         dateStr,
-        formattedDate: dateStr !== "Unknown Date"
-          ? new Date(dateStr).toLocaleDateString("en-IN", { day: "2-digit", month: "2-digit", year: "numeric" })
-          : "Unknown Date",
+        formattedDate:
+          dateStr !== "Unknown Date"
+            ? new Date(dateStr).toLocaleDateString("en-IN", {
+                day: "2-digit",
+                month: "2-digit",
+                year: "numeric",
+              })
+            : "Unknown Date",
         items,
         totalAmount: totalAmt,
         count: items.length,
@@ -330,7 +427,11 @@ export default function CashfreeReconciliationPage() {
     } else {
       activeUnreconciledOrders.forEach((o) => {
         let pData = o.paymentData || {};
-        if (typeof pData === "string") { try { pData = JSON.parse(pData); } catch (e) {} }
+        if (typeof pData === "string") {
+          try {
+            pData = JSON.parse(pData);
+          } catch (e) {}
+        }
         const st = pData.reconciliation?.status || pData.reconciliation_status;
         if (st === "FAILED") failed++;
         else missingCashfree++;
@@ -350,7 +451,8 @@ export default function CashfreeReconciliationPage() {
             Cashfree Payment Reconciliation Module
           </h1>
           <p className="text-slate-500 text-sm mt-1">
-            Two-Window Dual Panel Verification Architecture (Local DB vs Cashfree Live API)
+            Two-Window Dual Panel Verification Architecture (Local DB vs
+            Cashfree Live API)
           </p>
         </div>
 
@@ -390,59 +492,95 @@ export default function CashfreeReconciliationPage() {
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
         <Card className="bg-white border-slate-200 shadow-sm p-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Total Evaluated</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Total Evaluated
+            </span>
             <FileText className="w-4 h-4 text-slate-400" />
           </div>
-          <div className="text-2xl font-bold text-slate-900 mt-2 font-mono">{stats.total}</div>
+          <div className="text-2xl font-bold text-slate-900 mt-2 font-mono">
+            {stats.total}
+          </div>
           <p className="text-xs text-slate-500 mt-1">Transactions in batch</p>
         </Card>
 
         <Card className="bg-emerald-50/70 border-emerald-200 shadow-sm p-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">Reconciled</span>
+            <span className="text-xs font-semibold text-emerald-800 uppercase tracking-wider">
+              Reconciled
+            </span>
             <CheckCircle2 className="w-4 h-4 text-emerald-600" />
           </div>
-          <div className="text-2xl font-bold text-emerald-700 mt-2 font-mono">{stats.reconciled}</div>
-          <p className="text-xs text-emerald-600 mt-1">100% matched & cleared</p>
+          <div className="text-2xl font-bold text-emerald-700 mt-2 font-mono">
+            {stats.reconciled}
+          </div>
+          <p className="text-xs text-emerald-600 mt-1">
+            100% matched & cleared
+          </p>
         </Card>
 
         <Card className="bg-rose-50/70 border-rose-200 shadow-sm p-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-rose-800 uppercase tracking-wider">Failed (Mismatch)</span>
+            <span className="text-xs font-semibold text-rose-800 uppercase tracking-wider">
+              Failed (Mismatch)
+            </span>
             <AlertTriangle className="w-4 h-4 text-rose-600" />
           </div>
-          <div className="text-2xl font-bold text-rose-700 mt-2 font-mono">{stats.failed}</div>
-          <p className="text-xs text-rose-600 mt-1">Requires accountant review</p>
+          <div className="text-2xl font-bold text-rose-700 mt-2 font-mono">
+            {stats.failed}
+          </div>
+          <p className="text-xs text-rose-600 mt-1">
+            Requires accountant review
+          </p>
         </Card>
 
         <Card className="bg-amber-50/70 border-amber-200 shadow-sm p-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-amber-800 uppercase tracking-wider">Missing in Cashfree</span>
+            <span className="text-xs font-semibold text-amber-800 uppercase tracking-wider">
+              Missing in Cashfree
+            </span>
             <AlertCircle className="w-4 h-4 text-amber-600" />
           </div>
-          <div className="text-2xl font-bold text-amber-700 mt-2 font-mono">{stats.missingCashfree}</div>
+          <div className="text-2xl font-bold text-amber-700 mt-2 font-mono">
+            {stats.missingCashfree}
+          </div>
           <p className="text-xs text-amber-600 mt-1">Not found in API</p>
         </Card>
 
         <Card className="bg-white border-slate-200 shadow-sm p-4">
           <div className="flex items-center justify-between">
-            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">Missing in Local DB</span>
+            <span className="text-xs font-semibold text-slate-500 uppercase tracking-wider">
+              Missing in Local DB
+            </span>
             <Clock className="w-4 h-4 text-slate-400" />
           </div>
-          <div className="text-2xl font-bold text-slate-700 mt-2 font-mono">{stats.missingLocal}</div>
-          <p className="text-xs text-slate-500 mt-1">Unmatched gateway events</p>
+          <div className="text-2xl font-bold text-slate-700 mt-2 font-mono">
+            {stats.missingLocal}
+          </div>
+          <p className="text-xs text-slate-500 mt-1">
+            Unmatched gateway events
+          </p>
         </Card>
       </div>
 
       {/* Tabs Header Bar */}
-      <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+      <Tabs
+        value={activeTab}
+        onValueChange={setActiveTab}
+        className="space-y-4"
+      >
         <div className="flex items-center justify-between border-b border-slate-200 pb-3">
           <TabsList className="bg-slate-100 border border-slate-200 p-1">
-            <TabsTrigger value="reconcile" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-700 font-medium text-xs px-4">
+            <TabsTrigger
+              value="reconcile"
+              className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-700 font-medium text-xs px-4"
+            >
               <ArrowRightLeft className="w-4 h-4 mr-2" />
               Two-Window Split Reconciliation
             </TabsTrigger>
-            <TabsTrigger value="history" className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-700 font-medium text-xs px-4">
+            <TabsTrigger
+              value="history"
+              className="data-[state=active]:bg-emerald-600 data-[state=active]:text-white text-slate-700 font-medium text-xs px-4"
+            >
               <History className="w-4 h-4 mr-2" />
               Reconciliation History Logs
             </TabsTrigger>
@@ -450,7 +588,12 @@ export default function CashfreeReconciliationPage() {
 
           <div className="flex items-center gap-3">
             <Button
-              onClick={() => exportToCSV(lastRunResult?.reportData || rightWindowStatements, "reconciliation-report.csv")}
+              onClick={() =>
+                exportToCSV(
+                  lastRunResult?.reportData || rightWindowStatements,
+                  "reconciliation-report.csv",
+                )
+              }
               variant="outline"
               className="bg-white border-slate-300 hover:bg-slate-50 text-slate-700 text-xs flex items-center gap-2 shadow-sm"
             >
@@ -470,8 +613,7 @@ export default function CashfreeReconciliationPage() {
         {/* TAB 1: Two-Window Architecture Split Panel */}
         <TabsContent value="reconcile" className="space-y-4">
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            
-            {/* LEFT WINDOW: System Receipts (Unlisted Stox DB Orders) */}
+            {/* LEFT WINDOW: System Receipts (Unlisted stocks DB Orders) */}
             <Card className="bg-white border-slate-200 shadow-sm rounded-xl overflow-hidden flex flex-col">
               <div className="bg-slate-50 border-b border-slate-200 p-3 flex items-center justify-between">
                 <div className="flex items-center gap-2">
@@ -480,7 +622,10 @@ export default function CashfreeReconciliationPage() {
                     Window 1: System Receipts (Database)
                   </h3>
                 </div>
-                <Badge variant="outline" className="text-[10px] font-mono text-slate-600 bg-white">
+                <Badge
+                  variant="outline"
+                  className="text-[10px] font-mono text-slate-600 bg-white"
+                >
                   {leftWindowOrders.length} Pending / Failed
                 </Badge>
               </div>
@@ -501,29 +646,49 @@ export default function CashfreeReconciliationPage() {
                 <Table>
                   <TableHeader className="bg-slate-50 border-b border-slate-200">
                     <TableRow>
-                      <TableHead className="text-slate-600 font-semibold text-xs py-2">Order ID</TableHead>
-                      <TableHead className="text-slate-600 font-semibold text-xs py-2">Txn Date</TableHead>
-                      <TableHead className="text-slate-600 font-semibold text-xs py-2">Recon Date</TableHead>
-                      <TableHead className="text-slate-600 font-semibold text-xs py-2">Customer</TableHead>
-                      <TableHead className="text-slate-600 font-semibold text-xs py-2">Amount</TableHead>
-                      <TableHead className="text-slate-600 font-semibold text-xs py-2">Status</TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-xs py-2">
+                        Order ID
+                      </TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-xs py-2">
+                        Txn Date
+                      </TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-xs py-2">
+                        Recon Date
+                      </TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-xs py-2">
+                        Customer
+                      </TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-xs py-2">
+                        Amount
+                      </TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-xs py-2">
+                        Status
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-8 text-slate-400 text-xs">
+                        <TableCell
+                          colSpan={6}
+                          className="text-center py-8 text-slate-400 text-xs"
+                        >
                           Loading system receipts...
                         </TableCell>
                       </TableRow>
                     ) : leftWindowOrders.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={6} className="text-center py-12 text-slate-400 text-xs">
+                        <TableCell
+                          colSpan={6}
+                          className="text-center py-12 text-slate-400 text-xs"
+                        >
                           <div className="flex flex-col items-center justify-center gap-2 py-6">
                             <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100">
                               <CheckCircle2 className="w-6 h-6 text-emerald-600" />
                             </div>
-                            <p className="font-bold text-slate-800 text-sm">All Transactions Reconciled!</p>
+                            <p className="font-bold text-slate-800 text-sm">
+                              All Transactions Reconciled!
+                            </p>
                             <p className="text-slate-500 text-xs max-w-xs">
                               {selectedDate
                                 ? `All system receipts for ${selectedDate} have been successfully reconciled.`
@@ -535,11 +700,31 @@ export default function CashfreeReconciliationPage() {
                     ) : (
                       leftWindowOrders.map((order) => {
                         let pData = order.paymentData || {};
-                        if (typeof pData === "string") { try { pData = JSON.parse(pData); } catch (e) {} }
-                        const recStatus = pData.reconciliation?.status || pData.reconciliation_status || "PENDING";
-                        const rawReconDate = pData.reconciliation?.reconciliation_date || pData.reconciliation_date;
-                        const reconDateText = recStatus === "RECONCILED" && rawReconDate ? new Date(rawReconDate).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "—";
-                        const txnDateText = order.createdAt ? new Date(order.createdAt).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "—";
+                        if (typeof pData === "string") {
+                          try {
+                            pData = JSON.parse(pData);
+                          } catch (e) {}
+                        }
+                        const recStatus =
+                          pData.reconciliation?.status ||
+                          pData.reconciliation_status ||
+                          "PENDING";
+                        const rawReconDate =
+                          pData.reconciliation?.reconciliation_date ||
+                          pData.reconciliation_date;
+                        const reconDateText =
+                          recStatus === "RECONCILED" && rawReconDate
+                            ? new Date(rawReconDate).toLocaleString("en-IN", {
+                                dateStyle: "short",
+                                timeStyle: "short",
+                              })
+                            : "—";
+                        const txnDateText = order.createdAt
+                          ? new Date(order.createdAt).toLocaleString("en-IN", {
+                              dateStyle: "short",
+                              timeStyle: "short",
+                            })
+                          : "—";
                         const isSelected = selectedRowId === order.id;
 
                         return (
@@ -548,7 +733,9 @@ export default function CashfreeReconciliationPage() {
                             onClick={() => setSelectedRowId(order.id)}
                             className={cn(
                               "border-b border-slate-100 cursor-pointer text-xs transition-colors",
-                              isSelected ? "bg-emerald-50/80" : "hover:bg-slate-50"
+                              isSelected
+                                ? "bg-emerald-50/80"
+                                : "hover:bg-slate-50",
                             )}
                           >
                             <TableCell className="font-mono text-emerald-700 font-semibold py-2">
@@ -561,11 +748,19 @@ export default function CashfreeReconciliationPage() {
                               {reconDateText}
                             </TableCell>
                             <TableCell className="py-2">
-                              <div className="font-medium text-slate-800">{order.user?.fullName || "Guest Customer"}</div>
-                              <div className="text-slate-500 text-[10px]">{order.user?.email || "N/A"}</div>
+                              <div className="font-medium text-slate-800">
+                                {order.user?.fullName || "Guest Customer"}
+                              </div>
+                              <div className="text-slate-500 text-[10px]">
+                                {order.user?.email || "N/A"}
+                              </div>
                             </TableCell>
                             <TableCell className="font-mono text-slate-900 font-semibold py-2">
-                              ₹{Number(order.totalAmount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                              ₹
+                              {Number(order.totalAmount || 0).toLocaleString(
+                                "en-IN",
+                                { minimumFractionDigits: 2 },
+                              )}
                             </TableCell>
                             <TableCell className="py-2">
                               <Badge
@@ -573,7 +768,7 @@ export default function CashfreeReconciliationPage() {
                                   "text-[9px] font-semibold uppercase px-1.5 py-0.5 border shadow-none",
                                   recStatus === "FAILED"
                                     ? "bg-rose-50 border-rose-300 text-rose-700"
-                                    : "bg-amber-50 border-amber-300 text-amber-700"
+                                    : "bg-amber-50 border-amber-300 text-amber-700",
                                 )}
                               >
                                 {recStatus}
@@ -597,7 +792,10 @@ export default function CashfreeReconciliationPage() {
                     Window 2: Cashfree Gateway Statement (Live API)
                   </h3>
                 </div>
-                <Badge variant="outline" className="text-[10px] font-mono text-slate-600 bg-white">
+                <Badge
+                  variant="outline"
+                  className="text-[10px] font-mono text-slate-600 bg-white"
+                >
                   {rightWindowStatements.length} Statement Rows
                 </Badge>
               </div>
@@ -618,31 +816,55 @@ export default function CashfreeReconciliationPage() {
                 <Table>
                   <TableHeader className="bg-slate-50 border-b border-slate-200">
                     <TableRow>
-                      <TableHead className="text-slate-600 font-semibold text-xs py-2">CF Order ID</TableHead>
-                      <TableHead className="text-slate-600 font-semibold text-xs py-2">Transaction ID</TableHead>
-                      <TableHead className="text-slate-600 font-semibold text-xs py-2">Txn Date</TableHead>
-                      <TableHead className="text-slate-600 font-semibold text-xs py-2">Bank Ref (UTR)</TableHead>
-                      <TableHead className="text-slate-600 font-semibold text-xs py-2">Amount</TableHead>
-                      <TableHead className="text-slate-600 font-semibold text-xs py-2">Method</TableHead>
-                      <TableHead className="text-slate-600 font-semibold text-xs py-2">Match Remark</TableHead>
-                      <TableHead className="text-slate-600 font-semibold text-xs py-2">Recon Date</TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-xs py-2">
+                        CF Order ID
+                      </TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-xs py-2">
+                        Transaction ID
+                      </TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-xs py-2">
+                        Txn Date
+                      </TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-xs py-2">
+                        Bank Ref (UTR)
+                      </TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-xs py-2">
+                        Amount
+                      </TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-xs py-2">
+                        Method
+                      </TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-xs py-2">
+                        Match Remark
+                      </TableHead>
+                      <TableHead className="text-slate-600 font-semibold text-xs py-2">
+                        Recon Date
+                      </TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {loading ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-8 text-slate-400 text-xs">
+                        <TableCell
+                          colSpan={8}
+                          className="text-center py-8 text-slate-400 text-xs"
+                        >
                           Loading Cashfree statement rows...
                         </TableCell>
                       </TableRow>
                     ) : rightWindowStatements.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={8} className="text-center py-12 text-slate-400 text-xs">
+                        <TableCell
+                          colSpan={8}
+                          className="text-center py-12 text-slate-400 text-xs"
+                        >
                           <div className="flex flex-col items-center justify-center gap-2 py-6">
                             <div className="w-12 h-12 rounded-full bg-emerald-50 flex items-center justify-center border border-emerald-100">
                               <CheckCircle2 className="w-6 h-6 text-emerald-600" />
                             </div>
-                            <p className="font-bold text-slate-800 text-sm">No Pending Gateway Statements</p>
+                            <p className="font-bold text-slate-800 text-sm">
+                              No Pending Gateway Statements
+                            </p>
                             <p className="text-slate-500 text-xs max-w-xs">
                               {selectedDate
                                 ? `All Cashfree statement rows for ${selectedDate} have been reconciled.`
@@ -654,8 +876,19 @@ export default function CashfreeReconciliationPage() {
                     ) : (
                       rightWindowStatements.map((st: any, idx: number) => {
                         const recStatus = st.reconciliationStatus || "PENDING";
-                        const reconDateText = recStatus === "RECONCILED" && st.reconciliationDate ? new Date(st.reconciliationDate).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "—";
-                        const txnDateText = st.createdAt ? new Date(st.createdAt).toLocaleString("en-IN", { dateStyle: "short", timeStyle: "short" }) : "—";
+                        const reconDateText =
+                          recStatus === "RECONCILED" && st.reconciliationDate
+                            ? new Date(st.reconciliationDate).toLocaleString(
+                                "en-IN",
+                                { dateStyle: "short", timeStyle: "short" },
+                              )
+                            : "—";
+                        const txnDateText = st.createdAt
+                          ? new Date(st.createdAt).toLocaleString("en-IN", {
+                              dateStyle: "short",
+                              timeStyle: "short",
+                            })
+                          : "—";
 
                         return (
                           <TableRow
@@ -675,12 +908,18 @@ export default function CashfreeReconciliationPage() {
                               {st.bankReference || "—"}
                             </TableCell>
                             <TableCell className="font-mono text-slate-900 font-semibold py-2">
-                              ₹{Number(st.amount || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                              ₹
+                              {Number(st.amount || 0).toLocaleString("en-IN", {
+                                minimumFractionDigits: 2,
+                              })}
                             </TableCell>
                             <TableCell className="text-slate-600 py-2">
                               {st.paymentMethod || "UPI"}
                             </TableCell>
-                            <TableCell className="text-rose-600 font-medium text-[11px] py-2 max-w-xs truncate" title={st.mismatchReason}>
+                            <TableCell
+                              className="text-rose-600 font-medium text-[11px] py-2 max-w-xs truncate"
+                              title={st.mismatchReason}
+                            >
                               {st.mismatchReason || "Awaiting verification"}
                             </TableCell>
                             <TableCell className="font-mono text-[11px] text-slate-500 py-2">
@@ -726,12 +965,21 @@ export default function CashfreeReconciliationPage() {
                   </Button>
                 )}
                 <Button
-                  onClick={() => exportToCSV(reconciledTransactions, selectedDate ? `reconciled-${selectedDate}.csv` : "all-reconciled-transactions.csv")}
+                  onClick={() =>
+                    exportToCSV(
+                      reconciledTransactions,
+                      selectedDate
+                        ? `reconciled-${selectedDate}.csv`
+                        : "all-reconciled-transactions.csv",
+                    )
+                  }
                   size="sm"
                   className="bg-emerald-600 hover:bg-emerald-700 text-white font-semibold text-xs rounded-lg shadow-sm gap-1.5"
                 >
                   <Download className="w-3.5 h-3.5" />
-                  {selectedDate ? `Download CSV (${selectedDate})` : "Download All CSV"}
+                  {selectedDate
+                    ? `Download CSV (${selectedDate})`
+                    : "Download All CSV"}
                 </Button>
               </div>
             </div>
@@ -740,7 +988,9 @@ export default function CashfreeReconciliationPage() {
               <Card className="bg-white border-slate-200 shadow-sm p-12 text-center">
                 <div className="flex flex-col items-center justify-center gap-2">
                   <CheckCircle2 className="w-10 h-10 text-slate-300" />
-                  <p className="font-bold text-slate-700 text-sm">No Reconciled Transactions Found</p>
+                  <p className="font-bold text-slate-700 text-sm">
+                    No Reconciled Transactions Found
+                  </p>
                   <p className="text-slate-400 text-xs">
                     {selectedDate
                       ? `No orders reconciled for ${selectedDate}`
@@ -750,23 +1000,37 @@ export default function CashfreeReconciliationPage() {
               </Card>
             ) : (
               groupedReconciledTransactions.map((group) => (
-                <Card key={group.dateStr} className="bg-white border-slate-200 shadow-sm rounded-xl overflow-hidden">
+                <Card
+                  key={group.dateStr}
+                  className="bg-white border-slate-200 shadow-sm rounded-xl overflow-hidden"
+                >
                   {/* Date Group Header */}
                   <div className="bg-slate-50 border-b border-slate-200 px-4 py-3 flex items-center justify-between">
                     <div className="flex items-center gap-3">
                       <div className="flex items-center gap-1.5 text-xs font-bold text-emerald-800 bg-emerald-100/70 border border-emerald-200 px-3 py-1 rounded-md font-mono">
                         <Calendar className="w-3.5 h-3.5 text-emerald-600" />
-                        {group.formattedDate !== "Unknown Date" ? group.formattedDate : group.dateStr}
+                        {group.formattedDate !== "Unknown Date"
+                          ? group.formattedDate
+                          : group.dateStr}
                       </div>
-                      <Badge variant="outline" className="text-[11px] font-semibold text-slate-600 border-slate-300 bg-white">
-                        {group.count} {group.count === 1 ? "Transaction" : "Transactions"}
+                      <Badge
+                        variant="outline"
+                        className="text-[11px] font-semibold text-slate-600 border-slate-300 bg-white"
+                      >
+                        {group.count}{" "}
+                        {group.count === 1 ? "Transaction" : "Transactions"}
                       </Badge>
                     </div>
 
                     <div className="flex items-center gap-4 text-xs">
-                      <span className="text-slate-500 font-medium">Total Volume:</span>
+                      <span className="text-slate-500 font-medium">
+                        Total Volume:
+                      </span>
                       <span className="font-mono font-bold text-emerald-700 text-sm">
-                        ₹{group.totalAmount.toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                        ₹
+                        {group.totalAmount.toLocaleString("en-IN", {
+                          minimumFractionDigits: 2,
+                        })}
                       </span>
                     </div>
                   </div>
@@ -776,19 +1040,38 @@ export default function CashfreeReconciliationPage() {
                     <Table>
                       <TableHeader className="bg-slate-100/50 border-b border-slate-200">
                         <TableRow>
-                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5">Order ID</TableHead>
-                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5">CF Order ID</TableHead>
-                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5">Transaction ID</TableHead>
-                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5">Bank Ref (UTR)</TableHead>
-                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5">Customer</TableHead>
-                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5 text-right">Amount</TableHead>
-                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5">Method</TableHead>
-                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5">Status</TableHead>
+                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5">
+                            Order ID
+                          </TableHead>
+                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5">
+                            CF Order ID
+                          </TableHead>
+                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5">
+                            Transaction ID
+                          </TableHead>
+                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5">
+                            Bank Ref (UTR)
+                          </TableHead>
+                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5">
+                            Customer
+                          </TableHead>
+                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5 text-right">
+                            Amount
+                          </TableHead>
+                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5">
+                            Method
+                          </TableHead>
+                          <TableHead className="text-slate-700 font-semibold text-xs py-2.5">
+                            Status
+                          </TableHead>
                         </TableRow>
                       </TableHeader>
                       <TableBody>
                         {group.items.map((item: any, idx: number) => (
-                          <TableRow key={idx} className="border-b border-slate-100 hover:bg-slate-50/80 text-xs">
+                          <TableRow
+                            key={idx}
+                            className="border-b border-slate-100 hover:bg-slate-50/80 text-xs"
+                          >
                             <TableCell className="font-mono text-emerald-700 font-bold py-2.5">
                               {item.orderId}
                             </TableCell>
@@ -802,11 +1085,19 @@ export default function CashfreeReconciliationPage() {
                               {item.bankReference}
                             </TableCell>
                             <TableCell className="py-2.5">
-                              <div className="font-medium text-slate-800">{item.user?.fullName || "Customer"}</div>
-                              <div className="text-slate-400 text-[10px]">{item.user?.email || ""}</div>
+                              <div className="font-medium text-slate-800">
+                                {item.user?.fullName || "Customer"}
+                              </div>
+                              <div className="text-slate-400 text-[10px]">
+                                {item.user?.email || ""}
+                              </div>
                             </TableCell>
                             <TableCell className="font-mono text-slate-900 font-bold text-right py-2.5">
-                              ₹{Number(item.amount || 0).toLocaleString("en-IN", { minimumFractionDigits: 2 })}
+                              ₹
+                              {Number(item.amount || 0).toLocaleString(
+                                "en-IN",
+                                { minimumFractionDigits: 2 },
+                              )}
                             </TableCell>
                             <TableCell className="text-slate-600 py-2.5">
                               {item.paymentMethod}
@@ -829,73 +1120,109 @@ export default function CashfreeReconciliationPage() {
           {/* SECTION 2: Reconciliation Execution Batch Logs */}
           <Card className="bg-white border-slate-200 shadow-sm rounded-xl overflow-hidden">
             <div className="bg-slate-50 border-b border-slate-200 p-4">
-              <h3 className="font-bold text-sm text-slate-800">Reconciliation Batch Execution Logs</h3>
-              <p className="text-xs text-slate-500 mt-0.5">Summary logs of past automated & manual reconciliation runs.</p>
+              <h3 className="font-bold text-sm text-slate-800">
+                Reconciliation Batch Execution Logs
+              </h3>
+              <p className="text-xs text-slate-500 mt-0.5">
+                Summary logs of past automated & manual reconciliation runs.
+              </p>
             </div>
             <Table>
               <TableHeader className="bg-slate-50 border-b border-slate-200">
                 <TableRow>
-                  <TableHead className="text-slate-700 font-semibold text-xs">Run ID</TableHead>
-                  <TableHead className="text-slate-700 font-semibold text-xs">Run Target Date</TableHead>
-                  <TableHead className="text-slate-700 font-semibold text-xs">Executed At</TableHead>
-                  <TableHead className="text-slate-700 font-semibold text-xs">Executed By</TableHead>
-                  <TableHead className="text-slate-700 font-semibold text-xs">Total Evaluated</TableHead>
-                  <TableHead className="text-slate-700 font-semibold text-xs">Reconciled</TableHead>
-                  <TableHead className="text-slate-700 font-semibold text-xs">Failed</TableHead>
-                  <TableHead className="text-slate-700 font-semibold text-xs">Actions</TableHead>
+                  <TableHead className="text-slate-700 font-semibold text-xs">
+                    Run ID
+                  </TableHead>
+                  <TableHead className="text-slate-700 font-semibold text-xs">
+                    Run Target Date
+                  </TableHead>
+                  <TableHead className="text-slate-700 font-semibold text-xs">
+                    Executed At
+                  </TableHead>
+                  <TableHead className="text-slate-700 font-semibold text-xs">
+                    Executed By
+                  </TableHead>
+                  <TableHead className="text-slate-700 font-semibold text-xs">
+                    Total Evaluated
+                  </TableHead>
+                  <TableHead className="text-slate-700 font-semibold text-xs">
+                    Reconciled
+                  </TableHead>
+                  <TableHead className="text-slate-700 font-semibold text-xs">
+                    Failed
+                  </TableHead>
+                  <TableHead className="text-slate-700 font-semibold text-xs">
+                    Actions
+                  </TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {reconciliationHistory.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={8} className="text-center py-12 text-slate-500">
+                    <TableCell
+                      colSpan={8}
+                      className="text-center py-12 text-slate-500"
+                    >
                       No historical reconciliation runs logged yet.
                     </TableCell>
                   </TableRow>
                 ) : (
                   reconciliationHistory.map((run, idx) => {
-                    const d = new Date(run.executedAt || run.runDate || Date.now());
-                                    const yy = String(d.getFullYear()).slice(-2);
-    const mm = String(d.getMonth() + 1).padStart(2, "0");
-                    const seq = String(reconciliationHistory.length - idx).padStart(4, "0");
-                    const displayId = run.displayRunId || `REC/${yy}${mm}/${seq}`;
+                    const d = new Date(
+                      run.executedAt || run.runDate || Date.now(),
+                    );
+                    const yy = String(d.getFullYear()).slice(-2);
+                    const mm = String(d.getMonth() + 1).padStart(2, "0");
+                    const seq = String(
+                      reconciliationHistory.length - idx,
+                    ).padStart(4, "0");
+                    const displayId =
+                      run.displayRunId || `REC/${yy}${mm}/${seq}`;
                     return (
-                      <TableRow key={run.id || idx} className="border-b border-slate-100 hover:bg-slate-50">
+                      <TableRow
+                        key={run.id || idx}
+                        className="border-b border-slate-100 hover:bg-slate-50"
+                      >
                         <TableCell className="font-mono text-xs text-emerald-700 font-bold">
                           {displayId}
                         </TableCell>
-                      <TableCell className="font-mono text-xs text-emerald-700 font-semibold">
-                        {new Date(run.runDate).toISOString().split("T")[0]}
-                      </TableCell>
-                      <TableCell className="text-xs text-slate-600">
-                        {new Date(run.executedAt).toLocaleString("en-IN")}
-                      </TableCell>
-                      <TableCell className="text-xs text-slate-800 font-medium">
-                        {run.executedBy}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-slate-800">
-                        {run.totalTransactions}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-emerald-700 font-bold">
-                        {run.reconciledCount}
-                      </TableCell>
-                      <TableCell className="font-mono text-xs text-rose-600 font-bold">
-                        {run.failedCount}
-                      </TableCell>
-                      <TableCell>
-                        <Button
-                          onClick={() => exportToCSV(run.reportData || [], "reconciliation-run-report.csv")}
-                          size="sm"
-                          variant="ghost"
-                          className="text-xs text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50"
-                        >
-                          <Download className="w-3.5 h-3.5 mr-1" />
-                          Report CSV
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  );
-                })
+                        <TableCell className="font-mono text-xs text-emerald-700 font-semibold">
+                          {new Date(run.runDate).toISOString().split("T")[0]}
+                        </TableCell>
+                        <TableCell className="text-xs text-slate-600">
+                          {new Date(run.executedAt).toLocaleString("en-IN")}
+                        </TableCell>
+                        <TableCell className="text-xs text-slate-800 font-medium">
+                          {run.executedBy}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs text-slate-800">
+                          {run.totalTransactions}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs text-emerald-700 font-bold">
+                          {run.reconciledCount}
+                        </TableCell>
+                        <TableCell className="font-mono text-xs text-rose-600 font-bold">
+                          {run.failedCount}
+                        </TableCell>
+                        <TableCell>
+                          <Button
+                            onClick={() =>
+                              exportToCSV(
+                                run.reportData || [],
+                                "reconciliation-run-report.csv",
+                              )
+                            }
+                            size="sm"
+                            variant="ghost"
+                            className="text-xs text-emerald-700 hover:text-emerald-800 hover:bg-emerald-50"
+                          >
+                            <Download className="w-3.5 h-3.5 mr-1" />
+                            Report CSV
+                          </Button>
+                        </TableCell>
+                      </TableRow>
+                    );
+                  })
                 )}
               </TableBody>
             </Table>

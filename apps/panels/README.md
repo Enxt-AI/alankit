@@ -1,4 +1,4 @@
-# SMC Unlisted Stocks - Panels (Staff Portals)
+# Unlisted Stocks - Panels (Staff Portals)
 
 This is a Next.js app that hosts **staff portals**. The end-user product lives in `apps/web`.
 

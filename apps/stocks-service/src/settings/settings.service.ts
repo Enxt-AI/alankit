@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, BadRequestException} from '@nestjs/common';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 import { ConfigService } from '@nestjs/config';
 import { PrismaService } from '../prisma/prisma.service';
 import {
@@ -47,7 +47,7 @@ export class SettingsService {
    *
    * Handles both formats:
    *   Relative:  "esign-documents/template-xxx.pdf"           → "/storage/esign-documents/template-xxx.pdf"
-   *   Legacy:    "http://smc-minio-staging:9000/esign-doc/..." → "/storage/esign-documents/template-xxx.pdf"
+   *   Legacy:    "http://-minio-staging:9000/esign-doc/..." → "/storage/esign-documents/template-xxx.pdf"
    */
   private toPublicUrl(pdfUrl: string | null | undefined): string | null {
     if (!pdfUrl) return null;
@@ -261,7 +261,7 @@ export class SettingsService {
     await this.s3Client.send(command);
 
     // Store a relative path (bucket/key) so the URL is not locked to a specific
-    // MinIO host (e.g. localhost vs smc-minio-staging). fetchESignHtml in
+    // MinIO host (e.g. localhost vs -minio-staging). fetchESignHtml in
     // orders.service.ts resolves the full URL using MINIO_ENDPOINT at runtime.
     const relativeUrl = `${ESIGN_BUCKET}/${uniqueFilename}`;
     const publicUrl = this.toPublicUrl(relativeUrl)!;

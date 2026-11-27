@@ -18,7 +18,7 @@ import { EmailModule } from 'email-service';
  * - Registers JWT module with secret and expiry
  * - Registers Passport for strategy-based authentication
  * - Provides AuthService and JwtStrategy
- * - Imports SmsModule for OTP SMS delivery via SMC SMS Gateway
+ * - Imports SmsModule for OTP SMS delivery via  SMS Gateway
  */
 @Module({
   imports: [
@@ -42,7 +42,6 @@ import { EmailModule } from 'email-service';
         },
       ],
     }),
-
   ],
   controllers: [AuthController],
   providers: [

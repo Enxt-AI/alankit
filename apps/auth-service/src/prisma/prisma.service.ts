@@ -1,6 +1,6 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
 import { PrismaClient } from 'db-unlistedstock';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 
 const service = 'auth-service';
 const ctx = 'PrismaService';
@@ -37,11 +37,17 @@ export class PrismaService
 
   async onModuleInit() {
     await this.$connect();
-    this.logger.log({ event: 'prisma.connected' }, 'Prisma connected to database');
+    this.logger.log(
+      { event: 'prisma.connected' },
+      'Prisma connected to database',
+    );
   }
 
   async onModuleDestroy() {
     await this.$disconnect();
-    this.logger.log({ event: 'prisma.disconnected' }, 'Prisma disconnected from database');
+    this.logger.log(
+      { event: 'prisma.disconnected' },
+      'Prisma disconnected from database',
+    );
   }
 }

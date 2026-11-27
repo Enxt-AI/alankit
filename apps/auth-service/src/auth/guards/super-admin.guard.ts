@@ -4,7 +4,7 @@ import {
   ExecutionContext,
   ForbiddenException,
 } from '@nestjs/common';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 
 const logger = new PinoNestLogger('auth-service', 'SuperAdminGuard');
 
@@ -14,13 +14,16 @@ export class SuperAdminGuard implements CanActivate {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
 
-    logger.debug({
-      userExists: !!user,
-      userType: user?.type,
-      userRole: user?.role,
-      userPermissions: user?.permissions,
-      hasCreateAdmins: user?.permissions?.includes('create_admins'),
-    }, 'SuperAdminGuard - Checking access');
+    logger.debug(
+      {
+        userExists: !!user,
+        userType: user?.type,
+        userRole: user?.role,
+        userPermissions: user?.permissions,
+        hasCreateAdmins: user?.permissions?.includes('create_admins'),
+      },
+      'SuperAdminGuard - Checking access',
+    );
 
     if (!user || user.type !== 'ADMIN') {
       throw new ForbiddenException('Admin access required');

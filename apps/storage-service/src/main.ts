@@ -10,7 +10,7 @@ import cors from '@fastify/cors';
 import { createPinoLogger, createFastifyLogger,
   registerRequestIdHook,
   registerHttpAccessHook,
-} from '@smc/logger';
+} from '@/logger';
 
 async function bootstrap() {
   const logger = createPinoLogger('storage-service');
@@ -26,13 +26,13 @@ async function bootstrap() {
   await app.register(cors, {
     origin: [
       process.env.FRONTEND_URL || 'http://localhost:3000',
-      'https://unlistedstox.com',
-      'https://www.unlistedstox.com',
-      'https://api.unlistedstox.com',
-      'https://api.unlistedstox.com:90',
-      'http://api.unlistedstox.com:90',
-      'https://panels.unlistedstox.com',
-      'https://distributors.unlistedstox.com',
+      'https://unlistedstocks.com',
+      'https://www.unlistedstocks.com',
+      'https://api.unlistedstocks.com',
+      'https://api.unlistedstocks.com:90',
+      'http://api.unlistedstocks.com:90',
+      'https://panels.unlistedstocks.com',
+      'https://distributors.unlistedstocks.com',
       'http://localhost:3000',
       'http://localhost:4000',
       'http://localhost:8000',

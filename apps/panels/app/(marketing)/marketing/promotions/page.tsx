@@ -1,6 +1,6 @@
-'use client';
+"use client";
 
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo } from "react";
 import {
   Ticket,
   Search,
@@ -20,10 +20,10 @@ import {
   Zap,
   Infinity,
   Megaphone,
-} from 'lucide-react';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Badge } from '@/components/ui/badge';
+} from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Badge } from "@/components/ui/badge";
 import {
   Table,
   TableBody,
@@ -31,7 +31,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '@/components/ui/table';
+} from "@/components/ui/table";
 import {
   Pagination,
   PaginationContent,
@@ -39,30 +39,49 @@ import {
   PaginationLink,
   PaginationNext,
   PaginationPrevious,
-} from '@/components/ui/pagination';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
-import MarketingLayout from '@/components/marketing/marketing-layout';
-import { useMarketingAuth } from '@/hooks/use-marketing-auth';
-import { useAdminCoupons } from '@/hooks/use-promotions';
-import { Coupon } from '@/lib/promotions-api';
-import { CouponDetailDialog } from '@/components/admin/promotions/coupon-detail-dialog';
-import { Dialog, DialogContent, DialogTitle } from '@/components/ui/dialog';
-import { CouponSalesPopupContent } from '@/components/admin/promotions/coupon-sales-popup-content';
+} from "@/components/ui/pagination";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import MarketingLayout from "@/components/marketing/marketing-layout";
+import { useMarketingAuth } from "@/hooks/use-marketing-auth";
+import { useAdminCoupons } from "@/hooks/use-promotions";
+import { Coupon } from "@/lib/promotions-api";
+import { CouponDetailDialog } from "@/components/admin/promotions/coupon-detail-dialog";
+import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
+import { CouponSalesPopupContent } from "@/components/admin/promotions/coupon-sales-popup-content";
 
 export default function MarketingPromotionsPage() {
   const { marketingAdmin, isMarketingLoading } = useMarketingAuth();
-  const { data: coupons = [], isLoading, isFetching, refetch } = useAdminCoupons('marketing');
+  const {
+    data: coupons = [],
+    isLoading,
+    isFetching,
+    refetch,
+  } = useAdminCoupons("marketing");
 
   // Search and Filter states
-  const [searchQuery, setSearchQuery] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'ALL' | 'AVAILABLE' | 'REDEEMED' | 'EXPIRED'>('ALL');
-  const [audienceFilter, setAudienceFilter] = useState<'ALL' | 'PUBLIC' | 'ASSIGNED'>('ALL');
-  const [discountTypeFilter, setDiscountTypeFilter] = useState<'ALL' | 'FIXED' | 'PERCENTAGE'>('ALL');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [statusFilter, setStatusFilter] = useState<
+    "ALL" | "AVAILABLE" | "REDEEMED" | "EXPIRED"
+  >("ALL");
+  const [audienceFilter, setAudienceFilter] = useState<
+    "ALL" | "PUBLIC" | "ASSIGNED"
+  >("ALL");
+  const [discountTypeFilter, setDiscountTypeFilter] = useState<
+    "ALL" | "FIXED" | "PERCENTAGE"
+  >("ALL");
 
   // Interactive UI states
   const [copiedCode, setCopiedCode] = useState<string | null>(null);
-  const [selectedCouponForDetail, setSelectedCouponForDetail] = useState<Coupon | null>(null);
-  const [selectedSalesCouponId, setSelectedSalesCouponId] = useState<string | null>(null);
+  const [selectedCouponForDetail, setSelectedCouponForDetail] =
+    useState<Coupon | null>(null);
+  const [selectedSalesCouponId, setSelectedSalesCouponId] = useState<
+    string | null
+  >(null);
 
   // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
@@ -82,14 +101,14 @@ export default function MarketingPromotionsPage() {
       const popup = window.open(
         `/marketing/promotions/sales-popup?id=${couponId}`,
         `coupon_sales_${couponId}`,
-        'width=1200,height=900,status=no,menubar=no,resizable=yes,scrollbars=yes'
+        "width=1200,height=900,status=no,menubar=no,resizable=yes,scrollbars=yes",
       );
-      if (popup && !popup.closed && typeof popup.closed !== 'undefined') {
+      if (popup && !popup.closed && typeof popup.closed !== "undefined") {
         popupOpened = true;
         popup.focus();
       }
     } catch (e) {
-      console.warn('Popup blocked or error opening popup window:', e);
+      console.warn("Popup blocked or error opening popup window:", e);
     }
 
     // If popup was blocked by browser or failed, immediately open the in-page modal dialog
@@ -105,7 +124,7 @@ export default function MarketingPromotionsPage() {
         !coupon.internalRmId &&
         !coupon.distributorRmId &&
         !!coupon.createdBy &&
-        coupon.mapToMarketing === true
+        coupon.mapToMarketing === true,
     );
   }, [coupons]);
 
@@ -123,7 +142,7 @@ export default function MarketingPromotionsPage() {
       redeemed += count;
       if (!isExpired) active += 1;
 
-      if (coupon.discountType === 'FIXED') {
+      if (coupon.discountType === "FIXED") {
         totalDiscountDelivered += count * coupon.discountAmount;
       } else if (coupon.orders && coupon.orders.length > 0) {
         coupon.orders.forEach((ord) => {
@@ -144,41 +163,65 @@ export default function MarketingPromotionsPage() {
       const isExpired = coupon.expiresAt && new Date(coupon.expiresAt) < now;
 
       // Status filter
-      if (statusFilter === 'AVAILABLE' && (isExpired || (coupon.redemptionCount && coupon.redemptionCount > 0))) return false;
-      if (statusFilter === 'REDEEMED' && (!coupon.redemptionCount || coupon.redemptionCount === 0) && !coupon.isUsed) return false;
-      if (statusFilter === 'EXPIRED' && !isExpired) return false;
+      if (
+        statusFilter === "AVAILABLE" &&
+        (isExpired || (coupon.redemptionCount && coupon.redemptionCount > 0))
+      )
+        return false;
+      if (
+        statusFilter === "REDEEMED" &&
+        (!coupon.redemptionCount || coupon.redemptionCount === 0) &&
+        !coupon.isUsed
+      )
+        return false;
+      if (statusFilter === "EXPIRED" && !isExpired) return false;
 
       // Audience filter
-      if (audienceFilter === 'PUBLIC' && coupon.assignedUserId) return false;
-      if (audienceFilter === 'ASSIGNED' && !coupon.assignedUserId) return false;
+      if (audienceFilter === "PUBLIC" && coupon.assignedUserId) return false;
+      if (audienceFilter === "ASSIGNED" && !coupon.assignedUserId) return false;
 
       // Discount type filter
-      if (discountTypeFilter === 'FIXED' && coupon.discountType !== 'FIXED') return false;
-      if (discountTypeFilter === 'PERCENTAGE' && coupon.discountType !== 'PERCENTAGE') return false;
+      if (discountTypeFilter === "FIXED" && coupon.discountType !== "FIXED")
+        return false;
+      if (
+        discountTypeFilter === "PERCENTAGE" &&
+        coupon.discountType !== "PERCENTAGE"
+      )
+        return false;
 
       // Search query
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const codeMatch = coupon.code.toLowerCase().includes(q);
-        const stockMatch = (coupon.stock?.name || '').toLowerCase().includes(q);
+        const stockMatch = (coupon.stock?.name || "").toLowerCase().includes(q);
         const userMatch =
-          (coupon.assignedUser?.fullName || '').toLowerCase().includes(q) ||
-          (coupon.assignedUser?.email || '').toLowerCase().includes(q) ||
-          (coupon.usedByUser?.fullName || '').toLowerCase().includes(q);
+          (coupon.assignedUser?.fullName || "").toLowerCase().includes(q) ||
+          (coupon.assignedUser?.email || "").toLowerCase().includes(q) ||
+          (coupon.usedByUser?.fullName || "").toLowerCase().includes(q);
         const creatorMatch =
-          (coupon.createdBy?.name || '').toLowerCase().includes(q) ||
-          (coupon.createdBy?.email || '').toLowerCase().includes(q) ||
-          (coupon.createdBy?.role || '').toLowerCase().includes(q);
+          (coupon.createdBy?.name || "").toLowerCase().includes(q) ||
+          (coupon.createdBy?.email || "").toLowerCase().includes(q) ||
+          (coupon.createdBy?.role || "").toLowerCase().includes(q);
 
-        if (!codeMatch && !stockMatch && !userMatch && !creatorMatch) return false;
+        if (!codeMatch && !stockMatch && !userMatch && !creatorMatch)
+          return false;
       }
 
       return true;
     });
-  }, [adminCoupons, statusFilter, audienceFilter, discountTypeFilter, searchQuery]);
+  }, [
+    adminCoupons,
+    statusFilter,
+    audienceFilter,
+    discountTypeFilter,
+    searchQuery,
+  ]);
 
   // Paginated records
-  const totalPages = Math.max(1, Math.ceil(filteredCoupons.length / itemsPerPage));
+  const totalPages = Math.max(
+    1,
+    Math.ceil(filteredCoupons.length / itemsPerPage),
+  );
   const paginatedCoupons = useMemo(() => {
     const startIndex = (currentPage - 1) * itemsPerPage;
     return filteredCoupons.slice(startIndex, startIndex + itemsPerPage);
@@ -197,13 +240,16 @@ export default function MarketingPromotionsPage() {
                 </span>
                 <div>
                   <div className="flex items-center gap-2">
-                    <h1 className="text-2xl font-black text-[#0F172A] tracking-tight">Promotions & Redemptions</h1>
+                    <h1 className="text-2xl font-black text-[#0F172A] tracking-tight">
+                      Promotions & Redemptions
+                    </h1>
                     <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] font-bold">
                       Marketing View
                     </Badge>
                   </div>
                   <p className="text-xs font-medium text-[#64748B] mt-0.5">
-                    View generated coupons, Super Admin creators, and click any coupon to inspect live sales & redemptions.
+                    View generated coupons, Super Admin creators, and click any
+                    coupon to inspect live sales & redemptions.
                   </p>
                 </div>
               </div>
@@ -217,7 +263,9 @@ export default function MarketingPromotionsPage() {
                 disabled={isFetching}
                 className="rounded-xl text-xs font-semibold h-9 border-neutral-200 hover:bg-[#F8FAFC] text-[#475569] cursor-pointer"
               >
-                {isFetching && <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin text-[#16A34A]" />}
+                {isFetching && (
+                  <Loader2 className="h-3.5 w-3.5 mr-1.5 animate-spin text-[#16A34A]" />
+                )}
                 Refresh Data
               </Button>
             </div>
@@ -229,9 +277,13 @@ export default function MarketingPromotionsPage() {
               <Megaphone className="h-4 w-4" />
             </div>
             <div className="flex-1">
-              <span className="font-bold text-blue-950">Marketing Campaign Scope:</span>{' '}
+              <span className="font-bold text-blue-950">
+                Marketing Campaign Scope:
+              </span>{" "}
               <span className="text-blue-800">
-                Displaying only promotional coupons mapped by Super Admin to the Marketing Panel. Click on any coupon row to view full redemption orders, client claim history, and performance stats.
+                Displaying only promotional coupons mapped by Super Admin to the
+                Marketing Panel. Click on any coupon row to view full redemption
+                orders, client claim history, and performance stats.
               </span>
             </div>
           </div>
@@ -241,63 +293,88 @@ export default function MarketingPromotionsPage() {
             {/* Total Coupons */}
             <div
               className="p-4 bg-white rounded-2xl border border-neutral-200/50 shadow-sm transition-all hover:shadow-md"
-              style={{ boxShadow: '0 4px 20px rgba(15,23,42,0.03)' }}
+              style={{ boxShadow: "0 4px 20px rgba(15,23,42,0.03)" }}
             >
               <div className="flex items-center justify-between text-[#64748B] mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider">Total Coupons</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider">
+                  Total Coupons
+                </span>
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
                   <Ticket className="h-4 w-4" />
                 </span>
               </div>
-              <p className="text-2xl font-black text-[#0F172A] tracking-tight leading-none">{stats.total}</p>
-              <p className="text-[11px] font-medium text-[#64748B] mt-1.5">Across all platform stocks</p>
+              <p className="text-2xl font-black text-[#0F172A] tracking-tight leading-none">
+                {stats.total}
+              </p>
+              <p className="text-[11px] font-medium text-[#64748B] mt-1.5">
+                Across all platform stocks
+              </p>
             </div>
 
             {/* Active Coupons */}
             <div
               className="p-4 bg-white rounded-2xl border border-neutral-200/50 shadow-sm transition-all hover:shadow-md"
-              style={{ boxShadow: '0 4px 20px rgba(15,23,42,0.03)' }}
+              style={{ boxShadow: "0 4px 20px rgba(15,23,42,0.03)" }}
             >
               <div className="flex items-center justify-between text-[#64748B] mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider">Active Codes</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider">
+                  Active Codes
+                </span>
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-emerald-50 text-emerald-600">
                   <TrendingUp className="h-4 w-4" />
                 </span>
               </div>
-              <p className="text-2xl font-black text-[#16A34A] tracking-tight leading-none">{stats.active}</p>
-              <p className="text-[11px] font-medium text-[#64748B] mt-1.5">Valid and unexpired</p>
+              <p className="text-2xl font-black text-[#16A34A] tracking-tight leading-none">
+                {stats.active}
+              </p>
+              <p className="text-[11px] font-medium text-[#64748B] mt-1.5">
+                Valid and unexpired
+              </p>
             </div>
 
             {/* Redemptions */}
             <div
               className="p-4 bg-white rounded-2xl border border-neutral-200/50 shadow-sm transition-all hover:shadow-md"
-              style={{ boxShadow: '0 4px 20px rgba(15,23,42,0.03)' }}
+              style={{ boxShadow: "0 4px 20px rgba(15,23,42,0.03)" }}
             >
               <div className="flex items-center justify-between text-[#64748B] mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider">Redemptions</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider">
+                  Redemptions
+                </span>
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-purple-50 text-purple-600">
                   <BarChart3 className="h-4 w-4" />
                 </span>
               </div>
-              <p className="text-2xl font-black text-purple-600 tracking-tight leading-none">{stats.redeemed}</p>
-              <p className="text-[11px] font-medium text-[#64748B] mt-1.5">Claimed by platform clients</p>
+              <p className="text-2xl font-black text-purple-600 tracking-tight leading-none">
+                {stats.redeemed}
+              </p>
+              <p className="text-[11px] font-medium text-[#64748B] mt-1.5">
+                Claimed by platform clients
+              </p>
             </div>
 
             {/* Total Discount Delivered */}
             <div
               className="p-4 bg-white rounded-2xl border border-neutral-200/50 shadow-sm transition-all hover:shadow-md"
-              style={{ boxShadow: '0 4px 20px rgba(15,23,42,0.03)' }}
+              style={{ boxShadow: "0 4px 20px rgba(15,23,42,0.03)" }}
             >
               <div className="flex items-center justify-between text-[#64748B] mb-2">
-                <span className="text-[11px] font-bold uppercase tracking-wider">Discounts Given</span>
+                <span className="text-[11px] font-bold uppercase tracking-wider">
+                  Discounts Given
+                </span>
                 <span className="flex h-7 w-7 items-center justify-center rounded-lg bg-amber-50 text-amber-600">
                   <IndianRupee className="h-4 w-4" />
                 </span>
               </div>
               <p className="text-2xl font-black text-[#0F172A] tracking-tight leading-none">
-                ₹{Math.round(stats.totalDiscountDelivered).toLocaleString('en-IN')}
+                ₹
+                {Math.round(stats.totalDiscountDelivered).toLocaleString(
+                  "en-IN",
+                )}
               </p>
-              <p className="text-[11px] font-medium text-[#64748B] mt-1.5">Customer promotional savings</p>
+              <p className="text-[11px] font-medium text-[#64748B] mt-1.5">
+                Customer promotional savings
+              </p>
             </div>
           </div>
 
@@ -319,7 +396,9 @@ export default function MarketingPromotionsPage() {
             <div className="flex items-center gap-2 flex-wrap">
               {/* Status Filter */}
               <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-neutral-200/60 rounded-xl px-2.5 py-1">
-                <span className="text-[11px] font-semibold text-[#64748B]">Status:</span>
+                <span className="text-[11px] font-semibold text-[#64748B]">
+                  Status:
+                </span>
                 <select
                   value={statusFilter}
                   onChange={(e) => {
@@ -337,7 +416,9 @@ export default function MarketingPromotionsPage() {
 
               {/* Audience Filter */}
               <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-neutral-200/60 rounded-xl px-2.5 py-1">
-                <span className="text-[11px] font-semibold text-[#64748B]">Audience:</span>
+                <span className="text-[11px] font-semibold text-[#64748B]">
+                  Audience:
+                </span>
                 <select
                   value={audienceFilter}
                   onChange={(e) => {
@@ -354,7 +435,9 @@ export default function MarketingPromotionsPage() {
 
               {/* Discount Type */}
               <div className="flex items-center gap-1.5 bg-[#F8FAFC] border border-neutral-200/60 rounded-xl px-2.5 py-1">
-                <span className="text-[11px] font-semibold text-[#64748B]">Type:</span>
+                <span className="text-[11px] font-semibold text-[#64748B]">
+                  Type:
+                </span>
                 <select
                   value={discountTypeFilter}
                   onChange={(e) => {
@@ -369,15 +452,18 @@ export default function MarketingPromotionsPage() {
                 </select>
               </div>
 
-              {(searchQuery || statusFilter !== 'ALL' || audienceFilter !== 'ALL' || discountTypeFilter !== 'ALL') && (
+              {(searchQuery ||
+                statusFilter !== "ALL" ||
+                audienceFilter !== "ALL" ||
+                discountTypeFilter !== "ALL") && (
                 <Button
                   variant="ghost"
                   size="sm"
                   onClick={() => {
-                    setSearchQuery('');
-                    setStatusFilter('ALL');
-                    setAudienceFilter('ALL');
-                    setDiscountTypeFilter('ALL');
+                    setSearchQuery("");
+                    setStatusFilter("ALL");
+                    setAudienceFilter("ALL");
+                    setDiscountTypeFilter("ALL");
                     setCurrentPage(1);
                   }}
                   className="h-7 text-xs text-[#DC2626] hover:bg-red-50 px-2 font-medium"
@@ -395,7 +481,9 @@ export default function MarketingPromotionsPage() {
                 i
               </span>
               <span>
-                <strong>Marketing Overview:</strong> Click any coupon row or the <strong>Sales Pop-up</strong> icon to launch the detailed redemption report and sales figures for that promotion.
+                <strong>Marketing Overview:</strong> Click any coupon row or the{" "}
+                <strong>Sales Pop-up</strong> icon to launch the detailed
+                redemption report and sales figures for that promotion.
               </span>
             </div>
           </div>
@@ -440,7 +528,10 @@ export default function MarketingPromotionsPage() {
                 {isLoading ? (
                   Array.from({ length: 5 }).map((_, i) => (
                     <TableRow key={i} className="animate-pulse">
-                      <TableCell colSpan={9} className="py-4 text-center text-xs text-[#94A3B8]">
+                      <TableCell
+                        colSpan={9}
+                        className="py-4 text-center text-xs text-[#94A3B8]"
+                      >
                         Loading promotions data...
                       </TableCell>
                     </TableRow>
@@ -452,11 +543,13 @@ export default function MarketingPromotionsPage() {
                         <div className="h-10 w-10 rounded-full bg-neutral-100 flex items-center justify-center text-[#94A3B8]">
                           <Ticket className="h-5 w-5" />
                         </div>
-                        <p className="text-sm font-bold text-[#0F172A]">No promotional coupons found</p>
+                        <p className="text-sm font-bold text-[#0F172A]">
+                          No promotional coupons found
+                        </p>
                         <p className="text-xs text-[#64748B]">
-                          {searchQuery || statusFilter !== 'ALL'
-                            ? 'Try adjusting your search criteria or clearing filters.'
-                            : 'No promotional coupons have been created yet.'}
+                          {searchQuery || statusFilter !== "ALL"
+                            ? "Try adjusting your search criteria or clearing filters."
+                            : "No promotional coupons have been created yet."}
                         </p>
                       </div>
                     </TableCell>
@@ -464,8 +557,10 @@ export default function MarketingPromotionsPage() {
                 ) : (
                   paginatedCoupons.map((coupon, idx) => {
                     const now = new Date();
-                    const isExpired = coupon.expiresAt && new Date(coupon.expiresAt) < now;
-                    const isDirectAdmin = !coupon.internalRmId && !coupon.distributorRmId;
+                    const isExpired =
+                      coupon.expiresAt && new Date(coupon.expiresAt) < now;
+                    const isDirectAdmin =
+                      !coupon.internalRmId && !coupon.distributorRmId;
 
                     return (
                       <TableRow
@@ -494,7 +589,10 @@ export default function MarketingPromotionsPage() {
                                   <ExternalLink className="h-2.5 w-2.5 opacity-60 shrink-0" />
                                 </button>
                               </TooltipTrigger>
-                              <TooltipContent side="top" className="text-[10px] font-semibold">
+                              <TooltipContent
+                                side="top"
+                                className="text-[10px] font-semibold"
+                              >
                                 Open sales & redemption report
                               </TooltipContent>
                             </Tooltip>
@@ -514,7 +612,10 @@ export default function MarketingPromotionsPage() {
                                   )}
                                 </button>
                               </TooltipTrigger>
-                              <TooltipContent side="top" className="text-[10px] font-semibold">
+                              <TooltipContent
+                                side="top"
+                                className="text-[10px] font-semibold"
+                              >
                                 Copy coupon code
                               </TooltipContent>
                             </Tooltip>
@@ -524,9 +625,15 @@ export default function MarketingPromotionsPage() {
                         {/* Stock */}
                         <TableCell className="px-4 py-3.5 whitespace-nowrap">
                           <div className="min-w-[220px]">
-                            <p className="text-xs font-bold text-[#0F172A] whitespace-nowrap">{coupon.stock?.name || 'Stock'}</p>
+                            <p className="text-xs font-bold text-[#0F172A] whitespace-nowrap">
+                              {coupon.stock?.name || "Stock"}
+                            </p>
                             <p className="text-[11px] font-medium text-[#64748B] whitespace-nowrap mt-0.5">
-                              ₹{(coupon.stock?.price || 0).toLocaleString('en-IN')} / sh
+                              ₹
+                              {(coupon.stock?.price || 0).toLocaleString(
+                                "en-IN",
+                              )}{" "}
+                              / sh
                             </p>
                           </div>
                         </TableCell>
@@ -534,9 +641,10 @@ export default function MarketingPromotionsPage() {
                         {/* Discount */}
                         <TableCell className="px-4 py-3.5 text-center whitespace-nowrap">
                           <span className="inline-flex items-center font-extrabold text-xs text-[#16A34A] bg-[#DCFCE7]/60 px-2.5 py-1 rounded-md border border-[#16A34A]/20 whitespace-nowrap">
-                            {coupon.discountType === 'PERCENTAGE' && coupon.discountPercentage
+                            {coupon.discountType === "PERCENTAGE" &&
+                            coupon.discountPercentage
                               ? `${coupon.discountPercentage}% OFF`
-                              : `₹${(coupon.discountAmount || 0).toLocaleString('en-IN')} / sh`}
+                              : `₹${(coupon.discountAmount || 0).toLocaleString("en-IN")} / sh`}
                           </span>
                         </TableCell>
 
@@ -545,8 +653,14 @@ export default function MarketingPromotionsPage() {
                           <span className="inline-flex items-center gap-1 px-2.5 py-1 bg-neutral-100 rounded-lg border border-neutral-200/60 whitespace-nowrap">
                             <span>{coupon.minQuantity}</span>
                             <span className="text-[#94A3B8] mx-0.5">-</span>
-                            <span>{coupon.maxQuantity >= 999999 ? '∞' : coupon.maxQuantity}</span>
-                            <span className="text-[10px] text-[#64748B] ml-1">shares</span>
+                            <span>
+                              {coupon.maxQuantity >= 999999
+                                ? "∞"
+                                : coupon.maxQuantity}
+                            </span>
+                            <span className="text-[10px] text-[#64748B] ml-1">
+                              shares
+                            </span>
                           </span>
                         </TableCell>
 
@@ -555,14 +669,19 @@ export default function MarketingPromotionsPage() {
                           <div className="text-[11px] space-y-0.5 whitespace-nowrap">
                             <div className="flex items-center gap-1.5 flex-nowrap whitespace-nowrap">
                               <span className="font-bold text-[#0F172A] whitespace-nowrap">
-                                {coupon.createdBy?.name || 'Super Admin'}
+                                {coupon.createdBy?.name || "Super Admin"}
                               </span>
                               <Badge className="px-1.5 py-0 text-[9px] font-extrabold bg-amber-50 text-amber-800 border-amber-200 whitespace-nowrap shrink-0">
-                                {coupon.createdBy?.role === 'SUPER_ADMIN' ? 'SUPER ADMIN' : (coupon.createdBy?.role || 'ADMIN')}
+                                {coupon.createdBy?.role === "SUPER_ADMIN"
+                                  ? "SUPER ADMIN"
+                                  : coupon.createdBy?.role || "ADMIN"}
                               </Badge>
                             </div>
-                            <p className="text-[10px] text-[#64748B] whitespace-nowrap" title={coupon.createdBy?.email || 'admin@smc.com'}>
-                              {coupon.createdBy?.email || 'admin@smc.com'}
+                            <p
+                              className="text-[10px] text-[#64748B] whitespace-nowrap"
+                              title={coupon.createdBy?.email || "admin@.com"}
+                            >
+                              {coupon.createdBy?.email || "admin@.com"}
                             </p>
                           </div>
                         </TableCell>
@@ -571,11 +690,20 @@ export default function MarketingPromotionsPage() {
                         <TableCell className="px-4 py-3.5 text-center whitespace-nowrap text-xs">
                           {coupon.assignedUser ? (
                             <div className="space-y-1 inline-flex flex-col items-center whitespace-nowrap">
-                              <span className="font-semibold text-blue-600 whitespace-nowrap" title={coupon.assignedUser.fullName || coupon.assignedUser.email || ''}>
-                                {coupon.assignedUser.fullName || coupon.assignedUser.email}
+                              <span
+                                className="font-semibold text-blue-600 whitespace-nowrap"
+                                title={
+                                  coupon.assignedUser.fullName ||
+                                  coupon.assignedUser.email ||
+                                  ""
+                                }
+                              >
+                                {coupon.assignedUser.fullName ||
+                                  coupon.assignedUser.email}
                               </span>
                               <span className="inline-flex items-center gap-1 font-medium text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200 text-[9px] whitespace-nowrap shrink-0">
-                                <Zap className="h-2.5 w-2.5 text-amber-600" /> One-Time
+                                <Zap className="h-2.5 w-2.5 text-amber-600" />{" "}
+                                One-Time
                               </span>
                             </div>
                           ) : (
@@ -584,13 +712,15 @@ export default function MarketingPromotionsPage() {
                                 Multi-User Public
                               </span>
                               <div>
-                                {coupon.redemptionType === 'ONCE' ? (
+                                {coupon.redemptionType === "ONCE" ? (
                                   <span className="inline-flex items-center gap-1 font-medium text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 text-[9px] whitespace-nowrap shrink-0">
-                                    <Zap className="h-2.5 w-2.5 text-amber-600" /> One-Time
+                                    <Zap className="h-2.5 w-2.5 text-amber-600" />{" "}
+                                    One-Time
                                   </span>
                                 ) : (
                                   <span className="inline-flex items-center gap-1 font-medium text-purple-700 bg-purple-50 px-1.5 py-0.5 rounded border border-purple-200 text-[9px] whitespace-nowrap shrink-0">
-                                    <Infinity className="h-2.5 w-2.5 text-purple-600" /> Unlimited
+                                    <Infinity className="h-2.5 w-2.5 text-purple-600" />{" "}
+                                    Unlimited
                                   </span>
                                 )}
                               </div>
@@ -604,11 +734,13 @@ export default function MarketingPromotionsPage() {
                             <Badge className="bg-red-50 text-red-700 border-red-200 text-[10px] font-bold whitespace-nowrap">
                               Expired
                             </Badge>
-                          ) : coupon.redemptionType === 'ONCE' && (coupon.isRedeemed || coupon.isUsed) ? (
+                          ) : coupon.redemptionType === "ONCE" &&
+                            (coupon.isRedeemed || coupon.isUsed) ? (
                             <Badge className="bg-slate-100 text-slate-700 border-slate-300 text-[10px] font-bold whitespace-nowrap">
                               Redeemed (1/1)
                             </Badge>
-                          ) : (coupon.redemptionCount && coupon.redemptionCount > 0) ? (
+                          ) : coupon.redemptionCount &&
+                            coupon.redemptionCount > 0 ? (
                             <Badge className="bg-blue-50 text-blue-700 border-blue-200 text-[10px] font-bold whitespace-nowrap">
                               Active ({coupon.redemptionCount} used)
                             </Badge>
@@ -638,7 +770,10 @@ export default function MarketingPromotionsPage() {
                                   <span>Sales</span>
                                 </Button>
                               </TooltipTrigger>
-                              <TooltipContent side="left" className="text-[10px] font-semibold text-emerald-700">
+                              <TooltipContent
+                                side="left"
+                                className="text-[10px] font-semibold text-emerald-700"
+                              >
                                 Open live sales & redemption pop-up report
                               </TooltipContent>
                             </Tooltip>
@@ -658,7 +793,10 @@ export default function MarketingPromotionsPage() {
                                   <Eye className="h-3.5 w-3.5" />
                                 </Button>
                               </TooltipTrigger>
-                              <TooltipContent side="left" className="text-[10px] font-semibold">
+                              <TooltipContent
+                                side="left"
+                                className="text-[10px] font-semibold"
+                              >
                                 Inspect coupon details
                               </TooltipContent>
                             </Tooltip>
@@ -675,24 +813,38 @@ export default function MarketingPromotionsPage() {
             {totalPages > 1 && (
               <div className="flex items-center justify-between px-4 py-3 border-t border-neutral-100 bg-[#F8FAFC]">
                 <p className="text-xs text-[#64748B]">
-                  Showing{' '}
+                  Showing{" "}
                   <span className="font-semibold text-[#0F172A]">
-                    {Math.min((currentPage - 1) * itemsPerPage + 1, filteredCoupons.length)}
-                  </span>{' '}
-                  to{' '}
+                    {Math.min(
+                      (currentPage - 1) * itemsPerPage + 1,
+                      filteredCoupons.length,
+                    )}
+                  </span>{" "}
+                  to{" "}
                   <span className="font-semibold text-[#0F172A]">
-                    {Math.min(currentPage * itemsPerPage, filteredCoupons.length)}
-                  </span>{' '}
-                  of <span className="font-semibold text-[#0F172A]">{filteredCoupons.length}</span> coupons
+                    {Math.min(
+                      currentPage * itemsPerPage,
+                      filteredCoupons.length,
+                    )}
+                  </span>{" "}
+                  of{" "}
+                  <span className="font-semibold text-[#0F172A]">
+                    {filteredCoupons.length}
+                  </span>{" "}
+                  coupons
                 </p>
 
                 <Pagination className="justify-end w-auto mx-0">
                   <PaginationContent>
                     <PaginationItem>
                       <PaginationPrevious
-                        onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                        onClick={() =>
+                          setCurrentPage((p) => Math.max(1, p - 1))
+                        }
                         className={`h-8 text-xs cursor-pointer ${
-                          currentPage === 1 ? 'pointer-events-none opacity-40' : ''
+                          currentPage === 1
+                            ? "pointer-events-none opacity-40"
+                            : ""
                         }`}
                       />
                     </PaginationItem>
@@ -719,9 +871,13 @@ export default function MarketingPromotionsPage() {
                     })}
                     <PaginationItem>
                       <PaginationNext
-                        onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                        onClick={() =>
+                          setCurrentPage((p) => Math.min(totalPages, p + 1))
+                        }
                         className={`h-8 text-xs cursor-pointer ${
-                          currentPage === totalPages ? 'pointer-events-none opacity-40' : ''
+                          currentPage === totalPages
+                            ? "pointer-events-none opacity-40"
+                            : ""
                         }`}
                       />
                     </PaginationItem>
@@ -747,7 +903,9 @@ export default function MarketingPromotionsPage() {
           }}
         >
           <DialogContent className="max-w-6xl w-[95vw] p-0 overflow-hidden bg-white border border-neutral-200 shadow-2xl rounded-2xl">
-            <DialogTitle className="sr-only">Coupon Sales & Redemption Performance</DialogTitle>
+            <DialogTitle className="sr-only">
+              Coupon Sales & Redemption Performance
+            </DialogTitle>
             {selectedSalesCouponId && (
               <CouponSalesPopupContent
                 couponIdProp={selectedSalesCouponId}

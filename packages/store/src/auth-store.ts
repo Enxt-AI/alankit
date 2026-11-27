@@ -82,7 +82,10 @@ interface AuthStore {
   resetOTPFlow: () => void;
 
   // Phone-first actions
-  phoneOtpRequest: (phone: string, captchaToken?: string) => Promise<{
+  phoneOtpRequest: (
+    phone: string,
+    captchaToken?: string,
+  ) => Promise<{
     success: boolean;
     message: string;
     smsSent?: boolean;
@@ -97,7 +100,14 @@ interface AuthStore {
   setWasDeactivated: (was: boolean) => void;
 
   // Email OTP actions
-  emailOtpRequest: (email: string, captchaToken?: string) => Promise<{ success: boolean; message: string; captchaRequired?: boolean }>;
+  emailOtpRequest: (
+    email: string,
+    captchaToken?: string,
+  ) => Promise<{
+    success: boolean;
+    message: string;
+    captchaRequired?: boolean;
+  }>;
   emailOtpVerify: (email: string, otp: string, phone?: string) => Promise<void>;
   setTempEmail: (email: string | null) => void;
   updateProfile: (data: { fullName: string }) => Promise<void>;
@@ -146,7 +156,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       isAuthenticated: false,
       isLoading: false,
       error: null,
-      otpStep: 'idle',
+      otpStep: "idle",
       otpMobile: null,
       needsEmail: false,
       tempPhone: null,
@@ -230,7 +240,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       await get().refetchUser();
       set({ otpStep: "idle", otpMobile: null });
     } catch (error: any) {
-      set({ error: error?.message || "Failed to verify OTP", isLoading: false });
+      set({
+        error: error?.message || "Failed to verify OTP",
+        isLoading: false,
+      });
       throw error;
     }
   },
@@ -270,7 +283,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
   },
 
   phoneOtpRequest: async (phone, captchaToken) => {
-    if (get().isLoading) return { success: false, message: "A request is already in progress." };
+    if (get().isLoading)
+      return { success: false, message: "A request is already in progress." };
     set({ isLoading: true, error: null });
     try {
       const result = await phoneOtpRequestApi(phone, captchaToken);
@@ -282,11 +296,15 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       // Persist active phone in localStorage for seamless return across reloads
       if (typeof window !== "undefined") {
         try {
-          localStorage.setItem("unlistedstox_active_otp_phone", phone);
+          localStorage.setItem("unlistedstocks_active_otp_phone", phone);
         } catch (e) {}
       }
 
-      const cooldownUntil = result.cooldownUntil || (result.cooldownRemainingSeconds ? Date.now() + result.cooldownRemainingSeconds * 1000 : Date.now() + 30000);
+      const cooldownUntil =
+        result.cooldownUntil ||
+        (result.cooldownRemainingSeconds
+          ? Date.now() + result.cooldownRemainingSeconds * 1000
+          : Date.now() + 30000);
 
       set({
         otpStep: "otp",
@@ -303,9 +321,16 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       });
       return result;
     } catch (error: any) {
-      if (error?.message?.includes("CAPTCHA") || error?.response?.data?.captchaRequired) {
+      if (
+        error?.message?.includes("CAPTCHA") ||
+        error?.response?.data?.captchaRequired
+      ) {
         set({ isLoading: false });
-        return { success: false, captchaRequired: true, message: error.message };
+        return {
+          success: false,
+          captchaRequired: true,
+          message: error.message,
+        };
       }
       set({ error: error?.message || "Failed to send OTP", isLoading: false });
       throw error;
@@ -325,7 +350,7 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
       if (typeof window !== "undefined") {
         try {
-          localStorage.removeItem("unlistedstox_active_otp_phone");
+          localStorage.removeItem("unlistedstocks_active_otp_phone");
         } catch (e) {}
       }
 
@@ -356,7 +381,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         isLoading: false,
       });
     } catch (error: any) {
-      set({ error: error?.message || "Failed to verify OTP", isLoading: false });
+      set({
+        error: error?.message || "Failed to verify OTP",
+        isLoading: false,
+      });
       throw error;
     }
   },
@@ -366,7 +394,8 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
 
   // Email OTP actions
   emailOtpRequest: async (email, captchaToken) => {
-    if (get().isLoading) return { success: false, message: "A request is already in progress." };
+    if (get().isLoading)
+      return { success: false, message: "A request is already in progress." };
     set({ isLoading: true, error: null });
     try {
       const result = await emailOtpRequestApi(email, captchaToken);
@@ -382,9 +411,16 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       });
       return result;
     } catch (error: any) {
-      if (error?.message?.includes("CAPTCHA") || error?.response?.data?.captchaRequired) {
+      if (
+        error?.message?.includes("CAPTCHA") ||
+        error?.response?.data?.captchaRequired
+      ) {
         set({ isLoading: false });
-        return { success: false, captchaRequired: true, message: error.message };
+        return {
+          success: false,
+          captchaRequired: true,
+          message: error.message,
+        };
       }
       set({ error: error?.message || "Failed to send OTP", isLoading: false });
       throw error;
@@ -410,7 +446,11 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
       const profile = get().user;
 
       // If it's a new signup or name is empty/default, go to name-input
-      if (response?.isNewUser || !profile?.fullName || profile.fullName === email.split('@')[0]) {
+      if (
+        response?.isNewUser ||
+        !profile?.fullName ||
+        profile.fullName === email.split("@")[0]
+      ) {
         set({
           emailOtpStep: "name-input",
           isLoading: false,
@@ -427,7 +467,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         isLoading: false,
       });
     } catch (error: any) {
-      set({ error: error?.message || "Failed to verify OTP", isLoading: false });
+      set({
+        error: error?.message || "Failed to verify OTP",
+        isLoading: false,
+      });
       throw error;
     }
   },
@@ -448,7 +491,10 @@ export const useAuthStore = create<AuthStore>((set, get) => ({
         isLoading: false,
       });
     } catch (error: any) {
-      set({ error: error?.message || "Failed to update profile", isLoading: false });
+      set({
+        error: error?.message || "Failed to update profile",
+        isLoading: false,
+      });
       throw error;
     }
   },

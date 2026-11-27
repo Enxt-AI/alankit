@@ -141,7 +141,7 @@ export class AuditService {
       this.adminContextService.getContext();
 
     const adminId = adminContext?.adminId || 'system';
-    const adminEmail = adminContext?.email || 'system@smc.internal';
+    const adminEmail = adminContext?.email || 'system@.internal';
     const adminRole = adminContext?.role || 'ADMIN';
 
     // Create audit log entry

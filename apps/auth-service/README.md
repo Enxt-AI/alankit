@@ -1,6 +1,6 @@
 # Auth Service
 
-Authentication service for Unlisted StoX platform built with NestJS. Provides phone-first authentication with optional Google OAuth linking.
+Authentication service for Unlisted stocks platform built with NestJS. Provides phone-first authentication with optional Google OAuth linking.
 
 ## Features
 
@@ -13,6 +13,7 @@ Authentication service for Unlisted StoX platform built with NestJS. Provides ph
 ## Authentication Flow
 
 ### New User (Phone-First)
+
 1. User enters phone number
 2. `POST /auth/phone/otp/request` → Receive OTP via SMS
 3. `POST /auth/phone/otp/verify` → Get `{needsGoogle: true, phone}`
@@ -21,12 +22,14 @@ Authentication service for Unlisted StoX platform built with NestJS. Provides ph
 6. Redirect to dashboard
 
 ### Existing User (Phone-Only Login)
+
 1. User enters phone number
 2. `POST /auth/phone/otp/request` → Receive OTP via SMS
 3. `POST /auth/phone/otp/verify` → Get `{needsGoogle: false, token}` + cookie set
 4. Redirect to dashboard (skip Google)
 
 ### Legacy Google-First (Backward Compatible)
+
 1. `POST /auth/sync` → Direct Google OAuth login
 2. Creates user with email, sets `currentStep=1`
 
@@ -35,6 +38,7 @@ Authentication service for Unlisted StoX platform built with NestJS. Provides ph
 ### Phone-First Authentication
 
 #### Request Phone OTP
+
 ```http
 POST /auth/phone/otp/request
 Content-Type: application/json
@@ -45,6 +49,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -53,6 +58,7 @@ Content-Type: application/json
 ```
 
 #### Verify Phone OTP
+
 ```http
 POST /auth/phone/otp/verify
 Content-Type: application/json
@@ -64,6 +70,7 @@ Content-Type: application/json
 ```
 
 **Response (New User - needs Google):**
+
 ```json
 {
   "success": true,
@@ -73,6 +80,7 @@ Content-Type: application/json
 ```
 
 **Response (Existing User - has email):**
+
 ```json
 {
   "success": true,
@@ -83,6 +91,7 @@ Content-Type: application/json
 ```
 
 #### Link Google to Phone
+
 ```http
 POST /auth/phone/google/link
 Content-Type: application/json
@@ -96,6 +105,7 @@ Content-Type: application/json
 ```
 
 **Response:**
+
 ```json
 {
   "success": true,
@@ -107,6 +117,7 @@ Content-Type: application/json
 ### Legacy Endpoints
 
 #### Google OAuth Sync
+
 ```http
 POST /auth/sync
 Content-Type: application/json
@@ -119,12 +130,14 @@ Content-Type: application/json
 ```
 
 #### Get User Profile
+
 ```http
 GET /auth/profile
 Authorization: Bearer <token>
 ```
 
 **Response:**
+
 ```json
 {
   "id": "user_id",
@@ -242,20 +255,23 @@ pnpm test
 ## Testing Checklist
 
 ### New User Flow
+
 1. `POST /phone/otp/request` with phone → Receive OTP
 2. `POST /phone/otp/verify` with phone + OTP → `{needsGoogle: true}`
 3. `POST /phone/google/link` with Google data → JWT token + cookie
 
 ### Existing User Flow
+
 1. `POST /phone/otp/request` with existing phone → Receive OTP
 2. `POST /phone/otp/verify` with phone + OTP → `{needsGoogle: false, token}`
 
 ### Rate Limiting
+
 1. Request OTP 4 times in 15 min → Rate limit error
 2. Verify OTP with wrong code 6 times → Rate limit error
 
 ### Edge Cases
+
 1. Verify expired OTP → Error
 2. Link Google with existing email → Error
 3. Link Google without phone verification → Error
-

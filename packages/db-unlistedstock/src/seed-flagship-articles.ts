@@ -12,8 +12,8 @@
  * Run:
  *   pnpm --filter db-unlistedstock seed:articles
  */
-import 'dotenv/config';
-import { PrismaClient } from '../generated/prisma';
+import "dotenv/config";
+import { PrismaClient } from "../generated/prisma";
 
 const prisma = new PrismaClient();
 
@@ -38,49 +38,58 @@ function slugify(text: string): string {
   return text
     .toLowerCase()
     .trim()
-    .replace(/[^\w\s-]/g, '')
-    .replace(/\s+/g, '-')
-    .replace(/-+/g, '-')
-    .replace(/^-+|-+$/g, '');
+    .replace(/[^\w\s-]/g, "")
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-+|-+$/g, "");
 }
 
 const AUTHOR = {
-  authorName: 'UnlistedStox Editorial Team',
-  authorRole: 'Senior Investment Analyst',
+  authorName: "Unlistedstocks Editorial Team",
+  authorRole: "Senior Investment Analyst",
   authorBio:
-    "The UnlistedStox editorial team covers pre-IPO and unlisted share markets in India, backed by SMC Group's decades of broking experience.",
-  reviewedBy: 'SMC Compliance',
-  contentReviewedAt: '2026-01-15',
+    "The Unlistedstocks editorial team covers pre-IPO and unlisted share markets in India, backed by  Group's decades of broking experience.",
+  reviewedBy: " Compliance",
+  contentReviewedAt: "2026-01-15",
 };
 
 const ARTICLES: FlagshipArticle[] = [
   {
-    slug: 'how-to-buy-unlisted-shares-india',
-    title: 'How to Buy Unlisted Shares in India',
+    slug: "how-to-buy-unlisted-shares-india",
+    title: "How to Buy Unlisted Shares in India",
     summary:
-      'To buy unlisted shares in India, you need three things: a KYC-verified account, a linked Demat account (CDSL or NSDL), and a verified bank account. On UnlistedStox, you browse the unlisted share price list, place an order for the quantity you want, and pay. Once payment clears, shares are transferred off-market via demat-to-demat settlement directly into your Demat account, typically within T+1 to T+2 business days. You receive an SMS and email from your depository once the shares are credited. All transactions are backed by SMC Group and follow Companies Act, 2013 and SEBI regulations.',
+      "To buy unlisted shares in India, you need three things: a KYC-verified account, a linked Demat account (CDSL or NSDL), and a verified bank account. On Unlistedstocks, you browse the unlisted share price list, place an order for the quantity you want, and pay. Once payment clears, shares are transferred off-market via demat-to-demat settlement directly into your Demat account, typically within T+1 to T+2 business days. You receive an SMS and email from your depository once the shares are credited. All transactions are backed by  Group and follow Companies Act, 2013 and SEBI regulations.",
     keyFacts: [
-      { label: 'Minimum order', value: '1 share (price varies by company)' },
-      { label: 'Settlement timeline', value: 'T+1 to T+2 business days' },
-      { label: 'Transfer mode', value: 'Off-market, demat-to-demat via CDSL/NSDL' },
-      { label: 'Prerequisites', value: 'KYC, Demat, and bank account verification' },
-      { label: 'Regulatory backing', value: 'Companies Act, 2013; SEBI regulations; SMC Group' },
+      { label: "Minimum order", value: "1 share (price varies by company)" },
+      { label: "Settlement timeline", value: "T+1 to T+2 business days" },
+      {
+        label: "Transfer mode",
+        value: "Off-market, demat-to-demat via CDSL/NSDL",
+      },
+      {
+        label: "Prerequisites",
+        value: "KYC, Demat, and bank account verification",
+      },
+      {
+        label: "Regulatory backing",
+        value: "Companies Act, 2013; SEBI regulations;  Group",
+      },
     ],
     faqs: [
       {
-        question: 'Do I need a Demat account to buy unlisted shares?',
+        question: "Do I need a Demat account to buy unlisted shares?",
         answer:
-          'Yes. Unlisted shares are credited directly to your Demat account via CDSL or NSDL. You must link and verify your Demat account before placing an order on UnlistedStox.',
+          "Yes. Unlisted shares are credited directly to your Demat account via CDSL or NSDL. You must link and verify your Demat account before placing an order on Unlistedstocks.",
       },
       {
-        question: 'How long does it take to receive shares after payment?',
+        question: "How long does it take to receive shares after payment?",
         answer:
           "Settlement is typically T+1 to T+2 business days after payment confirmation. You'll receive an SMS and email from your depository once shares are credited.",
       },
       {
-        question: 'Is buying unlisted shares legal in India?',
+        question: "Is buying unlisted shares legal in India?",
         answer:
-          'Yes. Buying unlisted shares is legal under the Companies Act, 2013 and SEBI regulations. All transactions on UnlistedStox are legitimate demat-to-demat off-market transfers.',
+          "Yes. Buying unlisted shares is legal under the Companies Act, 2013 and SEBI regulations. All transactions on Unlistedstocks are legitimate demat-to-demat off-market transfers.",
       },
     ],
     ...AUTHOR,
@@ -118,32 +127,41 @@ const ARTICLES: FlagshipArticle[] = [
 `,
   },
   {
-    slug: 'is-it-safe-legal-to-buy-unlisted-shares-india',
-    title: 'Is It Safe and Legal to Buy Unlisted Shares in India?',
+    slug: "is-it-safe-legal-to-buy-unlisted-shares-india",
+    title: "Is It Safe and Legal to Buy Unlisted Shares in India?",
     summary:
-      'Yes, buying unlisted shares is completely legal in India under the Companies Act, 2013 and SEBI regulations. UnlistedStox executes all transactions through legitimate demat-to-demat off-market transfers via CDSL or NSDL, so ownership is recorded in your depository account just like listed shares. Shares are backed by SMC Group, and every transaction includes KYC verification, Demat linkage, and bank account verification. You receive depository-level confirmation (SMS and email) when shares are credited, providing a verifiable audit trail.',
+      "Yes, buying unlisted shares is completely legal in India under the Companies Act, 2013 and SEBI regulations. Unlistedstocks executes all transactions through legitimate demat-to-demat off-market transfers via CDSL or NSDL, so ownership is recorded in your depository account just like listed shares. Shares are backed by  Group, and every transaction includes KYC verification, Demat linkage, and bank account verification. You receive depository-level confirmation (SMS and email) when shares are credited, providing a verifiable audit trail.",
     keyFacts: [
-      { label: 'Legal framework', value: 'Companies Act, 2013; SEBI regulations' },
-      { label: 'Transfer mechanism', value: 'Off-market, demat-to-demat via CDSL/NSDL' },
-      { label: 'Ownership proof', value: 'Depository statement (Demat holding)' },
-      { label: 'Settlement', value: 'T+1 to T+2 business days' },
-      { label: 'Backed by', value: 'SMC Group' },
+      {
+        label: "Legal framework",
+        value: "Companies Act, 2013; SEBI regulations",
+      },
+      {
+        label: "Transfer mechanism",
+        value: "Off-market, demat-to-demat via CDSL/NSDL",
+      },
+      {
+        label: "Ownership proof",
+        value: "Depository statement (Demat holding)",
+      },
+      { label: "Settlement", value: "T+1 to T+2 business days" },
+      { label: "Backed by", value: " Group" },
     ],
     faqs: [
       {
-        question: 'Can I verify my unlisted share ownership?',
+        question: "Can I verify my unlisted share ownership?",
         answer:
-          'Yes. Once credited, your unlisted shares appear in your Demat account statement (CDSL or NSDL), just like listed shares. You can verify holdings through your depository participant.',
+          "Yes. Once credited, your unlisted shares appear in your Demat account statement (CDSL or NSDL), just like listed shares. You can verify holdings through your depository participant.",
       },
       {
-        question: 'Are off-market transfers safe?',
+        question: "Are off-market transfers safe?",
         answer:
-          'Off-market transfers through registered depositories (CDSL/NSDL) with KYC-verified counterparties are a standard, regulated mechanism for unlisted share transfers in India.',
+          "Off-market transfers through registered depositories (CDSL/NSDL) with KYC-verified counterparties are a standard, regulated mechanism for unlisted share transfers in India.",
       },
       {
-        question: 'Does UnlistedStox verify sellers?',
+        question: "Does Unlistedstocks verify sellers?",
         answer:
-          'Yes. All sellers and transactions on UnlistedStox undergo KYC verification and are processed through secure off-market transfer channels backed by SMC Group.',
+          "Yes. All sellers and transactions on Unlistedstocks undergo KYC verification and are processed through secure off-market transfer channels backed by  Group.",
       },
     ],
     ...AUTHOR,
@@ -169,32 +187,41 @@ const ARTICLES: FlagshipArticle[] = [
 `,
   },
   {
-    slug: 'difference-between-listed-and-unlisted-shares',
-    title: 'Difference Between Listed and Unlisted Shares',
+    slug: "difference-between-listed-and-unlisted-shares",
+    title: "Difference Between Listed and Unlisted Shares",
     summary:
-      'Listed shares trade on recognized stock exchanges (NSE, BSE) with daily price discovery and high liquidity. Unlisted shares are not listed on any exchange and are traded through off-market, demat-to-demat transfers. Prices for unlisted shares are negotiated between buyer and seller or set by platforms like UnlistedStox based on secondary-market demand and recent valuation rounds. Unlisted shares typically have lower liquidity, higher minimum investment, and longer settlement (T+1 to T+2), but offer early access to high-growth pre-IPO companies.',
+      "Listed shares trade on recognized stock exchanges (NSE, BSE) with daily price discovery and high liquidity. Unlisted shares are not listed on any exchange and are traded through off-market, demat-to-demat transfers. Prices for unlisted shares are negotiated between buyer and seller or set by platforms like Unlistedstocks based on secondary-market demand and recent valuation rounds. Unlisted shares typically have lower liquidity, higher minimum investment, and longer settlement (T+1 to T+2), but offer early access to high-growth pre-IPO companies.",
     keyFacts: [
-      { label: 'Trading venue', value: 'Listed: NSE/BSE · Unlisted: Off-market (CDSL/NSDL)' },
-      { label: 'Price discovery', value: 'Listed: Exchange-driven · Unlisted: Negotiated/platform-set' },
-      { label: 'Liquidity', value: 'Listed: High · Unlisted: Lower' },
-      { label: 'Settlement', value: 'Listed: T+1 · Unlisted: T+1 to T+2' },
-      { label: 'Minimum investment', value: 'Listed: 1 share · Unlisted: Varies by company' },
+      {
+        label: "Trading venue",
+        value: "Listed: NSE/BSE · Unlisted: Off-market (CDSL/NSDL)",
+      },
+      {
+        label: "Price discovery",
+        value: "Listed: Exchange-driven · Unlisted: Negotiated/platform-set",
+      },
+      { label: "Liquidity", value: "Listed: High · Unlisted: Lower" },
+      { label: "Settlement", value: "Listed: T+1 · Unlisted: T+1 to T+2" },
+      {
+        label: "Minimum investment",
+        value: "Listed: 1 share · Unlisted: Varies by company",
+      },
     ],
     faqs: [
       {
-        question: 'Can I sell unlisted shares on NSE or BSE?',
+        question: "Can I sell unlisted shares on NSE or BSE?",
         answer:
-          'No. Unlisted shares are not traded on recognized stock exchanges. They are sold through off-market, demat-to-demat transfers via platforms like UnlistedStox.',
+          "No. Unlisted shares are not traded on recognized stock exchanges. They are sold through off-market, demat-to-demat transfers via platforms like Unlistedstocks.",
       },
       {
-        question: 'How is the price of unlisted shares determined?',
+        question: "How is the price of unlisted shares determined?",
         answer:
-          'Unlisted share prices are negotiated between buyer and seller, or set by the platform based on secondary-market demand, recent company valuation rounds, and financial performance.',
+          "Unlisted share prices are negotiated between buyer and seller, or set by the platform based on secondary-market demand, recent company valuation rounds, and financial performance.",
       },
       {
-        question: 'Are unlisted shares more risky than listed shares?',
+        question: "Are unlisted shares more risky than listed shares?",
         answer:
-          'Unlisted shares generally carry higher risk due to lower liquidity, limited public information, and less price transparency. They suit investors with a medium-to-long-term horizon.',
+          "Unlisted shares generally carry higher risk due to lower liquidity, limited public information, and less price transparency. They suit investors with a medium-to-long-term horizon.",
       },
     ],
     ...AUTHOR,
@@ -222,74 +249,86 @@ const ARTICLES: FlagshipArticle[] = [
 `,
   },
   {
-    slug: 'tax-implications-of-unlisted-stock-investments',
-    title: 'Tax Implications of Unlisted Stock Investments',
+    slug: "tax-implications-of-unlisted-stock-investments",
+    title: "Tax Implications of Unlisted Stock Investments",
     summary:
-      'Capital gains on unlisted equity shares are taxed based on holding period. If you hold unlisted shares for more than 24 months, gains are Long-Term Capital Gains (LTCG) taxed at 12.5% without indexation (as per Finance Act 2024). If held for 24 months or less, gains are Short-Term Capital Gains (STCG) and taxed at your applicable individual income tax slab rate. The holding period is calculated from the date of allotment/credit to your Demat account to the date of sale.',
+      "Capital gains on unlisted equity shares are taxed based on holding period. If you hold unlisted shares for more than 24 months, gains are Long-Term Capital Gains (LTCG) taxed at 12.5% without indexation (as per Finance Act 2024). If held for 24 months or less, gains are Short-Term Capital Gains (STCG) and taxed at your applicable individual income tax slab rate. The holding period is calculated from the date of allotment/credit to your Demat account to the date of sale.",
     keyFacts: [
-      { label: 'Long-term holding period', value: 'More than 24 months' },
-      { label: 'LTCG tax rate', value: '12.5% without indexation (Finance Act 2024)' },
-      { label: 'Short-term holding period', value: '24 months or less' },
-      { label: 'STCG tax rate', value: 'Your individual income tax slab rate' },
-      { label: 'Holding period start', value: 'Date of credit to Demat account' },
+      { label: "Long-term holding period", value: "More than 24 months" },
+      {
+        label: "LTCG tax rate",
+        value: "12.5% without indexation (Finance Act 2024)",
+      },
+      { label: "Short-term holding period", value: "24 months or less" },
+      { label: "STCG tax rate", value: "Your individual income tax slab rate" },
+      {
+        label: "Holding period start",
+        value: "Date of credit to Demat account",
+      },
     ],
     faqs: [
       {
-        question: 'What is the holding period for LTCG on unlisted shares?',
+        question: "What is the holding period for LTCG on unlisted shares?",
         answer:
-          'For unlisted equity shares, a holding period of more than 24 months qualifies as Long-Term Capital Gains.',
+          "For unlisted equity shares, a holding period of more than 24 months qualifies as Long-Term Capital Gains.",
       },
       {
-        question: 'What is the LTCG tax rate on unlisted shares?',
-        answer: '12.5% without indexation, as per Finance Act 2024.',
+        question: "What is the LTCG tax rate on unlisted shares?",
+        answer: "12.5% without indexation, as per Finance Act 2024.",
       },
       {
-        question: 'How are short-term gains taxed?',
+        question: "How are short-term gains taxed?",
         answer:
-          'Short-term gains (held 24 months or less) are added to your income and taxed at your applicable individual income tax slab rate.',
+          "Short-term gains (held 24 months or less) are added to your income and taxed at your applicable individual income tax slab rate.",
       },
     ],
     ...AUTHOR,
     // Existing row (article-seed-5) keeps its own body.
-    content: '',
+    content: "",
   },
   {
-    slug: 'understanding-pre-ipo-investments-a-complete-guide',
-    title: 'Understanding Pre-IPO Investments: A Complete Guide',
+    slug: "understanding-pre-ipo-investments-a-complete-guide",
+    title: "Understanding Pre-IPO Investments: A Complete Guide",
     summary:
-      'Investing in pre-IPO companies means buying unlisted shares before a company lists on a stock exchange. On UnlistedStox, the process is: (1) complete KYC, (2) link and verify your Demat and bank accounts, (3) browse upcoming or active unlisted stocks, (4) place an order within the minimum/maximum quantity limits, (5) pay, and (6) receive shares in your Demat account via off-market transfer within T+1 to T+2 business days. Pre-IPO investing suits investors with a medium-to-long-term horizon who want early exposure to high-growth companies.',
+      "Investing in pre-IPO companies means buying unlisted shares before a company lists on a stock exchange. On Unlistedstocks, the process is: (1) complete KYC, (2) link and verify your Demat and bank accounts, (3) browse upcoming or active unlisted stocks, (4) place an order within the minimum/maximum quantity limits, (5) pay, and (6) receive shares in your Demat account via off-market transfer within T+1 to T+2 business days. Pre-IPO investing suits investors with a medium-to-long-term horizon who want early exposure to high-growth companies.",
     keyFacts: [
-      { label: 'Investment horizon', value: 'Medium to long-term' },
-      { label: 'Settlement timeline', value: 'T+1 to T+2 business days' },
-      { label: 'Transfer mode', value: 'Off-market, demat-to-demat via CDSL/NSDL' },
-      { label: 'Prerequisites', value: 'KYC, Demat, and bank account verification' },
-      { label: 'Backed by', value: 'SMC Group' },
+      { label: "Investment horizon", value: "Medium to long-term" },
+      { label: "Settlement timeline", value: "T+1 to T+2 business days" },
+      {
+        label: "Transfer mode",
+        value: "Off-market, demat-to-demat via CDSL/NSDL",
+      },
+      {
+        label: "Prerequisites",
+        value: "KYC, Demat, and bank account verification",
+      },
+      { label: "Backed by", value: " Group" },
     ],
     faqs: [
       {
-        question: 'What is pre-IPO investing?',
+        question: "What is pre-IPO investing?",
         answer:
-          'Pre-IPO investing means buying shares in a company before it lists on a stock exchange, typically at a price below the expected IPO price.',
+          "Pre-IPO investing means buying shares in a company before it lists on a stock exchange, typically at a price below the expected IPO price.",
       },
       {
-        question: 'Who can invest in pre-IPO shares?',
+        question: "Who can invest in pre-IPO shares?",
         answer:
-          'Any Indian resident with a KYC-verified account, a linked Demat account, and a verified bank account can invest in pre-IPO shares on UnlistedStox.',
+          "Any Indian resident with a KYC-verified account, a linked Demat account, and a verified bank account can invest in pre-IPO shares on Unlistedstocks.",
       },
       {
-        question: 'What happens after a pre-IPO company lists?',
+        question: "What happens after a pre-IPO company lists?",
         answer:
-          'After listing, pre-IPO shares become freely tradable on the stock exchange. You can continue holding them or sell them through the exchange at market prices.',
+          "After listing, pre-IPO shares become freely tradable on the stock exchange. You can continue holding them or sell them through the exchange at market prices.",
       },
     ],
     ...AUTHOR,
     // Existing row (article-seed-1) keeps its own body.
-    content: '',
+    content: "",
   },
 ];
 
 async function main() {
-  console.log('Seeding flagship articles...');
+  console.log("Seeding flagship articles...");
 
   const existing = await prisma.article.findMany({
     select: { id: true, title: true, slug: true, content: true },
@@ -344,12 +383,12 @@ async function main() {
     }
   }
 
-  console.log('Done.');
+  console.log("Done.");
 }
 
 main()
   .catch((err) => {
-    console.error('Seed error:', err);
+    console.error("Seed error:", err);
     process.exit(1);
   })
   .finally(async () => {

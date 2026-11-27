@@ -24,7 +24,12 @@ import { ConfigService } from '@nestjs/config';
 import { Throttle, SkipThrottle } from '@nestjs/throttler';
 import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { Prisma } from 'db-unlistedstock';
-import { encryptToken, OBFUSCATED_COOKIE_NAMES, ORIGINAL_COOKIE_NAMES, PANEL_ROLE_CONFIG } from 'cookie-crypto';
+import {
+  encryptToken,
+  OBFUSCATED_COOKIE_NAMES,
+  ORIGINAL_COOKIE_NAMES,
+  PANEL_ROLE_CONFIG,
+} from 'cookie-crypto';
 import { AuthService } from './auth.service';
 import { RequestOtpDto } from './dto/request-otp.dto';
 import { VerifyOtpDto } from './dto/verify-otp.dto';
@@ -118,21 +123,39 @@ function omitSensitive(obj: any): any {
   if (!obj || typeof obj !== 'object') return obj;
   if (Array.isArray(obj)) return obj.map(omitSensitive);
   if (obj instanceof Date) return obj;
-  
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { passwordHash, hashedRefreshToken, tempOtp, otp, secret, key, isDeleted, ...rest } = obj;
-  
+  const {
+    passwordHash,
+    hashedRefreshToken,
+    tempOtp,
+    otp,
+    secret,
+    key,
+    isDeleted,
+    ...rest
+  } = obj;
+
   // Context-aware masking for non-owners
   if (rest.phone) rest.phone = maskPhone(rest.phone);
   if (rest.email) rest.email = maskEmail(rest.email);
   if (rest.kycData && typeof rest.kycData === 'object') {
-    rest.kycData = { _masked: true, message: "KYC data is encrypted and restricted to owner." };
+    rest.kycData = {
+      _masked: true,
+      message: 'KYC data is encrypted and restricted to owner.',
+    };
   }
   if (rest.dematData && typeof rest.dematData === 'object') {
-    rest.dematData = { _masked: true, message: "Demat data is encrypted and restricted to owner." };
+    rest.dematData = {
+      _masked: true,
+      message: 'Demat data is encrypted and restricted to owner.',
+    };
   }
   if (rest.bankData && typeof rest.bankData === 'object') {
-    rest.bankData = { _masked: true, message: "Bank data is encrypted and restricted to owner." };
+    rest.bankData = {
+      _masked: true,
+      message: 'Bank data is encrypted and restricted to owner.',
+    };
   }
 
   for (const k in rest) {
@@ -152,10 +175,19 @@ function omitCredentials(obj: any): any {
   if (!obj || typeof obj !== 'object') return obj;
   if (Array.isArray(obj)) return obj.map(omitCredentials);
   if (obj instanceof Date) return obj;
-  
+
   // eslint-disable-next-line @typescript-eslint/no-unused-vars
-  const { passwordHash, hashedRefreshToken, tempOtp, otp, secret, key, isDeleted, ...rest } = obj;
-  
+  const {
+    passwordHash,
+    hashedRefreshToken,
+    tempOtp,
+    otp,
+    secret,
+    key,
+    isDeleted,
+    ...rest
+  } = obj;
+
   for (const k in rest) {
     if (Object.prototype.hasOwnProperty.call(rest, k)) {
       rest[k] = omitCredentials(rest[k]);
@@ -165,7 +197,7 @@ function omitCredentials(obj: any): any {
 }
 
 import { PrismaService } from '../prisma/prisma.service';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 
 /**
  * AuthController handles all authentication-related HTTP endpoints
@@ -173,12 +205,17 @@ import { PinoNestLogger } from '@smc/logger';
  */
 @Controller('auth')
 export class AuthController {
-  private readonly logger = new PinoNestLogger('auth-service', 'AuthController');
+  private readonly logger = new PinoNestLogger(
+    'auth-service',
+    'AuthController',
+  );
   /** Shared cookie options for all auth cookies — single source of truth */
   private get cookieOptions() {
     return {
       httpOnly: true,
-      secure: process.env.NODE_ENV === 'production' && process.env.SECURE_COOKIES !== 'false',
+      secure:
+        process.env.NODE_ENV === 'production' &&
+        process.env.SECURE_COOKIES !== 'false',
       sameSite: 'lax' as const,
       path: '/',
       domain: process.env.COOKIE_DOMAIN || undefined,
@@ -225,13 +262,24 @@ export class AuthController {
       const ip = this.getClientIp(req);
       const idempotencyKey = req.headers['x-idempotency-key'];
       if (idempotencyKey) {
-        const cached = await this.authService.redis.getIdempotencyResponse(idempotencyKey);
+        const cached =
+          await this.authService.redis.getIdempotencyResponse(idempotencyKey);
         if (cached) return cached;
       }
       const deviceFingerprint = req.headers['x-device-fingerprint'];
-      const result = await this.authService.sendEmailOTP(dto.email, ip, dto.captchaToken, deviceFingerprint, dto.phone);
+      const result = await this.authService.sendEmailOTP(
+        dto.email,
+        ip,
+        dto.captchaToken,
+        deviceFingerprint,
+        dto.phone,
+      );
       if (idempotencyKey) {
-        await this.authService.redis.setIdempotencyResponse(idempotencyKey, result, 300);
+        await this.authService.redis.setIdempotencyResponse(
+          idempotencyKey,
+          result,
+          300,
+        );
       }
       return result;
     } catch (error: any) {
@@ -255,16 +303,30 @@ export class AuthController {
     @Res({ passthrough: true }) res: FastifyReply,
   ) {
     try {
-      const result = await this.authService.verifyEmailOTP(dto.email, dto.otp, dto.phone, req, dto.phoneVerificationToken || req.cookies?.phone_verification);
+      const result = await this.authService.verifyEmailOTP(
+        dto.email,
+        dto.otp,
+        dto.phone,
+        req,
+        dto.phoneVerificationToken || req.cookies?.phone_verification,
+      );
 
       res.clearCookie('phone_verification', this.cookieOptions);
       if (result.needsName && result.signupToken) {
-        res.setCookie('pending_signup', result.signupToken, { ...this.cookieOptions, maxAge: 600 });
+        res.setCookie('pending_signup', result.signupToken, {
+          ...this.cookieOptions,
+          maxAge: 600,
+        });
         res.clearCookie(OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN, this.cookieOptions);
-        return { success: true, needsName: true, isNewUser: result.isNewUser,
-          ...(req.headers['x-client-type'] === 'mobile' && { signupToken: result.signupToken }) };
+        return {
+          success: true,
+          needsName: true,
+          isNewUser: result.isNewUser,
+          ...(req.headers['x-client-type'] === 'mobile' && {
+            signupToken: result.signupToken,
+          }),
+        };
       }
-
 
       res.clearCookie('pending_signup', this.cookieOptions);
 
@@ -272,11 +334,22 @@ export class AuthController {
       try {
         const ip = this.getClientIp(req);
         const userAgent = req.headers['user-agent'] || 'Unknown';
-        this.authService.logUserLogin(result.user.id, ip, userAgent).catch((err: any) => this.logger.warn({ userId: result.user.id, err }, 'logUserLogin failed'));
+        this.authService
+          .logUserLogin(result.user.id, ip, userAgent)
+          .catch((err: any) =>
+            this.logger.warn(
+              { userId: result.user.id, err },
+              'logUserLogin failed',
+            ),
+          );
       } catch (e) {}
 
       // Set HTTP-only cookie
-      res.setCookie(OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN, result.token!, this.cookieOptions);
+      res.setCookie(
+        OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN,
+        result.token!,
+        this.cookieOptions,
+      );
 
       const isMobile = req.headers['x-client-type'] === 'mobile';
 
@@ -301,14 +374,30 @@ export class AuthController {
   @Public()
   @HttpCode(200)
   @Throttle({ default: { limit: 5, ttl: 60000 } })
-  async completeSignup(@Body() dto: CompleteSignupDto, @Req() req: any, @Res({ passthrough: true }) res: FastifyReply) {
-    const result = await this.authService.completeSignup(dto.fullName, dto.signupToken || req.cookies?.pending_signup, req);
+  async completeSignup(
+    @Body() dto: CompleteSignupDto,
+    @Req() req: any,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
+    const result = await this.authService.completeSignup(
+      dto.fullName,
+      dto.signupToken || req.cookies?.pending_signup,
+      req,
+    );
     res.clearCookie('pending_signup', this.cookieOptions);
     res.clearCookie('phone_verification', this.cookieOptions);
-    res.setCookie(OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN, result.token, this.cookieOptions);
-    return { success: true, ...(req.headers['x-client-type'] === 'mobile' && {
-      token: result.token, user: omitSensitive(result.user),
-    }) };
+    res.setCookie(
+      OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN,
+      result.token,
+      this.cookieOptions,
+    );
+    return {
+      success: true,
+      ...(req.headers['x-client-type'] === 'mobile' && {
+        token: result.token,
+        user: omitSensitive(result.user),
+      }),
+    };
   }
 
   @Get('signup/status')
@@ -316,11 +405,16 @@ export class AuthController {
   @HttpCode(200)
   async signupStatus(@Req() req: any) {
     if (req.cookies?.pending_signup) {
-      const pending = await this.authService.redis.getPendingSignup(req.cookies.pending_signup);
-      if (pending) return { step: 'name', phone: pending.phone, email: pending.email };
+      const pending = await this.authService.redis.getPendingSignup(
+        req.cookies.pending_signup,
+      );
+      if (pending)
+        return { step: 'name', phone: pending.phone, email: pending.email };
     }
     if (req.cookies?.phone_verification) {
-      const phone = await this.authService.redis.getPhoneProof(req.cookies.phone_verification);
+      const phone = await this.authService.redis.getPhoneProof(
+        req.cookies.phone_verification,
+      );
       if (phone) return { step: 'email', phone };
     }
     return { step: 'phone' };
@@ -340,13 +434,24 @@ export class AuthController {
     const ip = this.getClientIp(req);
     const idempotencyKey = req.headers['x-idempotency-key'];
     if (idempotencyKey) {
-      const cached = await this.authService.redis.getIdempotencyResponse(idempotencyKey);
+      const cached =
+        await this.authService.redis.getIdempotencyResponse(idempotencyKey);
       if (cached) return cached;
     }
     const deviceFingerprint = req.headers['x-device-fingerprint'];
-    const result = await this.authService.sendOTP(dto.mobile, userId, ip, dto.captchaToken, deviceFingerprint);
+    const result = await this.authService.sendOTP(
+      dto.mobile,
+      userId,
+      ip,
+      dto.captchaToken,
+      deviceFingerprint,
+    );
     if (idempotencyKey) {
-      await this.authService.redis.setIdempotencyResponse(idempotencyKey, result, 300);
+      await this.authService.redis.setIdempotencyResponse(
+        idempotencyKey,
+        result,
+        300,
+      );
     }
     return result;
   }
@@ -383,7 +488,11 @@ export class AuthController {
       req,
     );
 
-    res.setCookie(OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN, token, this.cookieOptions);
+    res.setCookie(
+      OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN,
+      token,
+      this.cookieOptions,
+    );
 
     const isMobile = req.headers['x-client-type'] === 'mobile';
 
@@ -404,9 +513,14 @@ export class AuthController {
     const userId = req.user.userId;
     const ip = this.getClientIp(req);
     const deviceFingerprint = req.headers['x-device-fingerprint'];
-    
+
     // Pass undefined for captchaToken since step-up assumes they are already authed
-    return await this.authService.requestStepUpOtp(userId, ip, undefined, deviceFingerprint);
+    return await this.authService.requestStepUpOtp(
+      userId,
+      ip,
+      undefined,
+      deviceFingerprint,
+    );
   }
 
   /**
@@ -422,7 +536,7 @@ export class AuthController {
     // Wait, the raw session ID is not passed to req.user by SessionStrategy!
     // The SessionStrategy sets req.user.sessionId to the HASHED session ID.
     // I need to update authService.verifyStepUpOtp to handle this, or pass the raw session ID.
-    // Wait, if it's already hashed, I can just use it directly! 
+    // Wait, if it's already hashed, I can just use it directly!
     return await this.authService.verifyStepUpOtp(userId, sessionId, dto.otp);
   }
 
@@ -486,8 +600,14 @@ export class AuthController {
   async updateProfile(@Req() req: any, @Body() dto: UpdateProfileDto) {
     const userId = req.user?.userId;
     if (!userId) throw new UnauthorizedException('User not found');
-    const updatedUser = await this.authService.updateFullName(userId, dto.fullName);
-    return { success: true, user: { id: updatedUser.id, fullName: updatedUser.fullName } };
+    const updatedUser = await this.authService.updateFullName(
+      userId,
+      dto.fullName,
+    );
+    return {
+      success: true,
+      user: { id: updatedUser.id, fullName: updatedUser.fullName },
+    };
   }
 
   /**
@@ -541,9 +661,15 @@ export class AuthController {
   @Post('signout')
   @Public()
   @HttpCode(200)
-  async signOut(@Req() req: any, @Res({ passthrough: true }) res: FastifyReply) {
+  async signOut(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
     // Clear session in Redis
-    await this.authService.logoutSessionFromRequest(req, OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN);
+    await this.authService.logoutSessionFromRequest(
+      req,
+      OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN,
+    );
 
     // Clear the auth cookie (obfuscated name)
     res.clearCookie(OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN, this.cookieOptions);
@@ -567,9 +693,17 @@ export class AuthController {
     const admin = await this.authService.adminLogin(dto.email, dto.password);
 
     if (!PANEL_ROLE_CONFIG.ADMIN.includes(admin.role as any)) {
-      this.logger.warn({ event: 'admin.login.wrong_panel', adminId: admin.id, email: admin.email, role: admin.role }, `Access denied: role "${admin.role}" not allowed for admin panel`);
+      this.logger.warn(
+        {
+          event: 'admin.login.wrong_panel',
+          adminId: admin.id,
+          email: admin.email,
+          role: admin.role,
+        },
+        `Access denied: role "${admin.role}" not allowed for admin panel`,
+      );
       throw new UnauthorizedException(
-        `Access denied. Admin privileges required. Your account role (${admin.role}) is assigned to another workspace panel.`
+        `Access denied. Admin privileges required. Your account role (${admin.role}) is assigned to another workspace panel.`,
       );
     }
 
@@ -590,25 +724,40 @@ export class AuthController {
         name: OBFUSCATED_COOKIE_NAMES.ADMIN_PANEL_TOKEN,
         token: token,
       });
-      this.logger.log({ adminId: admin.id, role: admin.role }, `Setting admin panel cookie for role: ${admin.role}`);
+      this.logger.log(
+        { adminId: admin.id, role: admin.role },
+        `Setting admin panel cookie for role: ${admin.role}`,
+      );
     }
 
     // For CONTENT_MANAGER role only, set CMS panel cookie
-    if (PANEL_ROLE_CONFIG.CMS.includes(admin.role as any) && admin.role !== 'SUPER_ADMIN') {
+    if (
+      PANEL_ROLE_CONFIG.CMS.includes(admin.role as any) &&
+      admin.role !== 'SUPER_ADMIN'
+    ) {
       cookiesToSet.push({
         name: OBFUSCATED_COOKIE_NAMES.CMS_PANEL_TOKEN,
         token: token,
       });
-      this.logger.log({ adminId: admin.id, role: admin.role }, `Setting CMS panel cookie for role: ${admin.role}`);
+      this.logger.log(
+        { adminId: admin.id, role: admin.role },
+        `Setting CMS panel cookie for role: ${admin.role}`,
+      );
     }
 
     // For SUPPORT_AGENT role only, set support panel cookie
-    if (PANEL_ROLE_CONFIG.SUPPORT.includes(admin.role as any) && admin.role !== 'SUPER_ADMIN') {
+    if (
+      PANEL_ROLE_CONFIG.SUPPORT.includes(admin.role as any) &&
+      admin.role !== 'SUPER_ADMIN'
+    ) {
       cookiesToSet.push({
         name: OBFUSCATED_COOKIE_NAMES.SUPPORT_PANEL_TOKEN,
         token: token,
       });
-      this.logger.log({ adminId: admin.id, role: admin.role }, `Setting support panel cookie for role: ${admin.role}`);
+      this.logger.log(
+        { adminId: admin.id, role: admin.role },
+        `Setting support panel cookie for role: ${admin.role}`,
+      );
     }
 
     // Set all applicable cookies (token values encrypted via AES-256-GCM)
@@ -635,7 +784,10 @@ export class AuthController {
   @Post('admin/logout')
   @Public()
   @HttpCode(200)
-  async adminLogout(@Req() req: any, @Res({ passthrough: true }) res: FastifyReply) {
+  async adminLogout(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
     await this.clearAllPanelSessionsAndCookies(req, res);
     return { success: true };
   }
@@ -645,7 +797,7 @@ export class AuthController {
    */
   private async clearAllPanelSessionsAndCookies(req: any, res: FastifyReply) {
     const allCookies = Object.values(OBFUSCATED_COOKIE_NAMES).filter(
-      (name) => name !== OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN
+      (name) => name !== OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN,
     );
 
     for (const cookieName of allCookies) {
@@ -669,8 +821,19 @@ export class AuthController {
     const admin = await this.authService.adminLogin(dto.email, dto.password);
 
     if (!allowedRoles.includes(admin.role)) {
-      this.logger.warn({ event: 'panel.login.wrong_role', adminId: admin.id, email: admin.email, role: admin.role, allowedRoles }, `Panel login rejected: role "${admin.role}" not in allowed roles`);
-      throw new UnauthorizedException(`Access denied. Required roles: ${allowedRoles.join(', ')}.`);
+      this.logger.warn(
+        {
+          event: 'panel.login.wrong_role',
+          adminId: admin.id,
+          email: admin.email,
+          role: admin.role,
+          allowedRoles,
+        },
+        `Panel login rejected: role "${admin.role}" not in allowed roles`,
+      );
+      throw new UnauthorizedException(
+        `Access denied. Required roles: ${allowedRoles.join(', ')}.`,
+      );
     }
 
     const token = await this.authService.generateAdminToken(
@@ -702,23 +865,43 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   @HttpCode(200)
-  async cmsLogin(@Req() req: any, @Body() dto: AdminLoginDto, @Res({ passthrough: true }) res: FastifyReply) {
+  async cmsLogin(
+    @Req() req: any,
+    @Body() dto: AdminLoginDto,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
     const admin = await this.authService.adminLogin(dto.email, dto.password);
 
     if (!PANEL_ROLE_CONFIG.CMS.includes(admin.role as any)) {
-      this.logger.warn({ event: 'panel.login.cms.wrong_role', adminId: admin.id, email: admin.email, role: admin.role }, 'CMS login: access denied');
-      throw new UnauthorizedException(`Access denied. Required roles: ${PANEL_ROLE_CONFIG.CMS.join(', ')}.`);
+      this.logger.warn(
+        {
+          event: 'panel.login.cms.wrong_role',
+          adminId: admin.id,
+          email: admin.email,
+          role: admin.role,
+        },
+        'CMS login: access denied',
+      );
+      throw new UnauthorizedException(
+        `Access denied. Required roles: ${PANEL_ROLE_CONFIG.CMS.join(', ')}.`,
+      );
     }
 
     const ip = this.getClientIp(req);
     const idempotencyKey = req.headers['x-idempotency-key'];
     if (idempotencyKey) {
-      const cached = await this.authService.redis.getIdempotencyResponse(idempotencyKey);
+      const cached =
+        await this.authService.redis.getIdempotencyResponse(idempotencyKey);
       if (cached) return cached;
     }
     const deviceFingerprint = req.headers['x-device-fingerprint'];
-    await this.authService.sendCmsOtp(admin.email, ip, undefined, deviceFingerprint);
-    
+    await this.authService.sendCmsOtp(
+      admin.email,
+      ip,
+      undefined,
+      deviceFingerprint,
+    );
+
     const result = {
       success: true,
       requiresOtp: true,
@@ -726,7 +909,11 @@ export class AuthController {
     };
 
     if (idempotencyKey) {
-      await this.authService.redis.setIdempotencyResponse(idempotencyKey, result, 300);
+      await this.authService.redis.setIdempotencyResponse(
+        idempotencyKey,
+        result,
+        300,
+      );
     }
     return result;
   }
@@ -734,13 +921,27 @@ export class AuthController {
   @Post('cms/verify-otp')
   @Public()
   @HttpCode(200)
-  async cmsVerifyOtp(@Req() req: any, @Body() dto: CmsVerifyOtpDto, @Res({ passthrough: true }) res: FastifyReply) {
+  async cmsVerifyOtp(
+    @Req() req: any,
+    @Body() dto: CmsVerifyOtpDto,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
     // Re-verify password (stateless)
     const admin = await this.authService.adminLogin(dto.email, dto.password);
 
     if (!PANEL_ROLE_CONFIG.CMS.includes(admin.role as any)) {
-      this.logger.warn({ event: 'panel.verify.cms.otp.wrong_role', adminId: admin.id, email: admin.email, role: admin.role }, 'CMS OTP verify: access denied');
-      throw new UnauthorizedException(`Access denied. Required roles: ${PANEL_ROLE_CONFIG.CMS.join(', ')}.`);
+      this.logger.warn(
+        {
+          event: 'panel.verify.cms.otp.wrong_role',
+          adminId: admin.id,
+          email: admin.email,
+          role: admin.role,
+        },
+        'CMS OTP verify: access denied',
+      );
+      throw new UnauthorizedException(
+        `Access denied. Required roles: ${PANEL_ROLE_CONFIG.CMS.join(', ')}.`,
+      );
     }
 
     // Verify OTP
@@ -755,7 +956,11 @@ export class AuthController {
       req,
     );
 
-    res.setCookie(OBFUSCATED_COOKIE_NAMES.CMS_PANEL_TOKEN, token!, this.cookieOptions);
+    res.setCookie(
+      OBFUSCATED_COOKIE_NAMES.CMS_PANEL_TOKEN,
+      token!,
+      this.cookieOptions,
+    );
 
     return {
       success: true,
@@ -772,7 +977,10 @@ export class AuthController {
   @Post('cms/logout')
   @Public()
   @HttpCode(200)
-  async cmsLogout(@Req() req: any, @Res({ passthrough: true }) res: FastifyReply) {
+  async cmsLogout(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
     await this.clearAllPanelSessionsAndCookies(req, res);
     return { success: true };
   }
@@ -783,7 +991,14 @@ export class AuthController {
   @HttpCode(200)
   async verifyCms(@Req() req: any) {
     if (!PANEL_ROLE_CONFIG.CMS.includes(req.user.role as any)) {
-      this.logger.warn({ event: 'panel.verify.cms.access_denied', adminId: req.user.adminId, role: req.user.role }, 'CMS panel verify: access denied');
+      this.logger.warn(
+        {
+          event: 'panel.verify.cms.access_denied',
+          adminId: req.user.adminId,
+          role: req.user.role,
+        },
+        'CMS panel verify: access denied',
+      );
       throw new UnauthorizedException('Access denied');
     }
     let admin;
@@ -802,14 +1017,27 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   @HttpCode(200)
-  async marketingLogin(@Req() req: any, @Body() dto: AdminLoginDto, @Res({ passthrough: true }) res: FastifyReply) {
-    return this.performPanelLogin(dto, [...PANEL_ROLE_CONFIG.MARKETING], OBFUSCATED_COOKIE_NAMES.MARKETING_PANEL_TOKEN, res, req);
+  async marketingLogin(
+    @Req() req: any,
+    @Body() dto: AdminLoginDto,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
+    return this.performPanelLogin(
+      dto,
+      [...PANEL_ROLE_CONFIG.MARKETING],
+      OBFUSCATED_COOKIE_NAMES.MARKETING_PANEL_TOKEN,
+      res,
+      req,
+    );
   }
 
   @Post('marketing/logout')
   @Public()
   @HttpCode(200)
-  async marketingLogout(@Req() req: any, @Res({ passthrough: true }) res: FastifyReply) {
+  async marketingLogout(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
     await this.clearAllPanelSessionsAndCookies(req, res);
     return { success: true };
   }
@@ -820,7 +1048,14 @@ export class AuthController {
   @HttpCode(200)
   async verifyMarketing(@Req() req: any) {
     if (!PANEL_ROLE_CONFIG.MARKETING.includes(req.user.role as any)) {
-      this.logger.warn({ event: 'panel.verify.marketing.access_denied', adminId: req.user.adminId, role: req.user.role }, 'Marketing panel verify: access denied');
+      this.logger.warn(
+        {
+          event: 'panel.verify.marketing.access_denied',
+          adminId: req.user.adminId,
+          role: req.user.role,
+        },
+        'Marketing panel verify: access denied',
+      );
       throw new UnauthorizedException('Access denied');
     }
     let admin;
@@ -839,14 +1074,27 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   @HttpCode(200)
-  async accountingLogin(@Req() req: any, @Body() dto: AdminLoginDto, @Res({ passthrough: true }) res: FastifyReply) {
-    return this.performPanelLogin(dto, [...PANEL_ROLE_CONFIG.ACCOUNTING], OBFUSCATED_COOKIE_NAMES.ACCOUNTING_PANEL_TOKEN, res, req);
+  async accountingLogin(
+    @Req() req: any,
+    @Body() dto: AdminLoginDto,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
+    return this.performPanelLogin(
+      dto,
+      [...PANEL_ROLE_CONFIG.ACCOUNTING],
+      OBFUSCATED_COOKIE_NAMES.ACCOUNTING_PANEL_TOKEN,
+      res,
+      req,
+    );
   }
 
   @Post('accounting/logout')
   @Public()
   @HttpCode(200)
-  async accountingLogout(@Req() req: any, @Res({ passthrough: true }) res: FastifyReply) {
+  async accountingLogout(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
     await this.clearAllPanelSessionsAndCookies(req, res);
     return { success: true };
   }
@@ -857,7 +1105,14 @@ export class AuthController {
   @HttpCode(200)
   async verifyAccounting(@Req() req: any) {
     if (!PANEL_ROLE_CONFIG.ACCOUNTING.includes(req.user.role as any)) {
-      this.logger.warn({ event: 'panel.verify.accounting.access_denied', adminId: req.user.adminId, role: req.user.role }, 'Accounting panel verify: access denied');
+      this.logger.warn(
+        {
+          event: 'panel.verify.accounting.access_denied',
+          adminId: req.user.adminId,
+          role: req.user.role,
+        },
+        'Accounting panel verify: access denied',
+      );
       throw new UnauthorizedException('Access denied');
     }
     let admin;
@@ -876,14 +1131,27 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   @HttpCode(200)
-  async operationLogin(@Req() req: any, @Body() dto: AdminLoginDto, @Res({ passthrough: true }) res: FastifyReply) {
-    return this.performPanelLogin(dto, [...PANEL_ROLE_CONFIG.OPERATION], OBFUSCATED_COOKIE_NAMES.OPERATION_PANEL_TOKEN, res, req);
+  async operationLogin(
+    @Req() req: any,
+    @Body() dto: AdminLoginDto,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
+    return this.performPanelLogin(
+      dto,
+      [...PANEL_ROLE_CONFIG.OPERATION],
+      OBFUSCATED_COOKIE_NAMES.OPERATION_PANEL_TOKEN,
+      res,
+      req,
+    );
   }
 
   @Post('operation/logout')
   @Public()
   @HttpCode(200)
-  async operationLogout(@Req() req: any, @Res({ passthrough: true }) res: FastifyReply) {
+  async operationLogout(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
     await this.clearAllPanelSessionsAndCookies(req, res);
     return { success: true };
   }
@@ -894,7 +1162,14 @@ export class AuthController {
   @HttpCode(200)
   async verifyOperation(@Req() req: any) {
     if (!PANEL_ROLE_CONFIG.OPERATION.includes(req.user.role as any)) {
-      this.logger.warn({ event: 'panel.verify.operation.access_denied', adminId: req.user.adminId, role: req.user.role }, 'Operation panel verify: access denied');
+      this.logger.warn(
+        {
+          event: 'panel.verify.operation.access_denied',
+          adminId: req.user.adminId,
+          role: req.user.role,
+        },
+        'Operation panel verify: access denied',
+      );
       throw new UnauthorizedException('Access denied');
     }
     let admin;
@@ -917,7 +1192,14 @@ export class AuthController {
   @HttpCode(200)
   async verifyAdminSession(@Req() req: any) {
     if (!PANEL_ROLE_CONFIG.ADMIN.includes(req.user.role as any)) {
-      this.logger.warn({ event: 'panel.verify.admin.access_denied', adminId: req.user.adminId, role: req.user.role }, 'Admin panel verify: access denied');
+      this.logger.warn(
+        {
+          event: 'panel.verify.admin.access_denied',
+          adminId: req.user.adminId,
+          role: req.user.role,
+        },
+        'Admin panel verify: access denied',
+      );
       throw new UnauthorizedException('Access denied');
     }
     const adminId = req.user.adminId;
@@ -951,14 +1233,27 @@ export class AuthController {
   @Public()
   @Throttle({ default: { limit: 30, ttl: 60000 } })
   @HttpCode(200)
-  async supportLogin(@Req() req: any, @Body() dto: AdminLoginDto, @Res({ passthrough: true }) res: FastifyReply) {
-    return this.performPanelLogin(dto, [...PANEL_ROLE_CONFIG.SUPPORT], OBFUSCATED_COOKIE_NAMES.SUPPORT_PANEL_TOKEN, res, req);
+  async supportLogin(
+    @Req() req: any,
+    @Body() dto: AdminLoginDto,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
+    return this.performPanelLogin(
+      dto,
+      [...PANEL_ROLE_CONFIG.SUPPORT],
+      OBFUSCATED_COOKIE_NAMES.SUPPORT_PANEL_TOKEN,
+      res,
+      req,
+    );
   }
 
   @Post('support/logout')
   @Public()
   @HttpCode(200)
-  async supportLogout(@Req() req: any, @Res({ passthrough: true }) res: FastifyReply) {
+  async supportLogout(
+    @Req() req: any,
+    @Res({ passthrough: true }) res: FastifyReply,
+  ) {
     await this.clearAllPanelSessionsAndCookies(req, res);
     return { success: true };
   }
@@ -978,7 +1273,14 @@ export class AuthController {
 
     // Enforce support-specific role constraints
     if (!PANEL_ROLE_CONFIG.SUPPORT.includes(userRole as any)) {
-      this.logger.warn({ event: 'panel.verify.support.access_denied', adminId, role: userRole }, 'Support panel verify: access denied');
+      this.logger.warn(
+        {
+          event: 'panel.verify.support.access_denied',
+          adminId,
+          role: userRole,
+        },
+        'Support panel verify: access denied',
+      );
       throw new UnauthorizedException(
         'Only Support Agents and Super Admins can access the support verification endpoint',
       );
@@ -1112,7 +1414,10 @@ export class AuthController {
       };
     } catch (error) {
       // JWT verification failed, expired, or DB error
-      this.logger.error({ adminId: payload?.adminId, err: error }, '[Validate Admin] Token validation failed:');
+      this.logger.error(
+        { adminId: payload?.adminId, err: error },
+        '[Validate Admin] Token validation failed:',
+      );
       throw new UnauthorizedException('Invalid admin token');
     }
   }
@@ -1128,7 +1433,10 @@ export class AuthController {
   async getAllAdmins(@Req() req: any) {
     try {
       const adminId = req.user.adminId;
-      this.logger.log({ adminId }, `[Get All Admins] Request from admin ID: ${adminId}`);
+      this.logger.log(
+        { adminId },
+        `[Get All Admins] Request from admin ID: ${adminId}`,
+      );
 
       const admins = await this.authService.getAllAdmins(
         req.user.adminId,
@@ -1255,7 +1563,9 @@ export class AuthController {
       if (error instanceof HttpException) {
         throw error;
       }
-      throw new InternalServerErrorException(error.message || 'An internal server error occurred');
+      throw new InternalServerErrorException(
+        error.message || 'An internal server error occurred',
+      );
     }
   }
 
@@ -1309,7 +1619,10 @@ export class AuthController {
       if (error.status === 404 || error instanceof NotFoundException) {
         throw new NotFoundException('Admin not found');
       }
-      this.logger.error({ err: error }, `[Get Admin By ID] Error: ${error.message}`);
+      this.logger.error(
+        { err: error },
+        `[Get Admin By ID] Error: ${error.message}`,
+      );
       throw new InternalServerErrorException('Failed to fetch admin');
     }
   }
@@ -1332,7 +1645,14 @@ export class AuthController {
 
       // Prevent self-edit
       if (adminId === currentAdminId) {
-        this.logger.warn({ event: 'admin.permissions.update.self_edit', adminId, currentAdminId }, 'Cannot modify own permissions');
+        this.logger.warn(
+          {
+            event: 'admin.permissions.update.self_edit',
+            adminId,
+            currentAdminId,
+          },
+          'Cannot modify own permissions',
+        );
         throw new BadRequestException('Cannot modify your own permissions');
       }
 
@@ -1341,12 +1661,22 @@ export class AuthController {
         req.user.role !== 'SUPER_ADMIN' &&
         targetAdmin.role !== 'CONTENT_MANAGER'
       ) {
-        this.logger.warn({ event: 'admin.permissions.update.not_authorized', adminId, currentAdminId, targetRole: targetAdmin.role, requesterRole: req.user.role }, 'Not authorized to modify this admin');
+        this.logger.warn(
+          {
+            event: 'admin.permissions.update.not_authorized',
+            adminId,
+            currentAdminId,
+            targetRole: targetAdmin.role,
+            requesterRole: req.user.role,
+          },
+          'Not authorized to modify this admin',
+        );
         throw new ForbiddenException('You can only modify Content Managers');
       }
 
       this.logger.log(
-        { adminId, currentAdminId }, `[Update Admin Permissions] Admin ${currentAdminId} updating permissions for admin ${adminId}`,
+        { adminId, currentAdminId },
+        `[Update Admin Permissions] Admin ${currentAdminId} updating permissions for admin ${adminId}`,
       );
 
       const updatedAdmin = await this.authService.updateAdminPermissions(
@@ -1381,18 +1711,24 @@ export class AuthController {
       const currentAdminId = req.user.adminId;
 
       // Allow Super Admin or the agent themselves to update availability
-      if (
-        req.user.role !== 'SUPER_ADMIN' &&
-        currentAdminId !== adminId
-      ) {
-        this.logger.warn({ event: 'admin.availability.update.not_authorized', adminId, currentAdminId, requesterRole: req.user.role }, 'Not authorized to update Support Agent availability');
+      if (req.user.role !== 'SUPER_ADMIN' && currentAdminId !== adminId) {
+        this.logger.warn(
+          {
+            event: 'admin.availability.update.not_authorized',
+            adminId,
+            currentAdminId,
+            requesterRole: req.user.role,
+          },
+          'Not authorized to update Support Agent availability',
+        );
         throw new ForbiddenException(
           'You do not have permission to update Support Agent availability',
         );
       }
 
       this.logger.log(
-        { adminId, currentAdminId }, `[Update Availability] Admin ${currentAdminId} updating availability for Support Agent ${adminId}`,
+        { adminId, currentAdminId },
+        `[Update Availability] Admin ${currentAdminId} updating availability for Support Agent ${adminId}`,
       );
 
       const updatedAdmin = await this.authService.updateAvailability(
@@ -1424,7 +1760,10 @@ export class AuthController {
 
       // Prevent self-delete
       if (adminId === currentAdminId) {
-        this.logger.warn({ event: 'admin.delete.self_delete', adminId, currentAdminId }, 'Cannot delete own account');
+        this.logger.warn(
+          { event: 'admin.delete.self_delete', adminId, currentAdminId },
+          'Cannot delete own account',
+        );
         throw new BadRequestException('Cannot delete your own account');
       }
 
@@ -1433,19 +1772,32 @@ export class AuthController {
         req.user.role !== 'SUPER_ADMIN' &&
         targetAdmin.role !== 'CONTENT_MANAGER'
       ) {
-        this.logger.warn({ event: 'admin.delete.not_authorized', adminId, currentAdminId, targetRole: targetAdmin.role, requesterRole: req.user.role }, 'Not authorized to delete this admin');
+        this.logger.warn(
+          {
+            event: 'admin.delete.not_authorized',
+            adminId,
+            currentAdminId,
+            targetRole: targetAdmin.role,
+            requesterRole: req.user.role,
+          },
+          'Not authorized to delete this admin',
+        );
         throw new ForbiddenException('You can only delete Content Managers');
       }
 
       this.logger.log(
-        { adminId, currentAdminId }, `[Delete Admin] Admin ${currentAdminId} deleting admin ${adminId}`,
+        { adminId, currentAdminId },
+        `[Delete Admin] Admin ${currentAdminId} deleting admin ${adminId}`,
       );
 
       // Pass the requester as the preferred fallback owner for any
       // attributed records (stocks, baskets, leads, change requests) so
       // long-lived panel users can be deleted without FK violations.
       // The service falls back to the oldest SUPER_ADMIN when omitted.
-      const result = await this.authService.deleteAdmin(adminId, currentAdminId);
+      const result = await this.authService.deleteAdmin(
+        adminId,
+        currentAdminId,
+      );
 
       return {
         success: true,
@@ -1492,14 +1844,26 @@ export class AuthController {
       const ip = this.getClientIp(req);
       const idempotencyKey = req.headers['x-idempotency-key'];
       if (idempotencyKey) {
-        const cached = await this.authService.redis.getIdempotencyResponse(idempotencyKey);
+        const cached =
+          await this.authService.redis.getIdempotencyResponse(idempotencyKey);
         if (cached) return cached;
       }
-      this.logger.log(`Phone OTP request for ${dto.phone?.slice(-4)?.padStart(dto.phone?.length || 0, '*')}`);
+      this.logger.log(
+        `Phone OTP request for ${dto.phone?.slice(-4)?.padStart(dto.phone?.length || 0, '*')}`,
+      );
       const deviceFingerprint = req.headers['x-device-fingerprint'];
-      const result = await this.authService.sendPhoneOTP(dto.phone, ip, dto.captchaToken, deviceFingerprint);
+      const result = await this.authService.sendPhoneOTP(
+        dto.phone,
+        ip,
+        dto.captchaToken,
+        deviceFingerprint,
+      );
       if (idempotencyKey) {
-        await this.authService.redis.setIdempotencyResponse(idempotencyKey, result, 300);
+        await this.authService.redis.setIdempotencyResponse(
+          idempotencyKey,
+          result,
+          300,
+        );
       }
       return result;
     } catch (error: any) {
@@ -1525,8 +1889,11 @@ export class AuthController {
     @Res({ passthrough: true }) res: FastifyReply,
   ) {
     try {
-
-      const result = await this.authService.verifyPhoneOTP(dto.phone, dto.otp, req);
+      const result = await this.authService.verifyPhoneOTP(
+        dto.phone,
+        dto.otp,
+        req,
+      );
 
       if (!result.needsEmail && result.token) {
         res.clearCookie('pending_signup', this.cookieOptions);
@@ -1537,10 +1904,21 @@ export class AuthController {
         try {
           const ip = this.getClientIp(req);
           const userAgent = req.headers['user-agent'] || 'Unknown';
-          this.authService.logUserLogin(result.user?.id || '', ip, userAgent).catch((err: any) => this.logger.warn({ userId: result.user?.id, err }, 'logUserLogin failed'));
-        } catch(e) {}
+          this.authService
+            .logUserLogin(result.user?.id || '', ip, userAgent)
+            .catch((err: any) =>
+              this.logger.warn(
+                { userId: result.user?.id, err },
+                'logUserLogin failed',
+              ),
+            );
+        } catch (e) {}
 
-        res.setCookie(OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN, result.token!, this.cookieOptions);
+        res.setCookie(
+          OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN,
+          result.token!,
+          this.cookieOptions,
+        );
         const isMobile = req.headers['x-client-type'] === 'mobile';
         return {
           success: true,
@@ -1553,16 +1931,20 @@ export class AuthController {
             user: result.user ? omitSensitive(result.user) : undefined,
           }),
         };
-        
       } else {
         // Bind signup to this verified phone with a short-lived, one-use proof.
-        res.setCookie('phone_verification', result.phoneVerificationToken!, { ...this.cookieOptions, maxAge: 600 });
+        res.setCookie('phone_verification', result.phoneVerificationToken!, {
+          ...this.cookieOptions,
+          maxAge: 600,
+        });
         res.clearCookie('pending_signup', this.cookieOptions);
         res.clearCookie(OBFUSCATED_COOKIE_NAMES.AUTH_TOKEN, this.cookieOptions);
         return {
           success: true,
           needsEmail: true,
-          ...(req.headers['x-client-type'] === 'mobile' && { phoneVerificationToken: result.phoneVerificationToken }),
+          ...(req.headers['x-client-type'] === 'mobile' && {
+            phoneVerificationToken: result.phoneVerificationToken,
+          }),
           user: {
             ...result.user,
             phone: result.user?.phone ? maskPhone(result.user.phone) : null,
@@ -1625,8 +2007,17 @@ export class AuthController {
     const logger = this.logger;
     logger.log(`Logging in branch: ${dto.email}`);
 
-    const branch = await this.authService.branchLogin(dto.email, dto.password, dto.branchId);
-    const token = await this.authService.generateBranchToken(branch.id, branch.email, branch.name, req);
+    const branch = await this.authService.branchLogin(
+      dto.email,
+      dto.password,
+      dto.branchId,
+    );
+    const token = await this.authService.generateBranchToken(
+      branch.id,
+      branch.email,
+      branch.name,
+      req,
+    );
 
     res.setCookie(
       OBFUSCATED_COOKIE_NAMES.BRANCH_PANEL_TOKEN,
@@ -1643,7 +2034,8 @@ export class AuthController {
   @HttpCode(200)
   async verifyBranchSession(@Req() req: any) {
     const branchId = req.user.branchId;
-    if (!branchId || req.user.type !== 'BRANCH') throw new UnauthorizedException('Invalid branch session');
+    if (!branchId || req.user.type !== 'BRANCH')
+      throw new UnauthorizedException('Invalid branch session');
     const branch = await this.authService.getBranchById(branchId);
     return { success: true, branch: omitSensitive(branch) };
   }
@@ -1661,7 +2053,13 @@ export class AuthController {
     logger.log(`Logging in internal RM: ${dto.email}`);
 
     const rm = await this.authService.internalRmLogin(dto.email, dto.password);
-    const token = await this.authService.generateInternalRmToken(rm.id, rm.email, rm.name, rm.branchId, req);
+    const token = await this.authService.generateInternalRmToken(
+      rm.id,
+      rm.email,
+      rm.name,
+      rm.branchId,
+      req,
+    );
 
     res.setCookie(
       OBFUSCATED_COOKIE_NAMES.INTERNAL_RM_PANEL_TOKEN,
@@ -1676,9 +2074,20 @@ export class AuthController {
   @Post('branch/internal-rm')
   async createInternalRm(@Body() dto: CreatePartnerRmDto, @Req() req: any) {
     const user = req.user;
-    if (user.type !== 'BRANCH' || !user.branchId) throw new UnauthorizedException('Only branches can create Internal RMs');
-    const rm = await this.authService.createInternalRm(user.branchId, dto.name, dto.email, dto.password, dto.employeeId);
-    return { success: true, message: 'Internal RM created successfully', rm: omitSensitive(rm) };
+    if (user.type !== 'BRANCH' || !user.branchId)
+      throw new UnauthorizedException('Only branches can create Internal RMs');
+    const rm = await this.authService.createInternalRm(
+      user.branchId,
+      dto.name,
+      dto.email,
+      dto.password,
+      dto.employeeId,
+    );
+    return {
+      success: true,
+      message: 'Internal RM created successfully',
+      rm: omitSensitive(rm),
+    };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -1689,9 +2098,18 @@ export class AuthController {
     @Req() req: any,
   ) {
     const user = req.user;
-    if (user.type !== 'BRANCH' || !user.branchId) throw new UnauthorizedException('Only branches can update Internal RMs');
-    const rm = await this.authService.updateInternalRmEmployeeId(user.branchId, id, dto.employeeId);
-    return { success: true, message: 'Employee ID updated successfully', rm: omitSensitive(rm) };
+    if (user.type !== 'BRANCH' || !user.branchId)
+      throw new UnauthorizedException('Only branches can update Internal RMs');
+    const rm = await this.authService.updateInternalRmEmployeeId(
+      user.branchId,
+      id,
+      dto.employeeId,
+    );
+    return {
+      success: true,
+      message: 'Employee ID updated successfully',
+      rm: omitSensitive(rm),
+    };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -1709,9 +2127,13 @@ export class AuthController {
   @Delete('branch/internal-rm/:id')
   async deleteBranchInternalRm(@Param('id') id: string, @Req() req: any) {
     const user = req.user;
-    if (user.type !== 'BRANCH' || !user.branchId) throw new UnauthorizedException('Only branches can delete Internal RMs');
+    if (user.type !== 'BRANCH' || !user.branchId)
+      throw new UnauthorizedException('Only branches can delete Internal RMs');
     await this.authService.deleteInternalRm(user.branchId, id);
-    return { success: true, message: 'Relationship Manager deleted successfully' };
+    return {
+      success: true,
+      message: 'Relationship Manager deleted successfully',
+    };
   }
 
   /** POST alias for DELETE — WAF/reverse proxy blocks the DELETE method */
@@ -1726,7 +2148,8 @@ export class AuthController {
   @Get('branch/internal-rms')
   async getBranchInternalRms(@Req() req: any) {
     const user = req.user;
-    if (user.type !== 'BRANCH' || !user.branchId) throw new UnauthorizedException('Only branches can view Internal RMs');
+    if (user.type !== 'BRANCH' || !user.branchId)
+      throw new UnauthorizedException('Only branches can view Internal RMs');
     const rms = await this.authService.getBranchInternalRms(user.branchId);
     return { success: true, rms: omitSensitive(rms) };
   }
@@ -1760,7 +2183,12 @@ export class AuthController {
       throw new ForbiddenException('Super admin access required');
     }
     const { name, email, ...classificationFields } = dto;
-    const branch = await this.authService.updateBranch(id, name, email, classificationFields);
+    const branch = await this.authService.updateBranch(
+      id,
+      name,
+      email,
+      classificationFields,
+    );
     return { success: true, branch: omitSensitive(branch) };
   }
 
@@ -1768,9 +2196,15 @@ export class AuthController {
   @Post('admin/branches')
   async adminCreateBranch(@Body() dto: CreateBranchDto) {
     const { name, email, password, ...classificationFields } = dto;
-    if (!name || !email || !password) throw new BadRequestException('Name, email, and password are required');
-    const passwordHash = await require("bcrypt").hash(password, 10);
-    const branch = await this.authService.createBranch(name, email, passwordHash, classificationFields);
+    if (!name || !email || !password)
+      throw new BadRequestException('Name, email, and password are required');
+    const passwordHash = await require('bcrypt').hash(password, 10);
+    const branch = await this.authService.createBranch(
+      name,
+      email,
+      passwordHash,
+      classificationFields,
+    );
     return { success: true, branch: omitSensitive(branch) };
   }
 
@@ -1797,8 +2231,16 @@ export class AuthController {
     const logger = this.logger;
     logger.log(`Logging in distributor: ${dto.email}`);
 
-    const distributor = await this.authService.distributorLogin(dto.email, dto.password);
-    const token = await this.authService.generateDistributorToken(distributor.id, distributor.email, distributor.name, req);
+    const distributor = await this.authService.distributorLogin(
+      dto.email,
+      dto.password,
+    );
+    const token = await this.authService.generateDistributorToken(
+      distributor.id,
+      distributor.email,
+      distributor.name,
+      req,
+    );
 
     res.setCookie(
       OBFUSCATED_COOKIE_NAMES.DISTRIBUTOR_PANEL_TOKEN,
@@ -1815,8 +2257,10 @@ export class AuthController {
   @HttpCode(200)
   async verifyDistributorSession(@Req() req: any) {
     const distributorId = req.user.distributorId;
-    if (!distributorId || req.user.type !== 'DISTRIBUTOR') throw new UnauthorizedException('Invalid distributor session');
-    const distributor = await this.authService.getDistributorById(distributorId);
+    if (!distributorId || req.user.type !== 'DISTRIBUTOR')
+      throw new UnauthorizedException('Invalid distributor session');
+    const distributor =
+      await this.authService.getDistributorById(distributorId);
     return { success: true, distributor: omitSensitive(distributor) };
   }
 
@@ -1839,7 +2283,8 @@ export class AuthController {
           branch: { select: { name: true } },
         },
       });
-      if (!rm || rm.status !== 'ACTIVE') throw new UnauthorizedException('RM account deactivated or not found');
+      if (!rm || rm.status !== 'ACTIVE')
+        throw new UnauthorizedException('RM account deactivated or not found');
       return { success: true, rm: { ...rm, type: 'INTERNAL_RM' } };
     } else if (user.type === 'DISTRIBUTOR_RM' && user.distributorRmId) {
       const rm = await this.prisma.distributorRM.findUnique({
@@ -1854,7 +2299,8 @@ export class AuthController {
           distributor: { select: { name: true } },
         },
       });
-      if (!rm || rm.status !== 'ACTIVE') throw new UnauthorizedException('RM account deactivated or not found');
+      if (!rm || rm.status !== 'ACTIVE')
+        throw new UnauthorizedException('RM account deactivated or not found');
       return { success: true, rm: { ...rm, type: 'DISTRIBUTOR_RM' } };
     }
     throw new UnauthorizedException('Invalid RM session');
@@ -1877,8 +2323,17 @@ export class AuthController {
     const logger = this.logger;
     logger.log(`Logging in distributor RM: ${dto.email}`);
 
-    const rm = await this.authService.distributorRmLogin(dto.email, dto.password);
-    const token = await this.authService.generateDistributorRmToken(rm.id, rm.email, rm.name, rm.distributorId, req);
+    const rm = await this.authService.distributorRmLogin(
+      dto.email,
+      dto.password,
+    );
+    const token = await this.authService.generateDistributorRmToken(
+      rm.id,
+      rm.email,
+      rm.name,
+      rm.distributorId,
+      req,
+    );
 
     res.setCookie(
       OBFUSCATED_COOKIE_NAMES.DISTRIBUTOR_RM_PANEL_TOKEN,
@@ -1893,9 +2348,22 @@ export class AuthController {
   @Post('distributor/distributor-rm')
   async createDistributorRm(@Body() dto: CreatePartnerRmDto, @Req() req: any) {
     const user = req.user;
-    if (user.type !== 'DISTRIBUTOR' || !user.distributorId) throw new UnauthorizedException('Only distributors can create Distributor RMs');
-    const rm = await this.authService.createDistributorRm(user.distributorId, dto.name, dto.email, dto.password, dto.employeeId);
-    return { success: true, message: 'Distributor RM created successfully', rm: omitSensitive(rm) };
+    if (user.type !== 'DISTRIBUTOR' || !user.distributorId)
+      throw new UnauthorizedException(
+        'Only distributors can create Distributor RMs',
+      );
+    const rm = await this.authService.createDistributorRm(
+      user.distributorId,
+      dto.name,
+      dto.email,
+      dto.password,
+      dto.employeeId,
+    );
+    return {
+      success: true,
+      message: 'Distributor RM created successfully',
+      rm: omitSensitive(rm),
+    };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -1906,9 +2374,20 @@ export class AuthController {
     @Req() req: any,
   ) {
     const user = req.user;
-    if (user.type !== 'DISTRIBUTOR' || !user.distributorId) throw new UnauthorizedException('Only distributors can update Distributor RMs');
-    const rm = await this.authService.updateDistributorRmEmployeeId(user.distributorId, id, dto.employeeId);
-    return { success: true, message: 'Employee ID updated successfully', rm: omitSensitive(rm) };
+    if (user.type !== 'DISTRIBUTOR' || !user.distributorId)
+      throw new UnauthorizedException(
+        'Only distributors can update Distributor RMs',
+      );
+    const rm = await this.authService.updateDistributorRmEmployeeId(
+      user.distributorId,
+      id,
+      dto.employeeId,
+    );
+    return {
+      success: true,
+      message: 'Employee ID updated successfully',
+      rm: omitSensitive(rm),
+    };
   }
 
   @UseGuards(JwtAuthGuard)
@@ -1926,7 +2405,10 @@ export class AuthController {
   @Get('distributor/distributor-rms')
   async getDistributorRms(@Req() req: any) {
     const user = req.user;
-    if (user.type !== 'DISTRIBUTOR' || !user.distributorId) throw new UnauthorizedException('Only distributors can view Distributor RMs');
+    if (user.type !== 'DISTRIBUTOR' || !user.distributorId)
+      throw new UnauthorizedException(
+        'Only distributors can view Distributor RMs',
+      );
     const rms = await this.authService.getDistributorRms(user.distributorId);
     return { success: true, rms: omitSensitive(rms) };
   }
@@ -1959,7 +2441,11 @@ export class AuthController {
     if (req.user?.role !== 'SUPER_ADMIN') {
       throw new ForbiddenException('Super admin access required');
     }
-    const distributor = await this.authService.updateDistributor(id, dto.name, dto.email);
+    const distributor = await this.authService.updateDistributor(
+      id,
+      dto.name,
+      dto.email,
+    );
     return { success: true, distributor: omitSensitive(distributor) };
   }
 
@@ -1967,9 +2453,14 @@ export class AuthController {
   @Post('admin/distributors')
   async adminCreateDistributor(@Body() dto: CreateDistributorDto) {
     const { name, email, password } = dto;
-    if (!name || !email || !password) throw new BadRequestException('Name, email, and password are required');
-    const passwordHash = await require("bcrypt").hash(password, 10);
-    const distributor = await this.authService.createDistributor(name, email, passwordHash);
+    if (!name || !email || !password)
+      throw new BadRequestException('Name, email, and password are required');
+    const passwordHash = await require('bcrypt').hash(password, 10);
+    const distributor = await this.authService.createDistributor(
+      name,
+      email,
+      passwordHash,
+    );
     return { success: true, distributor: omitSensitive(distributor) };
   }
 
@@ -1985,11 +2476,11 @@ export class AuthController {
   async getAllRms() {
     const [internalRms, distributorRms] = await Promise.all([
       this.authService.getAllInternalRms(),
-      this.authService.getAllDistributorRms()
+      this.authService.getAllDistributorRms(),
     ]);
-    
+
     // Map to a unified format for the admin dashboard
-    const mappedInternal = internalRms.map(rm => ({
+    const mappedInternal = internalRms.map((rm) => ({
       ...rm,
       type: 'INTERNAL_RM',
       parentName: rm.branch?.name || 'Unknown Branch',
@@ -1997,8 +2488,8 @@ export class AuthController {
       conversionsCount: rm._count?.couponsGenerated || 0,
       totalRevenue: 0, // This would be fetched from stocks service in a full implementation
     }));
-    
-    const mappedDistributor = distributorRms.map(rm => ({
+
+    const mappedDistributor = distributorRms.map((rm) => ({
       ...rm,
       type: 'DISTRIBUTOR_RM',
       parentName: rm.distributor?.name || 'Unknown Distributor',
@@ -2006,12 +2497,13 @@ export class AuthController {
       conversionsCount: rm._count?.couponsGenerated || 0,
       totalRevenue: 0,
     }));
-    
+
     // Combine and sort by creation date
-    const allRms = [...mappedInternal, ...mappedDistributor].sort((a, b) => 
-      new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    const allRms = [...mappedInternal, ...mappedDistributor].sort(
+      (a, b) =>
+        new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime(),
     );
-    
+
     return { success: true, rms: omitSensitive(allRms) };
   }
 
@@ -2020,18 +2512,30 @@ export class AuthController {
   async adminCreateRm(@Body() dto: AdminCreateRmDto) {
     const { name, email, password, type, parentId } = dto;
     if (!name || !email || !password || !type || !parentId) {
-      throw new BadRequestException('Name, email, password, type, and parentId are required');
+      throw new BadRequestException(
+        'Name, email, password, type, and parentId are required',
+      );
     }
-    
+
     let rm;
     if (type === 'INTERNAL_RM') {
-      rm = await this.authService.createInternalRm(parentId, name, email, password);
+      rm = await this.authService.createInternalRm(
+        parentId,
+        name,
+        email,
+        password,
+      );
     } else if (type === 'DISTRIBUTOR_RM') {
-      rm = await this.authService.createDistributorRm(parentId, name, email, password);
+      rm = await this.authService.createDistributorRm(
+        parentId,
+        name,
+        email,
+        password,
+      );
     } else {
       throw new BadRequestException('Invalid RM type');
     }
-    
+
     return { success: true, rm: omitSensitive(rm) };
   }
 
@@ -2039,7 +2543,10 @@ export class AuthController {
   @Delete('admin/rms/:id')
   async adminDeleteRm(@Param('id') id: string) {
     await this.authService.deleteRm(id);
-    return { success: true, message: 'Relationship Manager deleted successfully' };
+    return {
+      success: true,
+      message: 'Relationship Manager deleted successfully',
+    };
   }
 
   /**
@@ -2051,7 +2558,9 @@ export class AuthController {
   // @Throttle({ default: { limit: 10, ttl: 60000 } })
   @SkipThrottle()
   @HttpCode(200)
-  async sendPartnerForgotPasswordOtp(@Body() dto: SendPartnerForgotPasswordOtpDto) {
+  async sendPartnerForgotPasswordOtp(
+    @Body() dto: SendPartnerForgotPasswordOtpDto,
+  ) {
     return this.authService.sendPartnerForgotPasswordOtp(dto.email, dto.portal);
   }
 
@@ -2064,8 +2573,14 @@ export class AuthController {
   // @Throttle({ default: { limit: 20, ttl: 60000 } })
   @SkipThrottle()
   @HttpCode(200)
-  async verifyPartnerForgotPasswordOtp(@Body() dto: VerifyPartnerForgotPasswordOtpDto) {
-    return this.authService.verifyPartnerForgotPasswordOtp(dto.email, dto.portal, dto.otp);
+  async verifyPartnerForgotPasswordOtp(
+    @Body() dto: VerifyPartnerForgotPasswordOtpDto,
+  ) {
+    return this.authService.verifyPartnerForgotPasswordOtp(
+      dto.email,
+      dto.portal,
+      dto.otp,
+    );
   }
 
   /**
@@ -2077,7 +2592,12 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(200)
   async resetPartnerPassword(@Body() dto: ResetPartnerPasswordDto) {
-    return this.authService.resetPartnerPassword(dto.portal, dto.email, dto.resetToken, dto.password);
+    return this.authService.resetPartnerPassword(
+      dto.portal,
+      dto.email,
+      dto.resetToken,
+      dto.password,
+    );
   }
 
   @Post('distributor/reset-password')
@@ -2085,7 +2605,12 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(200)
   async resetDistributorPassword(@Body() dto: ResetDistributorPasswordDto) {
-    return this.authService.resetPartnerPassword('distributor', dto.email, dto.resetToken, dto.password);
+    return this.authService.resetPartnerPassword(
+      'distributor',
+      dto.email,
+      dto.resetToken,
+      dto.password,
+    );
   }
 
   @Post('branch/reset-password')
@@ -2093,7 +2618,12 @@ export class AuthController {
   @Throttle({ default: { limit: 10, ttl: 60000 } })
   @HttpCode(200)
   async resetBranchPassword(@Body() dto: ResetDistributorPasswordDto) {
-    return this.authService.resetPartnerPassword('branch', dto.email, dto.resetToken, dto.password);
+    return this.authService.resetPartnerPassword(
+      'branch',
+      dto.email,
+      dto.resetToken,
+      dto.password,
+    );
   }
 
   // ==========================================
@@ -2109,10 +2639,19 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   async getActiveSessions(@Req() req: any) {
-    const userId = req.user.adminId || req.user.userId || req.user.branchId || req.user.internalRmId || req.user.distributorId || req.user.distributorRmId;
+    const userId =
+      req.user.adminId ||
+      req.user.userId ||
+      req.user.branchId ||
+      req.user.internalRmId ||
+      req.user.distributorId ||
+      req.user.distributorRmId;
     if (!userId) throw new UnauthorizedException('Invalid session');
     const currentSessionId = req.user.sessionId;
-    const sessions = await this.authService.getActiveSessions(userId, currentSessionId);
+    const sessions = await this.authService.getActiveSessions(
+      userId,
+      currentSessionId,
+    );
     return { success: true, sessions };
   }
 
@@ -2124,8 +2663,17 @@ export class AuthController {
   @Delete('sessions/:sessionId')
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
-  async terminateSession(@Req() req: any, @Param('sessionId') sessionId: string) {
-    const userId = req.user.adminId || req.user.userId || req.user.branchId || req.user.internalRmId || req.user.distributorId || req.user.distributorRmId;
+  async terminateSession(
+    @Req() req: any,
+    @Param('sessionId') sessionId: string,
+  ) {
+    const userId =
+      req.user.adminId ||
+      req.user.userId ||
+      req.user.branchId ||
+      req.user.internalRmId ||
+      req.user.distributorId ||
+      req.user.distributorRmId;
     if (!userId) throw new UnauthorizedException('Invalid session');
     return this.authService.terminateSession(userId, sessionId);
   }
@@ -2138,10 +2686,17 @@ export class AuthController {
   @UseGuards(JwtAuthGuard)
   @HttpCode(200)
   async terminateAllOtherSessions(@Req() req: any) {
-    const userId = req.user.adminId || req.user.userId || req.user.branchId || req.user.internalRmId || req.user.distributorId || req.user.distributorRmId;
+    const userId =
+      req.user.adminId ||
+      req.user.userId ||
+      req.user.branchId ||
+      req.user.internalRmId ||
+      req.user.distributorId ||
+      req.user.distributorRmId;
     if (!userId) throw new UnauthorizedException('Invalid session');
     const currentSessionId = req.user.sessionId;
-    if (!currentSessionId) throw new BadRequestException('Could not identify current session');
+    if (!currentSessionId)
+      throw new BadRequestException('Could not identify current session');
     return this.authService.terminateAllOtherSessions(userId, currentSessionId);
   }
 
@@ -2171,7 +2726,9 @@ export class AuthController {
   // @Throttle({ default: { limit: 20, ttl: 60000 } })
   @SkipThrottle()
   @HttpCode(200)
-  async verifyPanelForgotPasswordOtp(@Body() dto: VerifyPanelForgotPasswordOtpDto) {
+  async verifyPanelForgotPasswordOtp(
+    @Body() dto: VerifyPanelForgotPasswordOtpDto,
+  ) {
     return this.authService.verifyPanelForgotPasswordOtp(dto.email, dto.otp);
   }
 

@@ -1,6 +1,6 @@
 import { Injectable, BadRequestException, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 
 @Injectable()
 export class CouponsService {
@@ -9,7 +9,7 @@ export class CouponsService {
 
   /**
    * Generates a new coupon. Used by RM.
-   * @param internalRmId - set if RM is internal (SMC branch RM)
+   * @param internalRmId - set if RM is internal ( branch RM)
    * @param distributorRmId - set if RM is external (distributor RM)
    */
   async generateCoupon(
@@ -123,7 +123,7 @@ export class CouponsService {
 
       while (!isUnique && attempts < 10) {
         const randomSuffix = Math.random().toString(36).substring(2, 8).toUpperCase();
-        code = `SMC-${cleanStockName}-${randomSuffix}`;
+        code = `-${cleanStockName}-${randomSuffix}`;
         const existing = await this.prisma.coupon.findUnique({ where: { code } });
         if (!existing) {
           isUnique = true;

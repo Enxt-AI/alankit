@@ -21,7 +21,12 @@ export interface NetworkUser {
   classificationLabel?: string | null;
 }
 
-export type BranchClassification = "EQUITY" | "DISTRIBUTION" | "WEALTH" | "STOXKART" | "OTHER";
+export type BranchClassification =
+  | "EQUITY"
+  | "DISTRIBUTION"
+  | "WEALTH"
+  | "stocksKART"
+  | "OTHER";
 
 export interface BranchClassificationPayload {
   classification?: BranchClassification;
@@ -65,10 +70,14 @@ export function useDistributors() {
     fetchDistributors();
   }, [fetchDistributors]);
 
-  const createDistributor = async (payload: Omit<NetworkUser, "id" | "createdAt" | "status"> & { password?: string }) => {
+  const createDistributor = async (
+    payload: Omit<NetworkUser, "id" | "createdAt" | "status"> & {
+      password?: string;
+    },
+  ) => {
     try {
       const response = await authApi.post(`${API_BASE}/distributors`, payload);
-      
+
       const result = response.data;
       if (result.success) {
         notify.success("Distributor created successfully");
@@ -76,12 +85,18 @@ export function useDistributors() {
         return { success: true, distributor: result.distributor };
       } else {
         notify.error(result.message || "Failed to create distributor");
-        return { success: false, message: result.message || "Failed to create distributor" };
+        return {
+          success: false,
+          message: result.message || "Failed to create distributor",
+        };
       }
     } catch (err) {
       console.error("Error creating distributor", err);
       notify.error("Network error while creating distributor");
-      return { success: false, message: "Network error while creating distributor" };
+      return {
+        success: false,
+        message: "Network error while creating distributor",
+      };
     }
   };
 
@@ -95,34 +110,63 @@ export function useDistributors() {
         return { success: true };
       } else {
         notify.error(result.message || "Failed to delete distributor");
-        return { success: false, message: result.message || "Failed to delete distributor" };
+        return {
+          success: false,
+          message: result.message || "Failed to delete distributor",
+        };
       }
     } catch (err: any) {
       console.error("Error deleting distributor", err);
-      const msg = err?.response?.data?.message || "Failed to delete distributor";
+      const msg =
+        err?.response?.data?.message || "Failed to delete distributor";
       notify.error(msg);
       return { success: false, message: msg };
     }
   };
 
-  const updateDistributor = async (id: string, payload: Pick<NetworkUser, "name" | "email">) => {
+  const updateDistributor = async (
+    id: string,
+    payload: Pick<NetworkUser, "name" | "email">,
+  ) => {
     try {
-      const response = await authApi.patch(`${API_BASE}/distributors/${id}`, payload);
+      const response = await authApi.patch(
+        `${API_BASE}/distributors/${id}`,
+        payload,
+      );
       const result = response.data;
       if (result.success && result.distributor) {
-        setData((distributors) => distributors.map((distributor) => distributor.id === id ? result.distributor : distributor));
+        setData((distributors) =>
+          distributors.map((distributor) =>
+            distributor.id === id ? result.distributor : distributor,
+          ),
+        );
         notify.success("Distributor updated successfully");
         return { success: true };
       }
       const message = result.message || "Failed to update distributor";
-      return { success: false, message: Array.isArray(message) ? message.join(". ") : message };
+      return {
+        success: false,
+        message: Array.isArray(message) ? message.join(". ") : message,
+      };
     } catch (err) {
-      const message = (isAxiosError(err) && err.response?.data?.message) || "Failed to update distributor. Please try again.";
-      return { success: false, message: Array.isArray(message) ? message.join(". ") : message };
+      const message =
+        (isAxiosError(err) && err.response?.data?.message) ||
+        "Failed to update distributor. Please try again.";
+      return {
+        success: false,
+        message: Array.isArray(message) ? message.join(". ") : message,
+      };
     }
   };
 
-  return { data, isLoading, refetch: fetchDistributors, createDistributor, deleteDistributor, updateDistributor };
+  return {
+    data,
+    isLoading,
+    refetch: fetchDistributors,
+    createDistributor,
+    deleteDistributor,
+    updateDistributor,
+  };
 }
 
 export function useBranches() {
@@ -133,7 +177,7 @@ export function useBranches() {
     setIsLoading(true);
     try {
       const response = await authApi.get(`${API_BASE}/branches`);
-      
+
       const result = response.data;
 
       if (result.success && result.branches) {
@@ -153,10 +197,14 @@ export function useBranches() {
     fetchBranches();
   }, [fetchBranches]);
 
-  const createBranch = async (payload: Omit<NetworkUser, "id" | "createdAt" | "status"> & { password?: string } & BranchClassificationPayload) => {
+  const createBranch = async (
+    payload: Omit<NetworkUser, "id" | "createdAt" | "status"> & {
+      password?: string;
+    } & BranchClassificationPayload,
+  ) => {
     try {
       const response = await authApi.post(`${API_BASE}/branches`, payload);
-      
+
       const result = response.data;
       if (result.success) {
         notify.success("Branch created successfully");
@@ -164,11 +212,17 @@ export function useBranches() {
         return { success: true, branch: result.branch };
       } else {
         notify.error(result.message || "Failed to create branch");
-        return { success: false, message: result.message || "Failed to create branch" };
+        return {
+          success: false,
+          message: result.message || "Failed to create branch",
+        };
       }
     } catch (err: any) {
       console.error("Error creating branch", err);
-      const msg = err?.response?.data?.message || err?.response?.data?.errors?.[0]?.message || "Failed to create branch";
+      const msg =
+        err?.response?.data?.message ||
+        err?.response?.data?.errors?.[0]?.message ||
+        "Failed to create branch";
       notify.error(msg);
       return { success: false, message: msg };
     }
@@ -184,7 +238,10 @@ export function useBranches() {
         return { success: true };
       } else {
         notify.error(result.message || "Failed to delete branch");
-        return { success: false, message: result.message || "Failed to delete branch" };
+        return {
+          success: false,
+          message: result.message || "Failed to delete branch",
+        };
       }
     } catch (err: any) {
       console.error("Error deleting branch", err);
@@ -194,24 +251,47 @@ export function useBranches() {
     }
   };
 
-  const updateBranch = async (id: string, payload: Pick<NetworkUser, "name" | "email"> & BranchClassificationPayload) => {
+  const updateBranch = async (
+    id: string,
+    payload: Pick<NetworkUser, "name" | "email"> & BranchClassificationPayload,
+  ) => {
     try {
-      const response = await authApi.patch(`${API_BASE}/branches/${id}`, payload);
+      const response = await authApi.patch(
+        `${API_BASE}/branches/${id}`,
+        payload,
+      );
       const result = response.data;
       if (result.success && result.branch) {
-        setData((branches) => branches.map((branch) => branch.id === id ? result.branch : branch));
+        setData((branches) =>
+          branches.map((branch) => (branch.id === id ? result.branch : branch)),
+        );
         notify.success("Branch updated successfully");
         return { success: true };
       }
       const message = result.message || "Failed to update branch";
-      return { success: false, message: Array.isArray(message) ? message.join(". ") : message };
+      return {
+        success: false,
+        message: Array.isArray(message) ? message.join(". ") : message,
+      };
     } catch (err) {
-      const message = (isAxiosError(err) && err.response?.data?.message) || "Failed to update branch. Please try again.";
-      return { success: false, message: Array.isArray(message) ? message.join(". ") : message };
+      const message =
+        (isAxiosError(err) && err.response?.data?.message) ||
+        "Failed to update branch. Please try again.";
+      return {
+        success: false,
+        message: Array.isArray(message) ? message.join(". ") : message,
+      };
     }
   };
 
-  return { data, isLoading, refetch: fetchBranches, createBranch, deleteBranch, updateBranch };
+  return {
+    data,
+    isLoading,
+    refetch: fetchBranches,
+    createBranch,
+    deleteBranch,
+    updateBranch,
+  };
 }
 
 export function useRMs() {
@@ -222,7 +302,7 @@ export function useRMs() {
     setIsLoading(true);
     try {
       const response = await authApi.get(`${API_BASE}/rms`);
-      
+
       const result = response.data;
 
       if (result.success && result.rms) {
@@ -242,10 +322,16 @@ export function useRMs() {
     fetchRMs();
   }, [fetchRMs]);
 
-  const createRM = async (payload: Omit<NetworkUser, "id" | "createdAt" | "status"> & { password?: string, type: string, parentId: string }) => {
+  const createRM = async (
+    payload: Omit<NetworkUser, "id" | "createdAt" | "status"> & {
+      password?: string;
+      type: string;
+      parentId: string;
+    },
+  ) => {
     try {
       const response = await authApi.post(`${API_BASE}/rms`, payload);
-      
+
       const result = response.data;
       if (result.success) {
         notify.success("Relationship Manager created successfully");
@@ -253,7 +339,10 @@ export function useRMs() {
         return { success: true, rm: result.rm };
       } else {
         notify.error(result.message || "Failed to create RM");
-        return { success: false, message: result.message || "Failed to create RM" };
+        return {
+          success: false,
+          message: result.message || "Failed to create RM",
+        };
       }
     } catch (err) {
       console.error("Error creating RM", err);
@@ -272,7 +361,10 @@ export function useRMs() {
         return { success: true };
       } else {
         notify.error(result.message || "Failed to delete RM");
-        return { success: false, message: result.message || "Failed to delete RM" };
+        return {
+          success: false,
+          message: result.message || "Failed to delete RM",
+        };
       }
     } catch (err: any) {
       console.error("Error deleting RM", err);

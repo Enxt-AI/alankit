@@ -13,20 +13,20 @@
 export const MIN_PASSWORD_LENGTH = 8;
 
 export const COMMON_WEAK_PASSWORDS = new Set([
-  'password',
-  'password123',
-  'password123!',
-  'admin123456',
-  'admin@123456',
-  'qwerty123456',
-  'qwerty@123456',
-  'welcome12345',
-  'welcome@12345',
-  'welcome123!@#',
-  '123456789012',
-  'smcunlisted123',
-  'smcadmin1234',
-  'letmein123456',
+  "password",
+  "password123",
+  "password123!",
+  "admin123456",
+  "admin@123456",
+  "qwerty123456",
+  "qwerty@123456",
+  "welcome12345",
+  "welcome@12345",
+  "welcome123!@#",
+  "123456789012",
+  "unlisted123",
+  "admin1234",
+  "letmein123456",
 ]);
 
 export interface PasswordRequirement {
@@ -38,38 +38,38 @@ export interface PasswordRequirement {
 export interface PasswordValidationResult {
   isValid: boolean;
   score: number; // 0 to 4
-  strengthLabel: 'Weak' | 'Fair' | 'Good' | 'Strong';
+  strengthLabel: "Weak" | "Fair" | "Good" | "Strong";
   requirements: PasswordRequirement[];
   errorMessage?: string;
 }
 
 export function validatePassword(password: string): PasswordValidationResult {
-  const p = password || '';
+  const p = password || "";
 
   const requirements: PasswordRequirement[] = [
     {
-      id: 'length',
+      id: "length",
       label: `At least ${MIN_PASSWORD_LENGTH} characters`,
       met: p.length >= MIN_PASSWORD_LENGTH,
     },
     {
-      id: 'uppercase',
-      label: 'At least one uppercase letter (A-Z)',
+      id: "uppercase",
+      label: "At least one uppercase letter (A-Z)",
       met: /[A-Z]/.test(p),
     },
     {
-      id: 'lowercase',
-      label: 'At least one lowercase letter (a-z)',
+      id: "lowercase",
+      label: "At least one lowercase letter (a-z)",
       met: /[a-z]/.test(p),
     },
     {
-      id: 'number',
-      label: 'At least one number (0-9)',
+      id: "number",
+      label: "At least one number (0-9)",
       met: /[0-9]/.test(p),
     },
     {
-      id: 'special',
-      label: 'At least one special character (!@#$%^&*...)',
+      id: "special",
+      label: "At least one special character (!@#$%^&*...)",
       met: /[!@#$%^&*()_+\-=\[\]{};':"\\|,.<>\/?~`§±]/.test(p),
     },
   ];
@@ -87,19 +87,20 @@ export function validatePassword(password: string): PasswordValidationResult {
     score = 0;
   }
 
-  let strengthLabel: 'Weak' | 'Fair' | 'Good' | 'Strong' = 'Weak';
-  if (score === 2) strengthLabel = 'Fair';
-  else if (score === 3) strengthLabel = 'Good';
-  else if (score === 4) strengthLabel = 'Strong';
+  let strengthLabel: "Weak" | "Fair" | "Good" | "Strong" = "Weak";
+  if (score === 2) strengthLabel = "Fair";
+  else if (score === 3) strengthLabel = "Good";
+  else if (score === 4) strengthLabel = "Strong";
 
   let errorMessage: string | undefined;
   if (isCommon) {
-    errorMessage = 'This password is too common and easily guessable. Please choose a more unique password.';
+    errorMessage =
+      "This password is too common and easily guessable. Please choose a more unique password.";
   } else if (p.length < MIN_PASSWORD_LENGTH) {
     errorMessage = `Password must be at least ${MIN_PASSWORD_LENGTH} characters long.`;
   } else if (metCount < requirements.length) {
     const unmet = requirements.filter((r) => !r.met).map((r) => r.label);
-    errorMessage = `Password must meet all requirements: ${unmet.join(', ')}.`;
+    errorMessage = `Password must meet all requirements: ${unmet.join(", ")}.`;
   }
 
   return {
@@ -142,5 +143,5 @@ export function generateRandomPassword(length = 8): string {
     [chars[i], chars[j]] = [chars[j], chars[i]];
   }
 
-  return chars.join('');
+  return chars.join("");
 }

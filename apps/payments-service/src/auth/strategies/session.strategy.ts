@@ -5,7 +5,7 @@ import { RedisService } from '../../redis/redis.service';
 import { OBFUSCATED_COOKIE_NAMES, ORIGINAL_COOKIE_NAMES } from 'cookie-crypto';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 
 @Injectable()
 export class SessionStrategy extends PassportStrategy(Strategy, 'jwt') {

@@ -4,7 +4,7 @@
  * for managing marketing campaigns and leads.
  */
 
-import { stocksApi } from './api-client';
+import { stocksApi } from "./api-client";
 
 /**
  * Marketing Campaign interface
@@ -14,7 +14,7 @@ export interface MarketingCampaign {
   name: string;
   platform: string;
   platformCampaignId?: string;
-  status: 'ACTIVE' | 'PAUSED' | 'COMPLETED';
+  status: "ACTIVE" | "PAUSED" | "COMPLETED";
   budget?: number;
   startDate?: string;
   endDate?: string;
@@ -32,7 +32,7 @@ export interface MarketingLead {
   email?: string;
   phone?: string;
   // NOTE: assignedToRMId and assignedRM fields removed as part of RM system deprecation.
-  status: 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'CONVERTED' | 'LOST';
+  status: "NEW" | "CONTACTED" | "QUALIFIED" | "CONVERTED" | "LOST";
   source: string;
   metadata?: Record<string, any>;
   assignedToId?: string;
@@ -66,18 +66,22 @@ export interface PaginatedLeadsResponse {
 /**
  * 4-stage KYC funnel for marketing leads
  */
-export type KycStage = 'NOT_INITIATED' | 'PENDING' | 'NOT_VERIFIED' | 'VERIFIED';
+export type KycStage =
+  | "NOT_INITIATED"
+  | "PENDING"
+  | "NOT_VERIFIED"
+  | "VERIFIED";
 
 /**
  * Last payment status (NA while KYC not initiated, NO_TRANSACTION when the
  * lead has no orders at all)
  */
-export type LastPaymentStatus = 'NA' | 'PENDING' | 'PAID' | 'NO_TRANSACTION';
+export type LastPaymentStatus = "NA" | "PENDING" | "PAID" | "NO_TRANSACTION";
 
 /**
  * eSign stage (null = esign never initiated on the relevant order)
  */
-export type EsignStage = 'COMPLETED' | 'NOT_COMPLETED';
+export type EsignStage = "COMPLETED" | "NOT_COMPLETED";
 
 /**
  * Lead Analytics interface
@@ -118,7 +122,7 @@ export interface LeadDetailTransaction {
   shareName: string | null;
   quantity: number | null;
   revenue: number | null;
-  source: 'SMC' | 'Distributor' | null;
+  source: "" | "Distributor" | null;
   sourceDetails: string | null;
 }
 
@@ -167,7 +171,7 @@ export interface LeadAnalyticsResponse {
   summary: LeadAnalyticsSummary;
   /** Distinct acquisition sources present in the DB (powers Source dropdowns) */
   sources?: string[];
-  pagination: PaginatedLeadsResponse['pagination'];
+  pagination: PaginatedLeadsResponse["pagination"];
 }
 
 /**
@@ -194,14 +198,14 @@ export interface TopStocksResponse {
 export interface LeadFilters {
   startDate?: string;
   endDate?: string;
-  status?: 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'CONVERTED' | 'LOST';
+  status?: "NEW" | "CONTACTED" | "QUALIFIED" | "CONVERTED" | "LOST";
   source?: string;
   campaignId?: string;
   search?: string;
   assignedToId?: string;
   // NOTE: assignedToRMId filter removed as part of RM system deprecation.
-  sortBy?: 'createdAt' | 'updatedAt' | 'lastActivityAt' | 'fullName' | 'status';
-  sortOrder?: 'asc' | 'desc';
+  sortBy?: "createdAt" | "updatedAt" | "lastActivityAt" | "fullName" | "status";
+  sortOrder?: "asc" | "desc";
   lastActivityFrom?: string;
   lastActivityTo?: string;
   page?: number;
@@ -221,7 +225,7 @@ export interface CreateCampaignDto {
   name: string;
   platform: string;
   platformCampaignId?: string;
-  status?: 'ACTIVE' | 'PAUSED' | 'COMPLETED';
+  status?: "ACTIVE" | "PAUSED" | "COMPLETED";
   budget?: number;
   startDate?: string;
   endDate?: string;
@@ -236,7 +240,7 @@ export interface CreateLeadDto {
   email?: string;
   phone?: string;
   // NOTE: assignedToRMId field removed as part of RM system deprecation.
-  status?: 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'CONVERTED' | 'LOST';
+  status?: "NEW" | "CONTACTED" | "QUALIFIED" | "CONVERTED" | "LOST";
   source: string;
   metadata?: Record<string, any>;
 }
@@ -248,7 +252,7 @@ export interface UpdateLeadDto {
   fullName?: string;
   email?: string;
   phone?: string;
-  status?: 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'CONVERTED' | 'LOST';
+  status?: "NEW" | "CONTACTED" | "QUALIFIED" | "CONVERTED" | "LOST";
   metadata?: Record<string, any>;
 }
 
@@ -259,7 +263,7 @@ export interface UpdateLeadDto {
  * Update lead status DTO
  */
 export interface UpdateLeadStatusDto {
-  status: 'NEW' | 'CONTACTED' | 'QUALIFIED' | 'CONVERTED' | 'LOST';
+  status: "NEW" | "CONTACTED" | "QUALIFIED" | "CONVERTED" | "LOST";
 }
 
 // ============================================
@@ -273,19 +277,22 @@ export interface UpdateLeadStatusDto {
  */
 export async function getAllCampaigns(): Promise<MarketingCampaign[]> {
   try {
-    const response = await stocksApi.get('/marketing/campaigns');
+    const response = await stocksApi.get("/marketing/campaigns");
     return response.data.campaigns;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
     if (!error.response) {
-      throw new Error('Network error. Please check your connection.');
+      throw new Error("Network error. Please check your connection.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch campaigns.';
+    const errorMessage =
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to fetch campaigns.";
     throw new Error(errorMessage);
   }
 }
@@ -296,24 +303,29 @@ export async function getAllCampaigns(): Promise<MarketingCampaign[]> {
  * @returns Promise<MarketingCampaign> - Campaign data
  * @throws Error with user-friendly message on failure
  */
-export async function getCampaignById(campaignId: string): Promise<MarketingCampaign> {
+export async function getCampaignById(
+  campaignId: string,
+): Promise<MarketingCampaign> {
   try {
     const response = await stocksApi.get(`/marketing/campaigns/${campaignId}`);
     return response.data.campaign;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
     if (error.response?.status === 404) {
-      throw new Error('Campaign not found.');
+      throw new Error("Campaign not found.");
     }
     if (!error.response) {
-      throw new Error('Network error. Please check your connection.');
+      throw new Error("Network error. Please check your connection.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch campaign.';
+    const errorMessage =
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to fetch campaign.";
     throw new Error(errorMessage);
   }
 }
@@ -324,24 +336,29 @@ export async function getCampaignById(campaignId: string): Promise<MarketingCamp
  * @returns Promise<MarketingCampaign> - Created campaign
  * @throws Error with user-friendly message on failure
  */
-export async function createCampaign(campaignData: CreateCampaignDto): Promise<MarketingCampaign> {
+export async function createCampaign(
+  campaignData: CreateCampaignDto,
+): Promise<MarketingCampaign> {
   try {
-    const response = await stocksApi.post('/marketing/campaigns', campaignData);
+    const response = await stocksApi.post("/marketing/campaigns", campaignData);
     return response.data.campaign;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
     if (error.response?.status === 400) {
-      throw new Error('Invalid campaign data. Please check your inputs.');
+      throw new Error("Invalid campaign data. Please check your inputs.");
     }
     if (!error.response) {
-      throw new Error('Network error. Please check your connection.');
+      throw new Error("Network error. Please check your connection.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to create campaign.';
+    const errorMessage =
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to create campaign.";
     throw new Error(errorMessage);
   }
 }
@@ -355,28 +372,34 @@ export async function createCampaign(campaignData: CreateCampaignDto): Promise<M
  */
 export async function updateCampaign(
   campaignId: string,
-  updateData: Partial<CreateCampaignDto>
+  updateData: Partial<CreateCampaignDto>,
 ): Promise<MarketingCampaign> {
   try {
-    const response = await stocksApi.patch(`/marketing/campaigns/${campaignId}`, updateData);
+    const response = await stocksApi.patch(
+      `/marketing/campaigns/${campaignId}`,
+      updateData,
+    );
     return response.data.campaign;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
     if (error.response?.status === 404) {
-      throw new Error('Campaign not found.');
+      throw new Error("Campaign not found.");
     }
     if (error.response?.status === 400) {
-      throw new Error('Invalid update data. Please check your inputs.');
+      throw new Error("Invalid update data. Please check your inputs.");
     }
     if (!error.response) {
-      throw new Error('Network error. Please check your connection.');
+      throw new Error("Network error. Please check your connection.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to update campaign.';
+    const errorMessage =
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to update campaign.";
     throw new Error(errorMessage);
   }
 }
@@ -391,18 +414,21 @@ export async function deleteCampaign(campaignId: string): Promise<void> {
     await stocksApi.delete(`/marketing/campaigns/${campaignId}`);
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
     if (error.response?.status === 404) {
-      throw new Error('Campaign not found.');
+      throw new Error("Campaign not found.");
     }
     if (!error.response) {
-      throw new Error('Network error. Please check your connection.');
+      throw new Error("Network error. Please check your connection.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to delete campaign.';
+    const errorMessage =
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to delete campaign.";
     throw new Error(errorMessage);
   }
 }
@@ -417,21 +443,26 @@ export async function deleteCampaign(campaignId: string): Promise<void> {
  * @returns Promise<PaginatedLeadsResponse> - Paginated leads data
  * @throws Error with user-friendly message on failure
  */
-export async function getAllLeads(filters?: LeadFilters): Promise<PaginatedLeadsResponse> {
+export async function getAllLeads(
+  filters?: LeadFilters,
+): Promise<PaginatedLeadsResponse> {
   try {
-    const response = await stocksApi.get('/marketing/leads', { params: filters });
+    const response = await stocksApi.get("/marketing/leads", {
+      params: filters,
+    });
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
     if (!error.response) {
-      throw new Error('Network error. Please check your connection.');
+      throw new Error("Network error. Please check your connection.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch leads.';
+    const errorMessage =
+      error.response?.data?.error || error.message || "Failed to fetch leads.";
     throw new Error(errorMessage);
   }
 }
@@ -442,25 +473,37 @@ export async function getAllLeads(filters?: LeadFilters): Promise<PaginatedLeads
  * @returns Promise<LeadAnalyticsResponse> - Analytics data
  * @throws Error with user-friendly message on failure
  */
-export async function getLeadsAnalytics(filters?: LeadFilters): Promise<LeadAnalyticsResponse> {
+export async function getLeadsAnalytics(
+  filters?: LeadFilters,
+): Promise<LeadAnalyticsResponse> {
   try {
     // kycStage/lastPaymentStatus/esignStage are computed live per row — the
     // server can't filter on them, so strip before the API call (page applies
     // them client-side on the returned rows).
-    const { kycStage: _kyc, lastPaymentStatus: _pay, esignStage: _esign, ...serverFilters } = filters || {};
-    const response = await stocksApi.get('/marketing/leads-analytics', { params: serverFilters });
+    const {
+      kycStage: _kyc,
+      lastPaymentStatus: _pay,
+      esignStage: _esign,
+      ...serverFilters
+    } = filters || {};
+    const response = await stocksApi.get("/marketing/leads-analytics", {
+      params: serverFilters,
+    });
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
     if (!error.response) {
-      throw new Error('Network error. Please check your connection.');
+      throw new Error("Network error. Please check your connection.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch leads analytics.';
+    const errorMessage =
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to fetch leads analytics.";
     throw new Error(errorMessage);
   }
 }
@@ -471,21 +514,32 @@ export async function getLeadsAnalytics(filters?: LeadFilters): Promise<LeadAnal
  * @returns Promise<TopStocksResponse> - Top stocks data
  * @throws Error with user-friendly message on failure
  */
-export async function getTopStocks(sortBy: 'transactionCount' | 'transactionValue' | 'userRequested' | 'userWatchlisted' = 'transactionCount'): Promise<TopStocksResponse> {
+export async function getTopStocks(
+  sortBy:
+    | "transactionCount"
+    | "transactionValue"
+    | "userRequested"
+    | "userWatchlisted" = "transactionCount",
+): Promise<TopStocksResponse> {
   try {
-    const response = await stocksApi.get('/marketing/top-stocks', { params: { sortBy } });
+    const response = await stocksApi.get("/marketing/top-stocks", {
+      params: { sortBy },
+    });
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
     if (!error.response) {
-      throw new Error('Network error. Please check your connection.');
+      throw new Error("Network error. Please check your connection.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch top stocks.';
+    const errorMessage =
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to fetch top stocks.";
     throw new Error(errorMessage);
   }
 }
@@ -502,18 +556,21 @@ export async function getLeadDetail(leadId: string): Promise<LeadDetail> {
     return response.data.detail;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
     if (error.response?.status === 404) {
-      throw new Error('Lead not found.');
+      throw new Error("Lead not found.");
     }
     if (!error.response) {
-      throw new Error('Network error. Please check your connection.');
+      throw new Error("Network error. Please check your connection.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch lead detail.';
+    const errorMessage =
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to fetch lead detail.";
     throw new Error(errorMessage);
   }
 }
@@ -530,18 +587,19 @@ export async function getLeadById(leadId: string): Promise<MarketingLead> {
     return response.data.lead;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
     if (error.response?.status === 404) {
-      throw new Error('Lead not found.');
+      throw new Error("Lead not found.");
     }
     if (!error.response) {
-      throw new Error('Network error. Please check your connection.');
+      throw new Error("Network error. Please check your connection.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch lead.';
+    const errorMessage =
+      error.response?.data?.error || error.message || "Failed to fetch lead.";
     throw new Error(errorMessage);
   }
 }
@@ -552,24 +610,27 @@ export async function getLeadById(leadId: string): Promise<MarketingLead> {
  * @returns Promise<MarketingLead> - Created lead
  * @throws Error with user-friendly message on failure
  */
-export async function createLead(leadData: CreateLeadDto): Promise<MarketingLead> {
+export async function createLead(
+  leadData: CreateLeadDto,
+): Promise<MarketingLead> {
   try {
-    const response = await stocksApi.post('/marketing/leads', leadData);
+    const response = await stocksApi.post("/marketing/leads", leadData);
     return response.data.lead;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
     if (error.response?.status === 400) {
-      throw new Error('Invalid lead data. Please check your inputs.');
+      throw new Error("Invalid lead data. Please check your inputs.");
     }
     if (!error.response) {
-      throw new Error('Network error. Please check your connection.');
+      throw new Error("Network error. Please check your connection.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to create lead.';
+    const errorMessage =
+      error.response?.data?.error || error.message || "Failed to create lead.";
     throw new Error(errorMessage);
   }
 }
@@ -583,28 +644,32 @@ export async function createLead(leadData: CreateLeadDto): Promise<MarketingLead
  */
 export async function updateLead(
   leadId: string,
-  updateData: UpdateLeadDto
+  updateData: UpdateLeadDto,
 ): Promise<MarketingLead> {
   try {
-    const response = await stocksApi.patch(`/marketing/leads/${leadId}`, updateData);
+    const response = await stocksApi.patch(
+      `/marketing/leads/${leadId}`,
+      updateData,
+    );
     return response.data.lead;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
     if (error.response?.status === 404) {
-      throw new Error('Lead not found.');
+      throw new Error("Lead not found.");
     }
     if (error.response?.status === 400) {
-      throw new Error('Invalid update data. Please check your inputs.');
+      throw new Error("Invalid update data. Please check your inputs.");
     }
     if (!error.response) {
-      throw new Error('Network error. Please check your connection.');
+      throw new Error("Network error. Please check your connection.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to update lead.';
+    const errorMessage =
+      error.response?.data?.error || error.message || "Failed to update lead.";
     throw new Error(errorMessage);
   }
 }
@@ -617,42 +682,49 @@ export async function updateLead(
  */
 export async function updateLeadStatus(
   leadId: string,
-  statusData: UpdateLeadStatusDto
+  statusData: UpdateLeadStatusDto,
 ): Promise<void> {
   try {
     await stocksApi.patch(`/marketing/leads/${leadId}/status`, statusData);
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
     if (error.response?.status === 404) {
-      throw new Error('Lead not found.');
+      throw new Error("Lead not found.");
     }
     if (error.response?.status === 400) {
-      throw new Error('Invalid status data. Please check your inputs.');
+      throw new Error("Invalid status data. Please check your inputs.");
     }
     if (!error.response) {
-      throw new Error('Network error. Please check your connection.');
+      throw new Error("Network error. Please check your connection.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to update lead status.';
+    const errorMessage =
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to update lead status.";
     throw new Error(errorMessage);
   }
 }
 
-export async function assignLeadToUser(leadId: string, userId: string): Promise<void> {
+export async function assignLeadToUser(
+  leadId: string,
+  userId: string,
+): Promise<void> {
   try {
     await stocksApi.patch(`/marketing/leads/${leadId}/assign`, { userId });
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to assign lead.';
+    const errorMessage =
+      error.response?.data?.error || error.message || "Failed to assign lead.";
     throw new Error(errorMessage);
   }
 }
@@ -660,17 +732,23 @@ export async function assignLeadToUser(leadId: string, userId: string): Promise<
 /**
  * Bulk assign multiple leads to a user
  */
-export async function bulkAssignLeadsToUser(leadIds: string[], userId: string): Promise<void> {
+export async function bulkAssignLeadsToUser(
+  leadIds: string[],
+  userId: string,
+): Promise<void> {
   try {
-    await stocksApi.patch('/marketing/leads/bulk-assign', { leadIds, userId });
+    await stocksApi.patch("/marketing/leads/bulk-assign", { leadIds, userId });
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
     if (error.response?.status === 403) {
-      throw new Error('Access denied. Marketing Manager role required.');
+      throw new Error("Access denied. Marketing Manager role required.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to bulk assign leads.';
+    const errorMessage =
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to bulk assign leads.";
     throw new Error(errorMessage);
   }
 }
@@ -680,13 +758,16 @@ export async function bulkAssignLeadsToUser(leadIds: string[], userId: string): 
  */
 export async function getMarketingPanelUsers(): Promise<any[]> {
   try {
-    const response = await stocksApi.get('/marketing/panel-users');
+    const response = await stocksApi.get("/marketing/panel-users");
     return response.data.users;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch panel users.';
+    const errorMessage =
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to fetch panel users.";
     throw new Error(errorMessage);
   }
 }
@@ -696,15 +777,20 @@ export async function getMarketingPanelUsers(): Promise<any[]> {
 /**
  * Syncs database users into marketing leads
  */
-export async function syncDatabaseUsers(): Promise<{ success: boolean; count: number; message: string }> {
+export async function syncDatabaseUsers(): Promise<{
+  success: boolean;
+  count: number;
+  message: string;
+}> {
   try {
-    const response = await stocksApi.post('/marketing/sync-users');
+    const response = await stocksApi.post("/marketing/sync-users");
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to sync users.';
+    const errorMessage =
+      error.response?.data?.error || error.message || "Failed to sync users.";
     throw new Error(errorMessage);
   }
 }
@@ -770,17 +856,25 @@ export interface DroppedCheckoutResponse {
 /**
  * Fetch users who initiated checkout but dropped during payment journey
  */
-export async function getDroppedCheckouts(filters?: DroppedCheckoutFilters): Promise<DroppedCheckoutResponse> {
+export async function getDroppedCheckouts(
+  filters?: DroppedCheckoutFilters,
+): Promise<DroppedCheckoutResponse> {
   try {
-    const response = await stocksApi.get<DroppedCheckoutResponse>('/marketing/dropped-checkouts', {
-      params: filters,
-    });
+    const response = await stocksApi.get<DroppedCheckoutResponse>(
+      "/marketing/dropped-checkouts",
+      {
+        params: filters,
+      },
+    );
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch dropped checkouts.';
+    const errorMessage =
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to fetch dropped checkouts.";
     throw new Error(errorMessage);
   }
 }
@@ -844,17 +938,25 @@ export interface EsignDropoutResponse {
  * Fetch users who initiated e-sign but never signed (includes sign-first
  * abandons with no Order row)
  */
-export async function getEsignDropouts(filters?: EsignDropoutFilters): Promise<EsignDropoutResponse> {
+export async function getEsignDropouts(
+  filters?: EsignDropoutFilters,
+): Promise<EsignDropoutResponse> {
   try {
-    const response = await stocksApi.get<EsignDropoutResponse>('/marketing/esign-dropouts', {
-      params: filters,
-    });
+    const response = await stocksApi.get<EsignDropoutResponse>(
+      "/marketing/esign-dropouts",
+      {
+        params: filters,
+      },
+    );
     return response.data;
   } catch (error: any) {
     if (error.response?.status === 401) {
-      throw new Error('Authentication required. Please login again.');
+      throw new Error("Authentication required. Please login again.");
     }
-    const errorMessage = error.response?.data?.error || error.message || 'Failed to fetch e-sign dropouts.';
+    const errorMessage =
+      error.response?.data?.error ||
+      error.message ||
+      "Failed to fetch e-sign dropouts.";
     throw new Error(errorMessage);
   }
 }

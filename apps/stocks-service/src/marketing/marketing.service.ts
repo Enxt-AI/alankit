@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException, OnModuleInit } from '@nestjs/common';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 import { Cron } from '@nestjs/schedule';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCampaignDto } from './dto/create-campaign.dto';
@@ -96,9 +96,9 @@ export interface LeadAnalytics {
 }
 
 export interface LeadTransactionSource {
-  /** SMC (our organisation) | Distributor */
-  source: 'SMC' | 'Distributor';
-  /** Branch name for SMC coupon orders, distributor name for distributor orders */
+  /**  (our organisation) | Distributor */
+  source: '' | 'Distributor';
+  /** Branch name for  coupon orders, distributor name for distributor orders */
   sourceDetails: string | null;
 }
 
@@ -107,7 +107,7 @@ export interface LeadDetailTransaction {
   shareName: string | null;
   quantity: number | null;
   revenue: number | null;
-  source: 'SMC' | 'Distributor' | null;
+  source: '' | 'Distributor' | null;
   sourceDetails: string | null;
 }
 
@@ -195,8 +195,8 @@ export function orderShareName(order?: { stock?: { name?: string | null } | null
 
 /**
  * Derive transaction source from the order's coupon.
- * Coupon via InternalRM => SMC + branch name; via DistributorRM => Distributor + name;
- * no coupon => SMC Direct.
+ * Coupon via InternalRM =>  + branch name; via DistributorRM => Distributor + name;
+ * no coupon =>  Direct.
  */
 export function resolveOrderSource(order?: {
   coupon?: {
@@ -213,11 +213,11 @@ export function resolveOrderSource(order?: {
  }
   if (coupon?.internalRm) {
     return {
-      source: 'SMC',
+      source: '',
       sourceDetails: coupon.internalRm.branch?.name || coupon.internalRm.name || null,
    };
  }
-  return { source: 'SMC', sourceDetails: 'SMC Direct' };
+  return { source: '', sourceDetails: ' Direct' };
 }
 
 /**
@@ -1024,8 +1024,8 @@ export class MarketingService implements OnModuleInit {
    * Get full detail for a single lead (opened from the leads table name popup).
    * First/Last transactions consider SUCCESSFUL (PAID) orders only.
    * Transaction source is derived from the order coupon:
-   * InternalRM coupon => SMC + branch name; DistributorRM coupon => Distributor + name;
-   * no coupon => SMC Direct.
+   * InternalRM coupon =>  + branch name; DistributorRM coupon => Distributor + name;
+   * no coupon =>  Direct.
    */
   async getLeadDetail(leadId: string): Promise<LeadDetail> {
     this.logger.log('📊 Marketing - Getting lead detail:', leadId);

@@ -14,8 +14,8 @@ export const COMMON_WEAK_PASSWORDS = new Set([
   'welcome@12345',
   'welcome123!@#',
   '123456789012',
-  'smcunlisted123',
-  'smcadmin1234',
+  'unlisted123',
+  'admin1234',
   'letmein123456',
 ]);
 

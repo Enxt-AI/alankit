@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCarouselMediaDto } from './dto/create-carousel-media.dto';
 import { UpdateCarouselMediaDto } from './dto/update-carousel-media.dto';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 
 /**
  * CarouselService handles all CRUD operations for carousel media items.
@@ -19,7 +19,7 @@ export class CarouselService {
     if (url.startsWith('http://') || url.startsWith('https://')) {
       return url;
     }
-    const base = process.env.PUBLIC_API_URL || process.env.API_GATEWAY_URL || 'https://api.unlistedstox.com';
+    const base = process.env.PUBLIC_API_URL || process.env.API_GATEWAY_URL || 'https://api.unlistedstocks.com';
     const cleanBase = base.replace(/\/+$/, '');
     const cleanPath = url.startsWith('/') ? url : `/${url}`;
     return `${cleanBase}${cleanPath}`;

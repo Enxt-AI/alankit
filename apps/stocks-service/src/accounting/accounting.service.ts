@@ -20,7 +20,7 @@ import { CreateCustomVoucherTypeDto, UpdateCustomVoucherTypeDto } from './dto/cr
 import { CreateAccountingPeriodDto, UpdateAccountingPeriodDto } from './dto/accounting-period.dto';
 import { LedgerType, VoucherType, EntryType, VoucherStatus, Prisma } from 'db-unlistedstock';
 import * as crypto from 'crypto';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 
 @Injectable()
 export class AccountingService implements OnModuleInit {
@@ -307,7 +307,7 @@ export class AccountingService implements OnModuleInit {
 
         if (!resolvedScriptName) {
           const matchBy = narration.match(/By ([^\/]+)/i);
-          if (matchBy && matchBy[1] && !matchBy[1].toLowerCase().includes('smc global')) {
+          if (matchBy && matchBy[1] && !matchBy[1].toLowerCase().includes(' global')) {
             resolvedScriptName = matchBy[1].trim();
           }
         }

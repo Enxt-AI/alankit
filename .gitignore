@@ -47,14 +47,14 @@ postgres-data/
 uploads/
 redis-data/
 
-smc_key
+_key
 
 
 # Test Scripts
 test-*.ts
-smc-unlisted-stox\pnpm-lock.yaml
+-unlisted-stocks\pnpm-lock.yaml
 .code-review-graph
-DSMC
+D
 
 # Android / TWA
 apps/android-twa/android.keystore

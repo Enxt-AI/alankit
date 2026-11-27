@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 import type { Browser } from 'puppeteer';
 import * as QRCode from 'qrcode';
 import * as crypto from 'crypto';
@@ -37,7 +37,7 @@ export interface DealSheetData {
   buyer_account_no: string;
   buyer_ifsc: string;
 
-  // Seller column (SMC fixed values)
+  // Seller column ( fixed values)
   seller_name: string;
   seller_client_id: string;
   seller_dp_name: string;
@@ -108,8 +108,8 @@ export interface ReceiptData {
 }
 
 
-/** Fixed SMC seller details — never changes */
-const SMC_SELLER: Pick<
+/** Fixed  seller details — never changes */
+const _SELLER: Pick<
   DealSheetData,
   | 'seller_name'
   | 'seller_client_id'
@@ -120,9 +120,9 @@ const SMC_SELLER: Pick<
   | 'seller_account_no'
   | 'seller_ifsc'
 > = {
-  seller_name: 'SMC INVESTECH PRIVATE LIMITED',
+  seller_name: ' INVESTECH PRIVATE LIMITED',
   seller_client_id: '10336294',
-  seller_dp_name: 'SMC GLOBAL SECURITIES LTD',
+  seller_dp_name: ' GLOBAL SECURITIES LTD',
   seller_dp_id: 'IN303655',
   seller_pan: 'AASCS6448K',
   seller_bank_name: 'HDFC BANK',
@@ -393,15 +393,15 @@ export class PdfGeneratorService implements OnModuleInit, OnModuleDestroy {
       let html = rawHtml.split('{table_rows}').join(rowsHtml);
 
       // ── 3. Generate HMAC SHA256 signature & AES-256 Encrypted Payload ──────────
-      const secretKey = process.env.INVOICE_SECRET || 'SMC_INVOICE_AUTH_SECRET_KEY_2026';
+      const secretKey = process.env.INVOICE_SECRET || '_INVOICE_AUTH_SECRET_KEY_2026';
       const rawPayload = `INV:${data.invoice_no}|DATE:${data.invoice_date}|PAN:${data.customer_pan}|AMT:${data.total_amount}`;
       const hmacHash = crypto.createHmac('sha256', secretKey).update(rawPayload).digest('hex').toUpperCase();
-      const authCode = `SMC-SIG-${hmacHash.slice(0, 12)}`;
+      const authCode = `-SIG-${hmacHash.slice(0, 12)}`;
 
       const signedDate = data.invoice_date || new Date().toLocaleDateString('en-IN');
 
       // Generate clean verification URL that mobile phone cameras can scan and open
-      const baseUrl = process.env.PUBLIC_APP_URL || 'https://www.unlistedstox.com';
+      const baseUrl = process.env.PUBLIC_APP_URL || 'https://www.unlistedstocks.com';
       const cleanAmt = String(data.total_amount || '').replace(/[^0-9.]/g, '');
       const qrVerificationUrl = `${baseUrl}/verify?type=invoice&no=${encodeURIComponent(data.invoice_no)}&date=${encodeURIComponent(data.invoice_date || '')}&amt=${encodeURIComponent(cleanAmt)}&sig=${encodeURIComponent(authCode)}`;
 
@@ -664,7 +664,7 @@ export class PdfGeneratorService implements OnModuleInit, OnModuleDestroy {
       buyer_account_no: bankAccountNo,
       buyer_ifsc:       bankIfsc,
 
-      ...SMC_SELLER,
+      ..._SELLER,
     };
   }
 
@@ -686,15 +686,15 @@ export class PdfGeneratorService implements OnModuleInit, OnModuleDestroy {
       // Replace all {key} scalar placeholders
       let html = rawHtml;
       // Generate HMAC SHA256 signature & AES-256 Encrypted Payload
-      const secretKey = process.env.INVOICE_SECRET || 'SMC_INVOICE_AUTH_SECRET_KEY_2026';
+      const secretKey = process.env.INVOICE_SECRET || '_INVOICE_AUTH_SECRET_KEY_2026';
       const rawPayload = `RCP:${data.receipt_no}|ORD:${data.order_id}|AMT:${data.amount_received}|PAN:${data.customer_pan}|DATE:${data.receipt_date}`;
       const hmacHash = crypto.createHmac('sha256', secretKey).update(rawPayload).digest('hex').toUpperCase();
-      const authCode = `SMC-RCP-${hmacHash.slice(0, 12)}`;
+      const authCode = `-RCP-${hmacHash.slice(0, 12)}`;
 
       const signedDate = data.receipt_date || new Date().toLocaleDateString('en-IN');
 
       // Generate clean verification URL that mobile phone cameras can scan and open
-      const baseUrl = process.env.PUBLIC_APP_URL || 'https://www.unlistedstox.com';
+      const baseUrl = process.env.PUBLIC_APP_URL || 'https://www.unlistedstocks.com';
       const cleanAmt = String(data.amount_received || '').replace(/[^0-9.]/g, '');
       const qrVerificationUrl = `${baseUrl}/verify?type=receipt&no=${encodeURIComponent(data.receipt_no)}&orderId=${encodeURIComponent(data.order_id || '')}&date=${encodeURIComponent(data.receipt_date || '')}&amt=${encodeURIComponent(cleanAmt)}&sig=${encodeURIComponent(authCode)}`;
 
@@ -859,30 +859,30 @@ export class PdfGeneratorService implements OnModuleInit, OnModuleDestroy {
 
   /**
    * Encrypts the verification payload using AES-256-CBC with the system secret key.
-   * Scanned payload output format: "SMC-VERIFY:<iv_hex>:<encrypted_hex>"
-   * Decodable ONLY at SMC end!
+   * Scanned payload output format: "-VERIFY:<iv_hex>:<encrypted_hex>"
+   * Decodable ONLY at  end!
    */
   public encryptVerificationPayload(dataObj: Record<string, any>): string {
-    const secret = process.env.INVOICE_SECRET || 'SMC_INVOICE_AUTH_SECRET_KEY_2026';
+    const secret = process.env.INVOICE_SECRET || '_INVOICE_AUTH_SECRET_KEY_2026';
     const key = crypto.createHash('sha256').update(secret).digest();
     const iv = crypto.randomBytes(16);
     const cipher = crypto.createCipheriv('aes-256-cbc', key, iv);
     let encrypted = cipher.update(JSON.stringify(dataObj), 'utf8', 'hex');
     encrypted += cipher.final('hex');
-    return `SMC-VERIFY:${iv.toString('hex')}:${encrypted}`;
+    return `-VERIFY:${iv.toString('hex')}:${encrypted}`;
   }
 
   /**
-   * Decrypts an SMC verification QR token back to original document JSON data.
+   * Decrypts an  verification QR token back to original document JSON data.
    */
   public decryptVerificationPayload(token: string): Record<string, any> | null {
     try {
-      if (!token.startsWith('SMC-VERIFY:')) return null;
+      if (!token.startsWith('-VERIFY:')) return null;
       const parts = token.split(':');
       if (parts.length !== 3) return null;
       const iv = Buffer.from(parts[1], 'hex');
       const encryptedText = parts[2];
-      const secret = process.env.INVOICE_SECRET || 'SMC_INVOICE_AUTH_SECRET_KEY_2026';
+      const secret = process.env.INVOICE_SECRET || '_INVOICE_AUTH_SECRET_KEY_2026';
       const key = crypto.createHash('sha256').update(secret).digest();
       const decipher = crypto.createDecipheriv('aes-256-cbc', key, iv);
       let decrypted = decipher.update(encryptedText, 'hex', 'utf8');
@@ -892,4 +892,4 @@ export class PdfGeneratorService implements OnModuleInit, OnModuleDestroy {
       return null;
     }
   }
-}
+}

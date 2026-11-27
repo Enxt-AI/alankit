@@ -40,7 +40,7 @@ export class QueryTicketDto {
 
   @IsOptional()
   @IsString()
-  source?: string; // Filter by source app: smc-unlisted, mutual-fund (NEW)
+  source?: string; // Filter by source app: -unlisted, mutual-fund (NEW)
 
   // Escalation & Reopen Filters.
   @IsOptional()

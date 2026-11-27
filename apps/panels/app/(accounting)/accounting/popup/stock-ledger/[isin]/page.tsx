@@ -12,15 +12,15 @@ import {
 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { DatePicker } from "@/components/ui/date-picker";
-import {
-  fetchLedgerEntries,
-  type LedgerEntryRow,
-} from "@/lib/accounting-api";
+import { fetchLedgerEntries, type LedgerEntryRow } from "@/lib/accounting-api";
 import { getAllStocksAccounting } from "@/lib/stocks-api";
 import type { Stock } from "@/types/stock";
 
 const formatCurrency = (val: number) =>
-  new Intl.NumberFormat("en-IN", { minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(val);
+  new Intl.NumberFormat("en-IN", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  }).format(val);
 
 const formatDate = (dateStr: string) => {
   if (!dateStr || dateStr === "—") return "—";
@@ -49,8 +49,18 @@ const isStockInventoryEntry = (e: LedgerEntryRow) => {
   const code = (e.ledger.code || "").toUpperCase();
   const name = (e.ledger.name || "").toLowerCase();
   if (code === "PL436B" || code.startsWith("STOCK-")) return true;
-  if (name.includes("share purchase") || name.includes("stock in hand") || name.includes("inventory")) return true;
-  if (e.ledger.type === "PURCHASE" && !name.includes("inter dp") && !name.includes("retail")) return true;
+  if (
+    name.includes("share purchase") ||
+    name.includes("stock in hand") ||
+    name.includes("inventory")
+  )
+    return true;
+  if (
+    e.ledger.type === "PURCHASE" &&
+    !name.includes("inter dp") &&
+    !name.includes("retail")
+  )
+    return true;
   return false;
 };
 
@@ -59,7 +69,13 @@ const isCounterpartyEntry = (e: LedgerEntryRow) => {
   if (e.ledger.type === "USER" || e.ledger.type === "BANK") return true;
   const code = (e.ledger.code || "").toUpperCase();
   const name = (e.ledger.name || "").toLowerCase();
-  if (code === "SLDA08" || name.includes("inter dp") || name.includes("cashfree") || name.includes("bank")) return true;
+  if (
+    code === "SLDA08" ||
+    name.includes("inter dp") ||
+    name.includes("cashfree") ||
+    name.includes("bank")
+  )
+    return true;
   return false;
 };
 
@@ -157,15 +173,20 @@ export default function StockLedgerPopup() {
       // Filter out pure financial vouchers (e.g. RCP, PAY, JV, Contra) that do not contain a STOCK ledger entry OR a qty field
       const hasStockLedger = vEntries.some((e) => isStockInventoryEntry(e));
       const hasQty = vEntries.some((e) => e.qty && e.qty > 0);
-      
+
       let metaObj = (voucher as any).metadata;
-      if (typeof metaObj === 'string') {
-        try { metaObj = JSON.parse(metaObj); } catch(e) {}
+      if (typeof metaObj === "string") {
+        try {
+          metaObj = JSON.parse(metaObj);
+        } catch (e) {}
       }
 
       // Skip all payment receipt vouchers (RCP- vouchers created when user pays via Cashfree).
       // Payment receipts are financial vouchers only; stock movement occurs ONLY on Sales (SAL/INV) or Purchase (PUR).
-      if (voucherType === "RECEIPT" || voucher.voucherNumber?.startsWith("RCP-")) {
+      if (
+        voucherType === "RECEIPT" ||
+        voucher.voucherNumber?.startsWith("RCP-")
+      ) {
         const isManualPurchase =
           metaObj?.voucherClass === "PURCHASE" ||
           voucher.voucherNumber?.startsWith("PUR-");
@@ -174,11 +195,13 @@ export default function StockLedgerPopup() {
         }
       }
 
-      if ((voucherType === "JOURNAL" || voucherType === "CONTRA") && !hasStockLedger && !hasQty) {
+      if (
+        (voucherType === "JOURNAL" || voucherType === "CONTRA") &&
+        !hasStockLedger &&
+        !hasQty
+      ) {
         continue; // Pure monetary voucher, skip stock ledger inclusion
       }
-
-
 
       // Find the entry that carries the qty/rate information
       const qtyEntry = vEntries.find((e) => e.qty && e.qty > 0) || firstEntry;
@@ -190,19 +213,29 @@ export default function StockLedgerPopup() {
 
       // Strictly prioritize USER ledgers (Client/Seller) and exclude BANK ledgers from Seller/Client text
       const userPartyEntry = vEntries.find((e) => e.ledger?.type === "USER");
-      const nonStockEntry = vEntries.find((e) => e.ledger?.type !== "STOCK" && e.ledger?.type !== "SALE" && e.ledger?.type !== "PURCHASE");
+      const nonStockEntry = vEntries.find(
+        (e) =>
+          e.ledger?.type !== "STOCK" &&
+          e.ledger?.type !== "SALE" &&
+          e.ledger?.type !== "PURCHASE",
+      );
       const fallbackEntry = vEntries.find((e) => e.ledger?.type !== "STOCK");
 
-      const partyEntry = userPartyEntry || (nonStockEntry?.ledger?.type !== "BANK" ? nonStockEntry : null) || fallbackEntry;
-      const isBankParty = partyEntry?.ledger?.type === "BANK" ||
+      const partyEntry =
+        userPartyEntry ||
+        (nonStockEntry?.ledger?.type !== "BANK" ? nonStockEntry : null) ||
+        fallbackEntry;
+      const isBankParty =
+        partyEntry?.ledger?.type === "BANK" ||
         partyEntry?.ledger?.name?.toLowerCase().includes("cashfree") ||
         partyEntry?.ledger?.name?.toLowerCase().includes("bank");
 
       const partyCode = partyEntry?.ledger?.code || "";
       const partyName = partyEntry?.ledger?.name || "";
-      const partyText = partyCode && partyName 
-        ? `${partyCode} & ${partyName}` 
-        : (partyName || partyCode || "");
+      const partyText =
+        partyCode && partyName
+          ? `${partyCode} & ${partyName}`
+          : partyName || partyCode || "";
 
       const isPurchaseVoucher =
         voucherType === "PURCHASE" ||
@@ -216,100 +249,121 @@ export default function StockLedgerPopup() {
         metaObj?.voucherClass === "SALE" ||
         metaObj?.voucherClass === "SALES";
 
-        const isInternalCompany = (text: string) => {
-          if (!text) return true;
-          const lower = text.toLowerCase();
-          return lower.includes("smc global") ||
-                 lower.includes("smc investech") ||
-                 lower.includes("unlisted share") ||
-                 lower.includes("inter dp") ||
-                 lower.includes("system");
-        };
+      const isInternalCompany = (text: string) => {
+        if (!text) return true;
+        const lower = text.toLowerCase();
+        return (
+          lower.includes(" global") ||
+          lower.includes(" investech") ||
+          lower.includes("unlisted share") ||
+          lower.includes("inter dp") ||
+          lower.includes("system")
+        );
+      };
 
-        if (isPurchaseVoucher) {
+      if (isPurchaseVoucher) {
+        let sellerText = "";
+        if (userPartyEntry?.ledger?.name) {
+          const code = userPartyEntry.ledger.code || "";
+          const name = userPartyEntry.ledger.name || "";
+          sellerText = code ? `${code} & ${name}` : name;
+        } else if (metaObj?.sellerName || metaObj?.vendorName) {
+          sellerText = metaObj.sellerName || metaObj.vendorName;
+        } else if (voucher.narration) {
+          const matchBy =
+            voucher.narration.match(/By\s+([^\/]+)/i) ||
+            voucher.narration.match(/From\s+([^\/]+)/i);
+          if (matchBy && matchBy[1]) {
+            sellerText = matchBy[1].trim();
+          }
+        }
 
-          let sellerText = "";
-          if (userPartyEntry?.ledger?.name) {
-            const code = userPartyEntry.ledger.code || "";
-            const name = userPartyEntry.ledger.name || "";
-            sellerText = code ? `${code} & ${name}` : name;
-          } else if (metaObj?.sellerName || metaObj?.vendorName) {
-            sellerText = metaObj.sellerName || metaObj.vendorName;
-          } else if (voucher.narration) {
-            const matchBy = voucher.narration.match(/By\s+([^\/]+)/i) || voucher.narration.match(/From\s+([^\/]+)/i);
-            if (matchBy && matchBy[1]) {
-              sellerText = matchBy[1].trim();
-            }
-          }
+        if (
+          !sellerText &&
+          partyEntry?.ledger?.name &&
+          partyEntry.ledger.type !== "PURCHASE"
+        ) {
+          const code = partyEntry.ledger.code || "";
+          const name = partyEntry.ledger.name || "";
+          sellerText = code ? `${code} & ${name}` : name;
+        }
 
-          if (!sellerText && partyEntry?.ledger?.name && partyEntry.ledger.type !== "PURCHASE") {
-            const code = partyEntry.ledger.code || "";
-            const name = partyEntry.ledger.name || "";
-            sellerText = code ? `${code} & ${name}` : name;
-          }
+        if (sellerText && isInternalCompany(sellerText)) {
+          sellerText = "";
+        }
 
-          if (sellerText && isInternalCompany(sellerText)) {
-            sellerText = "";
-          }
+        if (sellerText) {
+          particular = metaObj?.isReversal
+            ? `Reversal of Purchase: ${sellerText}`
+            : `Bought from Seller: ${sellerText}`;
+        } else {
+          particular = metaObj?.isReversal
+            ? "Reversal of Purchase"
+            : "Purchase / Stock Received";
+        }
 
-          if (sellerText) {
-            particular = metaObj?.isReversal ? `Reversal of Purchase: ${sellerText}` : `Bought from Seller: ${sellerText}`;
-          } else {
-            particular = metaObj?.isReversal ? "Reversal of Purchase" : "Purchase / Stock Received";
-          }
-          
-          if (metaObj?.isReversal) {
-            // Reversal of Purchase means stock goes out
-            credit = qty;
-            debit = 0;
-          } else {
-            // Purchase means stock comes in
-            debit = qty;
-            credit = 0;
-          }
-        } else if (isSalesVoucher) {
-          // Sales voucher handling logic
+        if (metaObj?.isReversal) {
+          // Reversal of Purchase means stock goes out
+          credit = qty;
+          debit = 0;
+        } else {
+          // Purchase means stock comes in
+          debit = qty;
+          credit = 0;
+        }
+      } else if (isSalesVoucher) {
+        // Sales voucher handling logic
 
-          let clientText = "";
-          if (userPartyEntry?.ledger?.name) {
-            const code = userPartyEntry.ledger.code || "";
-            const name = userPartyEntry.ledger.name || "";
-            clientText = code ? `${code} & ${name}` : name;
-          } else if (metaObj?.clientName || metaObj?.userName) {
-            clientText = metaObj.clientName || metaObj.userName;
-          } else if (voucher.narration) {
-            const matchTo = voucher.narration.match(/To\s+([^\/]+)/i) || voucher.narration.match(/Sold to\s+([^\/]+)/i);
-            if (matchTo && matchTo[1]) {
-              clientText = matchTo[1].trim();
-            }
+        let clientText = "";
+        if (userPartyEntry?.ledger?.name) {
+          const code = userPartyEntry.ledger.code || "";
+          const name = userPartyEntry.ledger.name || "";
+          clientText = code ? `${code} & ${name}` : name;
+        } else if (metaObj?.clientName || metaObj?.userName) {
+          clientText = metaObj.clientName || metaObj.userName;
+        } else if (voucher.narration) {
+          const matchTo =
+            voucher.narration.match(/To\s+([^\/]+)/i) ||
+            voucher.narration.match(/Sold to\s+([^\/]+)/i);
+          if (matchTo && matchTo[1]) {
+            clientText = matchTo[1].trim();
           }
+        }
 
-          if (!clientText && partyEntry?.ledger?.name && partyEntry.ledger.type !== "SALE") {
-            const code = partyEntry.ledger.code || "";
-            const name = partyEntry.ledger.name || "";
-            clientText = code ? `${code} & ${name}` : name;
-          }
+        if (
+          !clientText &&
+          partyEntry?.ledger?.name &&
+          partyEntry.ledger.type !== "SALE"
+        ) {
+          const code = partyEntry.ledger.code || "";
+          const name = partyEntry.ledger.name || "";
+          clientText = code ? `${code} & ${name}` : name;
+        }
 
-          if (clientText && isInternalCompany(clientText)) {
-            clientText = "";
-          }
+        if (clientText && isInternalCompany(clientText)) {
+          clientText = "";
+        }
 
-          if (clientText) {
-            particular = metaObj?.isReversal ? `Reversal of Sale: ${clientText}` : `Sold to Client: ${clientText}`;
-          } else {
-            particular = metaObj?.isReversal ? "Reversal of Sale" : "Stock Sale / Inventory Issue";
-          }
+        if (clientText) {
+          particular = metaObj?.isReversal
+            ? `Reversal of Sale: ${clientText}`
+            : `Sold to Client: ${clientText}`;
+        } else {
+          particular = metaObj?.isReversal
+            ? "Reversal of Sale"
+            : "Stock Sale / Inventory Issue";
+        }
 
-          if (metaObj?.isReversal) {
-            // Reversal of sale means stock comes back in
-            debit = qty;
-            credit = 0;
-          } else {
-            // Sale means stock goes out
-            credit = qty;
-            debit = 0;
-          }
-        } else if (voucherType === "STOCK_JOURNAL") {
+        if (metaObj?.isReversal) {
+          // Reversal of sale means stock comes back in
+          debit = qty;
+          credit = 0;
+        } else {
+          // Sale means stock goes out
+          credit = qty;
+          debit = 0;
+        }
+      } else if (voucherType === "STOCK_JOURNAL") {
         // Stock Journal — DEBIT in accounting = DEBIT in stock ledger (in), CREDIT = CREDIT (out)
         const stockEntry =
           vEntries.find(isStockInventoryEntry) ||
@@ -323,9 +377,13 @@ export default function StockLedgerPopup() {
         }
 
         const adjType = voucher.adjustmentType;
-        const isReversal = metaObj?.isReversal || voucher.narration?.toLowerCase().includes("reversal");
+        const isReversal =
+          metaObj?.isReversal ||
+          voucher.narration?.toLowerCase().includes("reversal");
         if (isReversal) {
-          particular = isDebit ? "Reversal of Stock Journal (Out)" : "Reversal of Stock Journal (In)";
+          particular = isDebit
+            ? "Reversal of Stock Journal (Out)"
+            : "Reversal of Stock Journal (In)";
         } else if (adjType === "BONUS") {
           particular = "Bonus Shares";
         } else if (adjType === "SPLIT") {
@@ -346,29 +404,35 @@ export default function StockLedgerPopup() {
           vEntries.find((e) => !isCounterpartyEntry(e)) ||
           qtyEntry;
         const isDebit = stockEntry.entryType === "DEBIT";
-        const isReversal = metaObj?.isReversal || voucher.narration?.toLowerCase().includes("reversal");
+        const isReversal =
+          metaObj?.isReversal ||
+          voucher.narration?.toLowerCase().includes("reversal");
 
         if (isDebit) {
           debit = qty;
           if (isReversal) {
-            particular = partyText && userPartyEntry
-              ? `Reversal of Stock Issue: ${partyText}`
-              : "Reversal of Stock Issue (Journal)";
+            particular =
+              partyText && userPartyEntry
+                ? `Reversal of Stock Issue: ${partyText}`
+                : "Reversal of Stock Issue (Journal)";
           } else {
-            particular = partyText && userPartyEntry
-              ? `Bought from Seller ID & Name:- ${partyText}`
-              : "Stock Received (Journal)";
+            particular =
+              partyText && userPartyEntry
+                ? `Bought from Seller ID & Name:- ${partyText}`
+                : "Stock Received (Journal)";
           }
         } else {
           credit = qty;
           if (isReversal) {
-            particular = partyText && userPartyEntry
-              ? `Reversal of Stock Receipt: ${partyText}`
-              : "Reversal of Stock Receipt (Journal)";
+            particular =
+              partyText && userPartyEntry
+                ? `Reversal of Stock Receipt: ${partyText}`
+                : "Reversal of Stock Receipt (Journal)";
           } else {
-            particular = partyText && userPartyEntry
-              ? `Sold to Client ID & Name:- ${partyText}`
-              : "Stock Issued (Journal)";
+            particular =
+              partyText && userPartyEntry
+                ? `Sold to Client ID & Name:- ${partyText}`
+                : "Stock Issued (Journal)";
           }
         }
       }
@@ -416,7 +480,9 @@ export default function StockLedgerPopup() {
 
     // Calculate opening balance before `dateFrom`
     let openingBalance = initialOpeningQty;
-    const prePeriodRows = ledgerRows.filter((r) => new Date(r.date).getTime() < fromTime);
+    const prePeriodRows = ledgerRows.filter(
+      (r) => new Date(r.date).getTime() < fromTime,
+    );
     if (prePeriodRows.length > 0) {
       openingBalance = prePeriodRows[prePeriodRows.length - 1]!.balance;
     }
@@ -452,27 +518,39 @@ export default function StockLedgerPopup() {
     return initialOpeningQty;
   }, [ledgerRows, initialOpeningQty]);
 
-  const totalDebit = finalLedgerRows.reduce((s, r) => r.voucherId !== "opening" ? s + r.debit : s, 0);
-  const totalCredit = finalLedgerRows.reduce((s, r) => r.voucherId !== "opening" ? s + r.credit : s, 0);
-  const closingBalance = finalLedgerRows.length > 0 ? finalLedgerRows[finalLedgerRows.length - 1]!.balance : 0;
+  const totalDebit = finalLedgerRows.reduce(
+    (s, r) => (r.voucherId !== "opening" ? s + r.debit : s),
+    0,
+  );
+  const totalCredit = finalLedgerRows.reduce(
+    (s, r) => (r.voucherId !== "opening" ? s + r.credit : s),
+    0,
+  );
+  const closingBalance =
+    finalLedgerRows.length > 0
+      ? finalLedgerRows[finalLedgerRows.length - 1]!.balance
+      : 0;
 
   // Export CSV exactly matching user format
   const handleExportCsv = () => {
     const csvRows: string[][] = [];
 
     // Row 1: Corporate Name
-    csvRows.push(["SMC INVESTECH PRIVATE LIMITED"]);
+    csvRows.push([" INVESTECH PRIVATE LIMITED"]);
 
     // Row 2: Address Details
-    csvRows.push(["3Rd Floor,C-98, Noida,Sector-2,Gautam Budh Nagar, Noida,Uttar Pradesh,201301"]);
+    csvRows.push([
+      "3Rd Floor,C-98, Noida,Sector-2,Gautam Budh Nagar, Noida,Uttar Pradesh,201301",
+    ]);
 
     // Row 3: Blank
     csvRows.push([]);
 
     // Row 4: Period and Qty header
-    const periodText = dateFrom || dateTo
-      ? `${dateFrom ? formatDate(dateFrom) : "Start"} to ${dateTo ? formatDate(dateTo) : "End"}`
-      : "All Period";
+    const periodText =
+      dateFrom || dateTo
+        ? `${dateFrom ? formatDate(dateFrom) : "Start"} to ${dateTo ? formatDate(dateTo) : "End"}`
+        : "All Period";
     csvRows.push(["Period", periodText, "", "", "Qty"]);
 
     // Row 5: Script Name and Balance header
@@ -502,7 +580,7 @@ export default function StockLedgerPopup() {
               ? `"${cleanVal}"`
               : cleanVal;
           })
-          .join(",")
+          .join(","),
       )
       .join("\n");
 
@@ -529,15 +607,21 @@ export default function StockLedgerPopup() {
             </div>
             <div>
               <h1 className="text-xl font-bold text-slate-900">Stock Ledger</h1>
-              <p className="text-xs text-slate-500 mt-0.5 font-mono">ISIN: {isin}</p>
+              <p className="text-xs text-slate-500 mt-0.5 font-mono">
+                ISIN: {isin}
+              </p>
             </div>
           </div>
 
           {/* Corporate Header (Tally-Style / Exact match of CSV image) */}
           <div className="text-center hidden md:block">
-            <h2 className="text-lg font-black tracking-wide text-slate-800 uppercase">SMC INVESTECH PRIVATE LIMITED</h2>
+            <h2 className="text-lg font-black tracking-wide text-slate-800 uppercase">
+              {" "}
+              INVESTECH PRIVATE LIMITED
+            </h2>
             <p className="text-[10px] text-slate-500 max-w-[500px] leading-tight mt-0.5">
-              3Rd Floor, C-98, Noida, Sector-2, Gautam Budh Nagar, Noida, Uttar Pradesh, 201301
+              3Rd Floor, C-98, Noida, Sector-2, Gautam Budh Nagar, Noida, Uttar
+              Pradesh, 201301
             </p>
           </div>
 
@@ -567,9 +651,13 @@ export default function StockLedgerPopup() {
       <div className="flex-1 p-6 space-y-5">
         {/* Corporate Details Header for small screens */}
         <div className="md:hidden bg-white p-4 rounded-2xl border border-slate-100 shadow-sm text-center">
-          <h2 className="text-base font-black tracking-wide text-slate-800 uppercase">SMC INVESTECH PRIVATE LIMITED</h2>
+          <h2 className="text-base font-black tracking-wide text-slate-800 uppercase">
+            {" "}
+            INVESTECH PRIVATE LIMITED
+          </h2>
           <p className="text-[10px] text-slate-500 leading-tight mt-1">
-            3Rd Floor, C-98, Noida, Sector-2, Gautam Budh Nagar, Noida, Uttar Pradesh, 201301
+            3Rd Floor, C-98, Noida, Sector-2, Gautam Budh Nagar, Noida, Uttar
+            Pradesh, 201301
           </p>
         </div>
 
@@ -578,7 +666,8 @@ export default function StockLedgerPopup() {
           <div className="flex items-end gap-4">
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block mb-1">
-                <CalendarDays className="h-3 w-3 inline mr-1" />Period From
+                <CalendarDays className="h-3 w-3 inline mr-1" />
+                Period From
               </label>
               <DatePicker
                 value={dateFrom}
@@ -588,7 +677,8 @@ export default function StockLedgerPopup() {
             </div>
             <div>
               <label className="text-[10px] font-bold uppercase tracking-widest text-slate-500 block mb-1">
-                <CalendarDays className="h-3 w-3 inline mr-1" />Period To
+                <CalendarDays className="h-3 w-3 inline mr-1" />
+                Period To
               </label>
               <DatePicker
                 value={dateTo}
@@ -598,7 +688,10 @@ export default function StockLedgerPopup() {
             </div>
             {(dateFrom || dateTo) && (
               <button
-                onClick={() => { setDateFrom(""); setDateTo(""); }}
+                onClick={() => {
+                  setDateFrom("");
+                  setDateTo("");
+                }}
                 className="h-9 px-3 text-xs font-bold text-rose-600 rounded-lg border border-rose-200 hover:bg-rose-50 transition-colors"
               >
                 Clear
@@ -609,12 +702,25 @@ export default function StockLedgerPopup() {
           {/* Script Info */}
           <div className="flex items-center gap-6">
             <div className="bg-white rounded-xl px-5 py-3 border border-slate-100 shadow-sm">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Script Name</p>
-              <p className="text-sm font-bold text-slate-900 mt-0.5">{stockName}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Script Name
+              </p>
+              <p className="text-sm font-bold text-slate-900 mt-0.5">
+                {stockName}
+              </p>
             </div>
             <div className="bg-white rounded-xl px-5 py-3 border border-slate-100 shadow-sm">
-              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Current Qty</p>
-              <p className={cn("text-lg font-bold font-mono mt-0.5", currentQty > 0 ? "text-emerald-700" : "text-rose-600")}>{currentQty.toLocaleString("en-IN")}</p>
+              <p className="text-[10px] font-bold uppercase tracking-widest text-slate-400">
+                Current Qty
+              </p>
+              <p
+                className={cn(
+                  "text-lg font-bold font-mono mt-0.5",
+                  currentQty > 0 ? "text-emerald-700" : "text-rose-600",
+                )}
+              >
+                {currentQty.toLocaleString("en-IN")}
+              </p>
             </div>
           </div>
         </div>
@@ -624,7 +730,9 @@ export default function StockLedgerPopup() {
           {loading ? (
             <div className="flex flex-col items-center justify-center py-20 text-slate-400">
               <Loader2 className="h-8 w-8 animate-spin text-indigo-500 mb-3" />
-              <p className="font-bold text-slate-500">Loading stock ledger...</p>
+              <p className="font-bold text-slate-500">
+                Loading stock ledger...
+              </p>
             </div>
           ) : error ? (
             <div className="flex flex-col items-center justify-center py-20 text-slate-400">
@@ -636,14 +744,38 @@ export default function StockLedgerPopup() {
             <table className="w-full text-xs border-collapse">
               <thead>
                 <tr className="bg-slate-800 text-white border-b border-slate-700">
-                  <th className="px-4 py-3 text-left font-bold text-[10px] uppercase tracking-wider border-r border-slate-700 last:border-r-0" rowSpan={2}>Date</th>
-                  <th className="px-4 py-3 text-left font-bold text-[10px] uppercase tracking-wider border-r border-slate-700 last:border-r-0" rowSpan={2}>Particular</th>
-                  <th className="px-4 py-3 text-right font-bold text-[10px] uppercase tracking-wider border-r border-slate-700 last:border-r-0" rowSpan={2}>Debit</th>
-                  <th className="px-4 py-3 text-right font-bold text-[10px] uppercase tracking-wider border-r border-slate-700 last:border-r-0" rowSpan={2}>Credit</th>
-                  <th className="px-4 py-1 text-center font-bold text-[9px] uppercase tracking-wider border-b border-r border-slate-700 last:border-r-0">Qty</th>
+                  <th
+                    className="px-4 py-3 text-left font-bold text-[10px] uppercase tracking-wider border-r border-slate-700 last:border-r-0"
+                    rowSpan={2}
+                  >
+                    Date
+                  </th>
+                  <th
+                    className="px-4 py-3 text-left font-bold text-[10px] uppercase tracking-wider border-r border-slate-700 last:border-r-0"
+                    rowSpan={2}
+                  >
+                    Particular
+                  </th>
+                  <th
+                    className="px-4 py-3 text-right font-bold text-[10px] uppercase tracking-wider border-r border-slate-700 last:border-r-0"
+                    rowSpan={2}
+                  >
+                    Debit
+                  </th>
+                  <th
+                    className="px-4 py-3 text-right font-bold text-[10px] uppercase tracking-wider border-r border-slate-700 last:border-r-0"
+                    rowSpan={2}
+                  >
+                    Credit
+                  </th>
+                  <th className="px-4 py-1 text-center font-bold text-[9px] uppercase tracking-wider border-b border-r border-slate-700 last:border-r-0">
+                    Qty
+                  </th>
                 </tr>
                 <tr className="bg-slate-800 text-white">
-                  <th className="px-4 py-1.5 text-right font-bold text-[9px] uppercase tracking-wider border-r border-slate-700 last:border-r-0">Balance</th>
+                  <th className="px-4 py-1.5 text-right font-bold text-[9px] uppercase tracking-wider border-r border-slate-700 last:border-r-0">
+                    Balance
+                  </th>
                 </tr>
               </thead>
 
@@ -653,8 +785,12 @@ export default function StockLedgerPopup() {
                     <td colSpan={5} className="text-center py-16">
                       <div className="flex flex-col items-center text-slate-400">
                         <Package className="h-10 w-10 text-slate-300 mb-2" />
-                        <p className="font-bold text-slate-500">No entries found</p>
-                        <p className="text-xs text-slate-400 mt-0.5">No voucher entries exist for this stock.</p>
+                        <p className="font-bold text-slate-500">
+                          No entries found
+                        </p>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          No voucher entries exist for this stock.
+                        </p>
                       </div>
                     </td>
                   </tr>
@@ -667,7 +803,11 @@ export default function StockLedgerPopup() {
                         key={idx}
                         className={cn(
                           "border-b border-slate-100 hover:bg-indigo-50/30 transition-colors",
-                          isOpening ? "bg-amber-50/50" : isAlt ? "bg-slate-50/50" : "bg-white"
+                          isOpening
+                            ? "bg-amber-50/50"
+                            : isAlt
+                              ? "bg-slate-50/50"
+                              : "bg-white",
                         )}
                       >
                         {/* Date */}
@@ -676,21 +816,27 @@ export default function StockLedgerPopup() {
                         </td>
 
                         {/* Particular */}
-                        <td className={cn(
-                          "px-4 py-2.5 border-r border-slate-100/50 font-medium text-slate-700",
-                          isOpening && "text-amber-800 font-bold italic"
-                        )}>
+                        <td
+                          className={cn(
+                            "px-4 py-2.5 border-r border-slate-100/50 font-medium text-slate-700",
+                            isOpening && "text-amber-800 font-bold italic",
+                          )}
+                        >
                           {row.particular}
                         </td>
 
                         {/* Debit */}
                         <td className="px-4 py-2.5 text-right whitespace-nowrap border-r border-slate-100/50 font-mono font-semibold text-emerald-600">
-                          {row.debit > 0 ? row.debit.toLocaleString("en-IN") : ""}
+                          {row.debit > 0
+                            ? row.debit.toLocaleString("en-IN")
+                            : ""}
                         </td>
 
                         {/* Credit */}
                         <td className="px-4 py-2.5 text-right whitespace-nowrap border-r border-slate-100/50 font-mono font-semibold text-rose-600">
-                          {row.credit > 0 ? row.credit.toLocaleString("en-IN") : ""}
+                          {row.credit > 0
+                            ? row.credit.toLocaleString("en-IN")
+                            : ""}
                         </td>
 
                         {/* Balance */}
@@ -707,7 +853,10 @@ export default function StockLedgerPopup() {
               {finalLedgerRows.length > 0 && (
                 <tfoot>
                   <tr className="bg-slate-800 text-white border-t-2 border-slate-600">
-                    <td colSpan={2} className="px-4 py-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-300">
+                    <td
+                      colSpan={2}
+                      className="px-4 py-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-300"
+                    >
                       Closing Totals
                     </td>
                     <td className="px-4 py-3 text-right font-mono font-extrabold text-emerald-300 whitespace-nowrap">
@@ -761,8 +910,12 @@ export default function StockLedgerPopup() {
                     <td colSpan={15} className="text-center py-16">
                       <div className="flex flex-col items-center text-slate-400">
                         <Package className="h-10 w-10 text-slate-300 mb-2" />
-                        <p className="font-bold text-slate-500">No entries found</p>
-                        <p className="text-xs text-slate-400 mt-0.5">No voucher entries exist for this stock.</p>
+                        <p className="font-bold text-slate-500">
+                          No entries found
+                        </p>
+                        <p className="text-xs text-slate-400 mt-0.5">
+                          No voucher entries exist for this stock.
+                        </p>
                       </div>
                     </td>
                   </tr>
@@ -773,15 +926,36 @@ export default function StockLedgerPopup() {
 
                     if (isOpening) {
                       return (
-                        <tr key="opening" className="bg-amber-50 border-b border-amber-100 font-semibold text-amber-800">
-                          <td className="px-3 py-2.5 whitespace-nowrap border-r border-slate-100">{dateFrom ? formatDate(dateFrom) : "—"}</td>
-                          <td className="px-3 py-2.5 border-r border-slate-100">—</td>
-                          <td className="px-3 py-2.5 border-r border-slate-100">—</td>
-                          <td className="px-3 py-2.5 border-r border-slate-100 italic font-bold text-amber-700" colSpan={8}>Opening Balance</td>
-                          <td className="px-3 py-2.5 text-right font-mono border-r border-slate-100">—</td>
-                          <td className="px-3 py-2.5 text-right font-mono border-r border-slate-100">—</td>
+                        <tr
+                          key="opening"
+                          className="bg-amber-50 border-b border-amber-100 font-semibold text-amber-800"
+                        >
+                          <td className="px-3 py-2.5 whitespace-nowrap border-r border-slate-100">
+                            {dateFrom ? formatDate(dateFrom) : "—"}
+                          </td>
+                          <td className="px-3 py-2.5 border-r border-slate-100">
+                            —
+                          </td>
+                          <td className="px-3 py-2.5 border-r border-slate-100">
+                            —
+                          </td>
+                          <td
+                            className="px-3 py-2.5 border-r border-slate-100 italic font-bold text-amber-700"
+                            colSpan={8}
+                          >
+                            Opening Balance
+                          </td>
+                          <td className="px-3 py-2.5 text-right font-mono border-r border-slate-100">
+                            —
+                          </td>
+                          <td className="px-3 py-2.5 text-right font-mono border-r border-slate-100">
+                            —
+                          </td>
                           <td className="px-3 py-2.5 text-right font-mono font-bold text-amber-700 border-r border-slate-100 whitespace-nowrap">
-                            {row.balance.toLocaleString("en-IN")} <span className="text-[8px] text-amber-600">Units</span>
+                            {row.balance.toLocaleString("en-IN")}{" "}
+                            <span className="text-[8px] text-amber-600">
+                              Units
+                            </span>
                           </td>
                           <td className="px-3 py-2.5">—</td>
                         </tr>
@@ -790,7 +964,7 @@ export default function StockLedgerPopup() {
 
                     // Find original entry for extra fields
                     const entry = entries.find(
-                      (e) => e.voucher?.voucherNumber === row.voucherNumber
+                      (e) => e.voucher?.voucherNumber === row.voucherNumber,
                     );
                     const voucherTypeLabels: Record<string, string> = {
                       RECEIPT: "Purchase",
@@ -815,7 +989,7 @@ export default function StockLedgerPopup() {
                         key={idx}
                         className={cn(
                           "border-b border-slate-100 hover:bg-indigo-50/30 transition-colors",
-                          isAlt ? "bg-slate-50/50" : "bg-white"
+                          isAlt ? "bg-slate-50/50" : "bg-white",
                         )}
                       >
                         {/* Date */}
@@ -825,32 +999,75 @@ export default function StockLedgerPopup() {
 
                         {/* Voucher No. */}
                         <td className="px-3 py-2.5 whitespace-nowrap border-r border-slate-100">
-                          <span className="font-mono font-bold text-indigo-700 text-[10px]">{row.voucherNumber}</span>
+                          <span className="font-mono font-bold text-indigo-700 text-[10px]">
+                            {row.voucherNumber}
+                          </span>
                         </td>
 
                         {/* Voucher Type */}
                         <td className="px-3 py-2.5 whitespace-nowrap border-r border-slate-100">
-                          <span className={cn("inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold", 
-                            entry?.voucher?.voucherNumber?.startsWith("PAY-") ? "bg-blue-50 text-blue-700" :
-                            entry?.voucher?.voucherNumber?.startsWith("SAL-") || entry?.voucher?.voucherNumber?.startsWith("INV-") ? "bg-rose-50 text-rose-700" :
-                            entry?.voucher?.voucherNumber?.startsWith("PUR-") ? "bg-amber-50 text-amber-700" :
-                            entry?.voucher?.voucherNumber?.startsWith("RCP-") ? "bg-emerald-50 text-emerald-700" :
-                            entry?.voucher?.voucherNumber?.startsWith("JV-") ? "bg-violet-50 text-violet-700" :
-                            (voucherTypeColors[vType] || "bg-slate-100 text-slate-600")
-                          )}>
+                          <span
+                            className={cn(
+                              "inline-flex items-center px-2 py-0.5 rounded-full text-[9px] font-bold",
+                              entry?.voucher?.voucherNumber?.startsWith("PAY-")
+                                ? "bg-blue-50 text-blue-700"
+                                : entry?.voucher?.voucherNumber?.startsWith(
+                                      "SAL-",
+                                    ) ||
+                                    entry?.voucher?.voucherNumber?.startsWith(
+                                      "INV-",
+                                    )
+                                  ? "bg-rose-50 text-rose-700"
+                                  : entry?.voucher?.voucherNumber?.startsWith(
+                                        "PUR-",
+                                      )
+                                    ? "bg-amber-50 text-amber-700"
+                                    : entry?.voucher?.voucherNumber?.startsWith(
+                                          "RCP-",
+                                        )
+                                      ? "bg-emerald-50 text-emerald-700"
+                                      : entry?.voucher?.voucherNumber?.startsWith(
+                                            "JV-",
+                                          )
+                                        ? "bg-violet-50 text-violet-700"
+                                        : voucherTypeColors[vType] ||
+                                          "bg-slate-100 text-slate-600",
+                            )}
+                          >
                             {entry?.voucher?.customType?.name ||
-                             (entry?.voucher?.voucherNumber?.startsWith("PAY-") ? "Payment" :
-                              entry?.voucher?.voucherNumber?.startsWith("SAL-") || entry?.voucher?.voucherNumber?.startsWith("INV-") ? "Sale" :
-                              entry?.voucher?.voucherNumber?.startsWith("PUR-") ? "Purchase" :
-                              entry?.voucher?.voucherNumber?.startsWith("RCP-") ? "Receipt" :
-                              entry?.voucher?.voucherNumber?.startsWith("JV-") ? "Journal" :
-                              voucherTypeLabels[vType]) || vType || "—"}
+                              (entry?.voucher?.voucherNumber?.startsWith("PAY-")
+                                ? "Payment"
+                                : entry?.voucher?.voucherNumber?.startsWith(
+                                      "SAL-",
+                                    ) ||
+                                    entry?.voucher?.voucherNumber?.startsWith(
+                                      "INV-",
+                                    )
+                                  ? "Sale"
+                                  : entry?.voucher?.voucherNumber?.startsWith(
+                                        "PUR-",
+                                      )
+                                    ? "Purchase"
+                                    : entry?.voucher?.voucherNumber?.startsWith(
+                                          "RCP-",
+                                        )
+                                      ? "Receipt"
+                                      : entry?.voucher?.voucherNumber?.startsWith(
+                                            "JV-",
+                                          )
+                                        ? "Journal"
+                                        : voucherTypeLabels[vType]) ||
+                              vType ||
+                              "—"}
                           </span>
                         </td>
 
                         {/* Narration */}
                         <td className="px-3 py-2.5 border-r border-slate-100 max-w-[180px]">
-                          <span className="text-slate-600 font-medium truncate block" title={row.particular}>
+                          <span
+                            className="text-slate-600 font-medium truncate block"
+                            title={row.particular}
+                          >
                             {row.particular}
                           </span>
                         </td>
@@ -872,12 +1089,16 @@ export default function StockLedgerPopup() {
 
                         {/* Rate */}
                         <td className="px-3 py-2.5 text-right whitespace-nowrap border-r border-slate-100 font-mono font-semibold text-slate-800">
-                          {entry?.rate != null ? formatCurrency(entry.rate) : "—"}
+                          {entry?.rate != null
+                            ? formatCurrency(entry.rate)
+                            : "—"}
                         </td>
 
                         {/* Amount */}
                         <td className="px-3 py-2.5 text-right whitespace-nowrap border-r border-slate-100 font-mono font-bold text-slate-900">
-                          {entry?.amount != null ? `₹${formatCurrency(entry.amount)}` : "—"}
+                          {entry?.amount != null
+                            ? `₹${formatCurrency(entry.amount)}`
+                            : "—"}
                         </td>
 
                         {/* Ref. No. */}
@@ -887,13 +1108,17 @@ export default function StockLedgerPopup() {
 
                         {/* Ref. Date */}
                         <td className="px-3 py-2.5 whitespace-nowrap border-r border-slate-100 text-slate-600">
-                          {entry?.voucher?.referenceDate ? formatDate(entry.voucher.referenceDate) : "—"}
+                          {entry?.voucher?.referenceDate
+                            ? formatDate(entry.voucher.referenceDate)
+                            : "—"}
                         </td>
 
                         {/* Debit (In) */}
                         <td className="px-3 py-2.5 text-right whitespace-nowrap border-r border-slate-100 font-mono font-bold">
                           {row.debit > 0 ? (
-                            <span className="text-emerald-600">{row.debit.toLocaleString("en-IN")}</span>
+                            <span className="text-emerald-600">
+                              {row.debit.toLocaleString("en-IN")}
+                            </span>
                           ) : (
                             <span className="text-slate-300">—</span>
                           )}
@@ -902,7 +1127,9 @@ export default function StockLedgerPopup() {
                         {/* Credit (Out) */}
                         <td className="px-3 py-2.5 text-right whitespace-nowrap border-r border-slate-100 font-mono font-bold">
                           {row.credit > 0 ? (
-                            <span className="text-rose-600">{row.credit.toLocaleString("en-IN")}</span>
+                            <span className="text-rose-600">
+                              {row.credit.toLocaleString("en-IN")}
+                            </span>
                           ) : (
                             <span className="text-slate-300">—</span>
                           )}
@@ -910,15 +1137,28 @@ export default function StockLedgerPopup() {
 
                         {/* Balance */}
                         <td className="px-3 py-2.5 text-right whitespace-nowrap border-r border-slate-100 font-mono font-extrabold">
-                          <span className={row.balance > 0 ? "text-indigo-700" : row.balance === 0 ? "text-slate-400" : "text-rose-700"}>
+                          <span
+                            className={
+                              row.balance > 0
+                                ? "text-indigo-700"
+                                : row.balance === 0
+                                  ? "text-slate-400"
+                                  : "text-rose-700"
+                            }
+                          >
                             {row.balance.toLocaleString("en-IN")}
                           </span>
-                          <span className="ml-1 text-[8px] text-slate-400">Units</span>
+                          <span className="ml-1 text-[8px] text-slate-400">
+                            Units
+                          </span>
                         </td>
 
                         {/* Remarks */}
                         <td className="px-3 py-2.5 text-slate-500 font-medium max-w-[140px]">
-                          <span className="truncate block" title={entry?.remarks || ""}>
+                          <span
+                            className="truncate block"
+                            title={entry?.remarks || ""}
+                          >
                             {entry?.remarks || "—"}
                           </span>
                         </td>
@@ -932,7 +1172,10 @@ export default function StockLedgerPopup() {
               {finalLedgerRows.length > 0 && (
                 <tfoot>
                   <tr className="bg-slate-800 text-white border-t-2 border-slate-600">
-                    <td colSpan={11} className="px-3 py-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-300">
+                    <td
+                      colSpan={11}
+                      className="px-3 py-3 text-[10px] font-extrabold uppercase tracking-widest text-slate-300"
+                    >
                       Closing Totals
                     </td>
                     <td className="px-3 py-3 text-right font-mono font-extrabold text-emerald-300 whitespace-nowrap">
@@ -942,10 +1185,20 @@ export default function StockLedgerPopup() {
                       {totalCredit.toLocaleString("en-IN")}
                     </td>
                     <td className="px-3 py-3 text-right font-mono font-extrabold whitespace-nowrap">
-                      <span className={closingBalance > 0 ? "text-indigo-200" : closingBalance === 0 ? "text-slate-400" : "text-rose-200"}>
+                      <span
+                        className={
+                          closingBalance > 0
+                            ? "text-indigo-200"
+                            : closingBalance === 0
+                              ? "text-slate-400"
+                              : "text-rose-200"
+                        }
+                      >
                         {closingBalance.toLocaleString("en-IN")}
                       </span>
-                      <span className="ml-1 text-[9px] text-slate-400">Units</span>
+                      <span className="ml-1 text-[9px] text-slate-400">
+                        Units
+                      </span>
                     </td>
                     <td className="px-3 py-3" />
                   </tr>
@@ -958,4 +1211,3 @@ export default function StockLedgerPopup() {
     </div>
   );
 }
-

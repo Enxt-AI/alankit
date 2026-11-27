@@ -5,6 +5,7 @@
 This document is the authoritative backend staging deployment flow for v1.
 
 Included:
+
 - GitHub Actions backend CI
 - GitHub Actions staging deployment from `staging`
 - GHCR image build and push
@@ -14,6 +15,7 @@ Included:
 - Migration safety policy as governance
 
 Excluded from v1:
+
 - Automated database rollback
 - Schema rollback automation
 - Frontend CI/CD
@@ -97,10 +99,10 @@ Current image behavior:
 
 Current image naming pattern:
 
-- `ghcr.io/<owner>/smc-auth-service:<sha>`
-- `ghcr.io/<owner>/smc-payments-service:<sha>`
-- `ghcr.io/<owner>/smc-stocks-service:<sha>`
-- `ghcr.io/<owner>/smc-ticketing-service:<sha>`
+- `ghcr.io/<owner>/-auth-service:<sha>`
+- `ghcr.io/<owner>/-payments-service:<sha>`
+- `ghcr.io/<owner>/-stocks-service:<sha>`
+- `ghcr.io/<owner>/-ticketing-service:<sha>`
 
 ## EC2 Runtime Strategy
 
@@ -128,7 +130,7 @@ The first v1 deployment may encounter legacy container names from the previous m
 
 The deploy script handles that by:
 
-1. creating the dedicated Docker network `smc-staging-network`
+1. creating the dedicated Docker network `-staging-network`
 2. adopting legacy backend containers into blue-slot names when slot state does not yet exist
 3. generating the new Nginx config from the template
 4. reloading or starting the managed Nginx container
@@ -158,7 +160,7 @@ Notes:
 The target EC2 host must have:
 
 1. Docker installed and running
-2. A checked-out copy of this repository at `~/smc-unlisted-stox`
+2. A checked-out copy of this repository at `~/-unlisted-stocks`
 3. A populated `.env.staging` file at the repository root on the EC2 host
 4. Network access to Supabase, Redis, and other external services required by the backend
 5. Port 80 available for the managed Nginx container

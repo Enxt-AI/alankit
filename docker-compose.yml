@@ -5,14 +5,14 @@
 #   View logs:        docker compose logs -f
 #   Check status:     docker compose ps
 #   Stop services:    docker compose down
-#   Redis CLI:        docker exec -it smc-redis redis-cli
+#   Redis CLI:        docker exec -it -redis redis-cli
 #   Redis Web UI:     http://<host-or-server-ip>:5540
 #   MinIO Web UI:     http://<host-or-server-ip>:9001
 
 services:
   redis:
     image: redis:7-alpine
-    container_name: smc-redis
+    container_name: -redis
     restart: unless-stopped
     ports:
       - "${REDIS_PORT:-6379}:6379"
@@ -59,11 +59,11 @@ services:
         max-file: "3"
         compress: "true"
     networks:
-      - smc-network
+      - -network
 
   minio:
     image: minio/minio:latest
-    container_name: smc-minio
+    container_name: -minio
     restart: unless-stopped
     ports:
       - "${MINIO_PORT:-9000}:9000"         # S3 API endpoint
@@ -97,11 +97,11 @@ services:
         max-file: "3"
         compress: "true"
     networks:
-      - smc-network
+      - -network
 
   redis-insight:
     image: redis/redisinsight:latest
-    container_name: smc-redis-insight
+    container_name: -redis-insight
     restart: unless-stopped
     ports:
       - "${REDIS_INSIGHT_PORT:-5540}:5540"
@@ -109,9 +109,9 @@ services:
       - ./.state/redisinsight-data:/data
     mem_limit: 512m
     networks:
-      - smc-network
+      - -network
 
 networks:
-  smc-network:
-    name: smc-staging-network
+  -network:
+    name: -staging-network
     external: true

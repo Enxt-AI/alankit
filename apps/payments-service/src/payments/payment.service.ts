@@ -13,7 +13,7 @@ import { VerifyPaymentDto } from './dto/verify-payment.dto';
 import { NdpsGateway } from './ndps.gateway';
 import { InjectQueue } from '@nestjs/bull';
 import type { Queue } from 'bull';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 import { Cron, CronExpression } from '@nestjs/schedule';
 
 @Injectable()

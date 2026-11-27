@@ -2,7 +2,7 @@
 
 ## Overview
 
-This guide provides comprehensive documentation for the Agent-Facing Support System implemented in the SMC Unlisted Stox platform. The system consists of three interconnected panels: User-Facing (existing), Agent-Facing (new), and Admin-Facing (enhanced).
+This guide provides comprehensive documentation for the Agent-Facing Support System implemented in the Unlisted stocks platform. The system consists of three interconnected panels: User-Facing (existing), Agent-Facing (new), and Admin-Facing (enhanced).
 
 ### System Architecture
 
@@ -186,7 +186,7 @@ EMAIL_FROM=support@yourdomain.com
 
 ### Test Scenarios
 
-####  Scenario 1: User Creates Ticket → Auto-Assignment
+#### Scenario 1: User Creates Ticket → Auto-Assignment
 
 1. Login as user at `/login` (use existing user or create one)
 2. Navigate to `/dashboard/support` → "Create Ticket"
@@ -197,7 +197,7 @@ EMAIL_FROM=support@yourdomain.com
 5. Verify in database: `ticket.assignedTo` = agent ID, `admin.activeTicketCount` incremented
 6. **Expected:** Ticket auto-assigned to `supportagent@test.com` (first available agent)
 
-####  Scenario 2: Agent Resolves Ticket → User Notification
+#### Scenario 2: Agent Resolves Ticket → User Notification
 
 1. Login as `supportagent@test.com` / `agent123` at `/support/login`
 2. Navigate to `/support/tickets` → "My Tickets" tab
@@ -207,7 +207,7 @@ EMAIL_FROM=support@yourdomain.com
 5. Verify in database: `ticket.status='resolved'`, `ticket.resolvedAt` set, `ticket.resolvedBy` = agent ID
 6. **Expected:** Ticket marked resolved, user would receive email (placeholder logs)
 
-####  Scenario 3: User Reopens Ticket → Agent Notification
+#### Scenario 3: User Reopens Ticket → Agent Notification
 
 1. As user, navigate to resolved ticket → "Reopen" button
 2. Enter reopen reason → Submit
@@ -219,7 +219,7 @@ EMAIL_FROM=support@yourdomain.com
    - `ticket.status='escalated'`, `ticket.escalatedTo` = Super Admin ID
 6. **Expected:** First 2 reopens notify agent, 3rd triggers escalation
 
-####  Scenario 4: SLA Breach → Admin Escalation
+#### Scenario 4: SLA Breach → Admin Escalation
 
 1. Create ticket with priority='urgent' (4h SLA)
 2. Wait 4+ hours OR manually update `ticket.dueDate` to past date in database
@@ -232,7 +232,7 @@ EMAIL_FROM=support@yourdomain.com
 5. Verify: `ticket.status='escalated'`, `ticket.escalatedAt` set, `ticket.escalatedTo` = Super Admin
 6. **Expected:** Overdue ticket auto-escalated, Super Admin notified
 
-####  Scenario 5: Admin Manual Assignment → Confirmation
+#### Scenario 5: Admin Manual Assignment → Confirmation
 
 1. Login as `superadmin@test.com` / `admin123` at `/admin/login`
 2. Navigate to `/admin/support-tickets` → "All" tab
@@ -245,7 +245,7 @@ EMAIL_FROM=support@yourdomain.com
 6. Verify: `ticket.assignedTo` updated, previous agent's count decremented, new agent's incremented
 7. **Expected:** Ticket reassigned with confirmation, workload warnings shown
 
-####  Scenario 6: Support Agent Login → Panel Access
+#### Scenario 6: Support Agent Login → Panel Access
 
 1. Navigate to `/support/login`
 2. Enter `supportagent@test.com` / `agent123`
@@ -257,7 +257,7 @@ EMAIL_FROM=support@yourdomain.com
 5. Try accessing `/admin` → Redirected to `/support/dashboard` (middleware blocks)
 6. **Expected:** Support Agent can only access Support Panel, not Admin Panel
 
-####  Scenario 7: Admin Creates Support Agent → Permissions Applied
+#### Scenario 7: Admin Creates Support Agent → Permissions Applied
 
 1. As Super Admin, navigate to `/admin/support-agents` → "Create Support Agent"
 2. Fill form:

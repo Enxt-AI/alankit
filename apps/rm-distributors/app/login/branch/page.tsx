@@ -1,7 +1,13 @@
 "use client";
 
 import Link from "next/link";
-import { Card, CardHeader, CardTitle, CardDescription, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Button } from "@/components/ui/button";
@@ -36,15 +42,19 @@ export default function BranchLogin() {
     let cancelled = false;
     (async () => {
       try {
-        const response = await fetch(resolveApiUrl("/api/auth/branch/login-options"), {
-          headers: { ...getAuthHeaders() },
-          credentials: "include",
-        });
+        const response = await fetch(
+          resolveApiUrl("/api/auth/branch/login-options"),
+          {
+            headers: { ...getAuthHeaders() },
+            credentials: "include",
+          },
+        );
         const data = await response.json().catch(() => null);
         if (!response.ok || !Array.isArray(data?.branches)) throw new Error();
         if (!cancelled) setBranches(data.branches);
       } catch {
-        if (!cancelled) setError("Unable to load branches. Please refresh the page.");
+        if (!cancelled)
+          setError("Unable to load branches. Please refresh the page.");
       } finally {
         if (!cancelled) setBranchesLoading(false);
       }
@@ -76,7 +86,10 @@ export default function BranchLogin() {
   // Close dropdown when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      if (comboboxRef.current && !comboboxRef.current.contains(event.target as Node)) {
+      if (
+        comboboxRef.current &&
+        !comboboxRef.current.contains(event.target as Node)
+      ) {
         setDropdownOpen(false);
         // Restore selected branch label if user typed something without picking
         if (selectedBranch) {
@@ -117,7 +130,10 @@ export default function BranchLogin() {
       if (!dropdownOpen) {
         setDropdownOpen(true);
       } else if (filteredBranches.length > 0) {
-        setHighlightedIndex((prev) => (prev - 1 + filteredBranches.length) % filteredBranches.length);
+        setHighlightedIndex(
+          (prev) =>
+            (prev - 1 + filteredBranches.length) % filteredBranches.length,
+        );
       }
     } else if (e.key === "Enter" && dropdownOpen) {
       e.preventDefault();
@@ -150,10 +166,10 @@ export default function BranchLogin() {
           ...getAuthHeaders(),
         },
         credentials: "include",
-        body: JSON.stringify({ 
+        body: JSON.stringify({
           branchId,
-          email: email.trim(), 
-          password: password.trim() 
+          email: email.trim(),
+          password: password.trim(),
         }),
       });
 
@@ -164,29 +180,31 @@ export default function BranchLogin() {
       }
 
       if (!response.ok) {
-        let errorText = 'Failed to sign in';
+        let errorText = "Failed to sign in";
         if (data && data.message) {
           const msg = data.message;
-          if (typeof msg === 'string') {
+          if (typeof msg === "string") {
             errorText = msg;
           } else if (Array.isArray(msg)) {
             const texts = msg.map((m: any) => {
-              if (typeof m === 'string') return m;
-              if (m?.constraints) return Object.values(m.constraints).join(', ');
+              if (typeof m === "string") return m;
+              if (m?.constraints)
+                return Object.values(m.constraints).join(", ");
               return String(m);
             });
-            errorText = texts.join('. ');
+            errorText = texts.join(". ");
           }
         } else {
           // Map HTTP status codes to user-friendly messages
           if (response.status === 401) {
-            errorText = 'Invalid email or password. Please try again.';
+            errorText = "Invalid email or password. Please try again.";
           } else if (response.status === 429) {
-            errorText = 'Too many login attempts. Please try again later.';
+            errorText = "Too many login attempts. Please try again later.";
           } else if (response.status >= 500) {
-            errorText = 'We\'re experiencing temporary issues. Please try again in a few moments.';
+            errorText =
+              "We're experiencing temporary issues. Please try again in a few moments.";
           } else {
-            errorText = 'Unable to sign in. Please try again.';
+            errorText = "Unable to sign in. Please try again.";
           }
         }
         throw new Error(errorText);
@@ -194,17 +212,25 @@ export default function BranchLogin() {
 
       // Check if this is a branch
       if (data && data.distributor && !data.distributor.isBranch) {
-        throw new Error("This account is registered as a Distributor. Please log in on the Distributor page.");
+        throw new Error(
+          "This account is registered as a Distributor. Please log in on the Distributor page.",
+        );
       }
 
       // Navigate to dashboard
       localStorage.setItem("userType", "branch");
       router.push("/branch");
     } catch (err: any) {
-      const msg = err.message || 'Something went wrong. Please try again.';
+      const msg = err.message || "Something went wrong. Please try again.";
       // Sanitize any leaked technical details
-      if (msg.includes('ECONNREFUSED') || msg.includes('NetworkError') || msg.includes('Failed to fetch')) {
-        setError('Unable to connect. Please check your internet connection and try again.');
+      if (
+        msg.includes("ECONNREFUSED") ||
+        msg.includes("NetworkError") ||
+        msg.includes("Failed to fetch")
+      ) {
+        setError(
+          "Unable to connect. Please check your internet connection and try again.",
+        );
       } else {
         setError(msg);
       }
@@ -216,17 +242,34 @@ export default function BranchLogin() {
   return (
     <main className="min-h-screen flex items-center justify-center p-8 bg-background">
       <div className="max-w-md w-full animate-in fade-in zoom-in duration-300">
-        <Link href="/" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8 group">
-          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="transition-transform group-hover:-translate-x-1"><path d="m15 18-6-6 6-6"/></svg>
+        <Link
+          href="/"
+          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-8 group"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            className="transition-transform group-hover:-translate-x-1"
+          >
+            <path d="m15 18-6-6 6-6" />
+          </svg>
           Back to roles
         </Link>
-        
+
         <Card className="border-border shadow-sm">
           <CardHeader className="space-y-1">
-            <CardTitle className="text-2xl font-semibold tracking-tight">SMC Branch Login</CardTitle>
-            <CardDescription>
-              Sign in to your SMC Branch portal
-            </CardDescription>
+            <CardTitle className="text-2xl font-semibold tracking-tight">
+              {" "}
+              Branch Login
+            </CardTitle>
+            <CardDescription>Sign in to your Branch portal</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
@@ -249,7 +292,9 @@ export default function BranchLogin() {
                     autoComplete="off"
                     disabled={branchesLoading || branches.length === 0}
                     placeholder={
-                      branchesLoading ? "Loading branches..." : "Search or select your branch..."
+                      branchesLoading
+                        ? "Loading branches..."
+                        : "Search or select your branch..."
                     }
                     value={branchQuery}
                     onFocus={() => setDropdownOpen(true)}
@@ -324,12 +369,15 @@ export default function BranchLogin() {
                               }}
                               className={cn(
                                 "relative flex w-full cursor-pointer select-none items-center justify-between rounded-sm px-2.5 py-2 text-left text-sm outline-none transition-colors",
-                                (isHighlighted || isSelected) && "bg-accent text-accent-foreground",
+                                (isHighlighted || isSelected) &&
+                                  "bg-accent text-accent-foreground",
                                 isSelected && "font-medium",
                               )}
                             >
                               <span className="truncate pr-2">{b.name}</span>
-                              {isSelected && <Check className="h-4 w-4 shrink-0 text-primary" />}
+                              {isSelected && (
+                                <Check className="h-4 w-4 shrink-0 text-primary" />
+                              )}
                             </button>
                           );
                         })
@@ -340,11 +388,11 @@ export default function BranchLogin() {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email address</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
-                  placeholder="name@smcindia.com" 
-                  required 
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="name@india.com"
+                  required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   className="h-10 border-border focus-visible:ring-primary focus-visible:border-primary"
@@ -353,15 +401,18 @@ export default function BranchLogin() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Password</Label>
-                  <Link href="/change-password?portal=branch" className="text-sm font-semibold text-primary hover:underline">
+                  <Link
+                    href="/change-password?portal=branch"
+                    className="text-sm font-semibold text-primary hover:underline"
+                  >
                     Forgot password?
                   </Link>
                 </div>
                 <div className="relative">
-                  <Input 
-                    id="password" 
-                    type={showPassword ? "text" : "password"} 
-                    required 
+                  <Input
+                    id="password"
+                    type={showPassword ? "text" : "password"}
+                    required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     className="h-10 border-border focus-visible:ring-primary focus-visible:border-primary pr-10"
@@ -379,7 +430,11 @@ export default function BranchLogin() {
                   </button>
                 </div>
               </div>
-              <Button type="submit" className="w-full h-10 font-semibold" disabled={isLoading || !branchId}>
+              <Button
+                type="submit"
+                className="w-full h-10 font-semibold"
+                disabled={isLoading || !branchId}
+              >
                 {isLoading ? "Signing In..." : "Sign In"}
               </Button>
             </form>

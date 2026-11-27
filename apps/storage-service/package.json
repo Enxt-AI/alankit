@@ -35,7 +35,7 @@
     "@nestjs/passport": "^11.0.5",
     "@nestjs/platform-express": "^11.0.1",
     "@nestjs/platform-fastify": "^11.1.8",
-    "@smc/logger": "workspace:*",
+    "@/logger": "workspace:*",
     "cookie-crypto": "workspace:^",
     "ioredis": "^5.4.1",
     "passport": "^0.7.0",

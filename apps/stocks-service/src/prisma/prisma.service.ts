@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 import { PrismaClient } from 'db-unlistedstock';
 import { createAuditMiddleware } from './audit-middleware';
 import { AdminContextService } from '../common/admin-context.service';

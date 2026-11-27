@@ -11,7 +11,7 @@ import {
   ServiceUnavailableException,
   Logger,
 } from '@nestjs/common';
-import { PinoNestLogger } from '@smc/logger';
+import { PinoNestLogger } from '@/logger';
 import * as crypto from 'crypto';
 import * as fs from 'fs';
 import * as path from 'path';
