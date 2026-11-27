@@ -10,7 +10,7 @@ import cors from '@fastify/cors';
 import { createPinoLogger, createFastifyLogger,
   registerRequestIdHook,
   registerHttpAccessHook,
-} from '@/logger';
+} from '@repo/logger';
 
 async function bootstrap() {
   const logger = createPinoLogger('storage-service');

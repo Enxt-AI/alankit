@@ -6,7 +6,7 @@ import { GoogleWebhookDto } from './dto/webhook-google.dto';
 import { TwitterWebhookDto } from './dto/webhook-twitter.dto';
 import { ConfigService } from '@nestjs/config';
 import * as crypto from 'crypto';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 /**
  * Webhook Service

@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, ServiceUnavailableException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 import { randomUUID } from 'crypto';
 import { SignedDealSheetService } from './signed-deal-sheet.service';
 

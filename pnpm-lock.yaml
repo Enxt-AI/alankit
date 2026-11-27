@@ -88,9 +88,6 @@ importers:
 
   apps/auth-service:
     dependencies:
-      '@/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
       '@fastify/cookie':
         specifier: ^11.0.2
         version: 11.0.2
@@ -127,6 +124,9 @@ importers:
       '@nestjs/throttler':
         specifier: ^6.5.0
         version: 6.5.0(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.8(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.8)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)
+      '@repo/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       axios:
         specifier: ^1.13.2
         version: 1.13.6
@@ -507,9 +507,6 @@ importers:
 
   apps/payments-service:
     dependencies:
-      '@/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
       '@fastify/cookie':
         specifier: ^11.0.2
         version: 11.0.2
@@ -540,6 +537,9 @@ importers:
       '@nestjs/schedule':
         specifier: 6.1.1
         version: 6.1.1(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.8(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.8)(reflect-metadata@0.2.2)(rxjs@7.8.2))
+      '@repo/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       bull:
         specifier: 4.16.5
         version: 4.16.5
@@ -755,9 +755,6 @@ importers:
 
   apps/stocks-service:
     dependencies:
-      '@/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
       '@aws-sdk/client-s3':
         specifier: ^3.1017.0
         version: 3.1017.0
@@ -812,6 +809,9 @@ importers:
       '@nestjs/throttler':
         specifier: ^6.5.0
         version: 6.5.0(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.8(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.8)(reflect-metadata@0.2.2)(rxjs@7.8.2))(reflect-metadata@0.2.2)
+      '@repo/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       '@types/multer':
         specifier: ^2.0.0
         version: 2.0.0
@@ -966,9 +966,6 @@ importers:
 
   apps/storage-service:
     dependencies:
-      '@/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
       '@aws-sdk/client-s3':
         specifier: ^3.1017.0
         version: 3.1017.0
@@ -1002,6 +999,9 @@ importers:
       '@nestjs/platform-fastify':
         specifier: ^11.1.8
         version: 11.1.8(@fastify/static@8.3.0)(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/core@11.1.8(@nestjs/common@11.1.8(class-transformer@0.5.1)(class-validator@0.14.2)(reflect-metadata@0.2.2)(rxjs@7.8.2))(@nestjs/platform-express@11.1.8)(reflect-metadata@0.2.2)(rxjs@7.8.2))
+      '@repo/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       cookie-crypto:
         specifier: workspace:^
         version: link:../../packages/cookie-crypto
@@ -1096,9 +1096,6 @@ importers:
 
   apps/ticketing-service:
     dependencies:
-      '@/logger':
-        specifier: workspace:*
-        version: link:../../packages/logger
       '@fastify/cookie':
         specifier: ^10.0.1
         version: 10.0.1
@@ -1144,6 +1141,9 @@ importers:
       '@prisma/client':
         specifier: ^6.18.0
         version: 6.18.0(prisma@6.18.0(typescript@5.9.2))(typescript@5.9.2)
+      '@repo/logger':
+        specifier: workspace:*
+        version: link:../../packages/logger
       '@types/passport-jwt':
         specifier: ^4.0.1
         version: 4.0.1

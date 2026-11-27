@@ -15,7 +15,7 @@ import {
   BadRequestException,
 
 } from '@nestjs/common';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 import { plainToInstance } from 'class-transformer';
 import { validateOrReject } from 'class-validator';
 import * as path from 'path';

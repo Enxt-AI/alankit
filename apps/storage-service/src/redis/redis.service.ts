@@ -1,6 +1,6 @@
 import { Injectable, OnModuleDestroy } from '@nestjs/common';
 import Redis from 'ioredis';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 const service = 'storage-service';
 const ctx = 'RedisService';

@@ -1,6 +1,6 @@
 import { PrismaClient } from 'db-unlistedstock';
 import { AdminContextService } from '../common/admin-context.service';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 const logger = new PinoNestLogger('stocks-service', 'AuditMiddleware');
 

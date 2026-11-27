@@ -4,7 +4,7 @@ import { Strategy } from 'passport-custom';
 import { RedisService } from '../../redis/redis.service';
 import { OBFUSCATED_COOKIE_NAMES, ORIGINAL_COOKIE_NAMES } from 'cookie-crypto';
 import * as crypto from 'crypto';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 @Injectable()
 export class SessionStrategy extends PassportStrategy(Strategy, 'jwt') {

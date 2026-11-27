@@ -3,7 +3,7 @@ import * as Bull from 'bull';
 import { SmsService } from './sms.service';
 import { RedisService } from '../redis/redis.service';
 import { createHash } from 'crypto';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 const service = 'auth-service';
 const ctx = 'SmsProcessor';

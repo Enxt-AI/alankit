@@ -16,7 +16,7 @@ import {
   UPDATE_DELIVERY,
   TAKE_SIGNUP,
 } from './otp-scripts';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 export interface PendingSignup {
   phone: string;

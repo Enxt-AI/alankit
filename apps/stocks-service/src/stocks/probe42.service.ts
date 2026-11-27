@@ -6,7 +6,7 @@ import {
   GatewayTimeoutException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 import { ConfigService } from '@nestjs/config';
 
 @Injectable()

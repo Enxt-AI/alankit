@@ -15,7 +15,7 @@ import { SmsService } from '../sms/sms.service';
 import { EmailService } from 'email-service';
 import type { PartnerPortal } from './dto/distributor-reset-password.dto';
 import { AdminRole, Prisma } from 'db-unlistedstock';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 import { ALL_PERMISSIONS } from 'db-unlistedstock/src/constants/admin-permissions';
 import * as bcrypt from 'bcrypt';
 import * as crypto from 'crypto';

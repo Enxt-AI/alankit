@@ -2,7 +2,7 @@ import { NestFactory } from '@nestjs/core';
 import { getQueueToken } from '@nestjs/bull';
 import type { Queue } from 'bull';
 import { EsignWorkerModule } from './esign-worker.module';
-import { createPinoLogger } from '@/logger';
+import { createPinoLogger } from '@repo/logger';
 
 const logger = createPinoLogger('stocks-service');
 const esignLogger = logger.child({ context: 'EsignWorker' });

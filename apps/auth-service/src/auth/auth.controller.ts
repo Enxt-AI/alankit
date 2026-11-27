@@ -197,7 +197,7 @@ function omitCredentials(obj: any): any {
 }
 
 import { PrismaService } from '../prisma/prisma.service';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 /**
  * AuthController handles all authentication-related HTTP endpoints

@@ -1,5 +1,5 @@
 import { Injectable, OnModuleInit, OnModuleDestroy } from '@nestjs/common';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 import type { Browser } from 'puppeteer';
 import * as QRCode from 'qrcode';
 import * as crypto from 'crypto';

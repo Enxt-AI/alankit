@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 import { PrismaService } from '../prisma/prisma.service';
 import { AdminPrismaService } from '../prisma/admin-prisma.service';
 import { NotificationService } from '../notification/notification.service';

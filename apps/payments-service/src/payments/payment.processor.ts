@@ -1,7 +1,7 @@
 import { Process, Processor } from '@nestjs/bull';
 import type { Job } from 'bull';
 import { PaymentService } from './payment.service';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 const service = 'payments-service';
 const ctx = 'PaymentWebhookProcessor';

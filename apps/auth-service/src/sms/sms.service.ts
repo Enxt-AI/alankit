@@ -4,7 +4,7 @@ import { firstValueFrom } from 'rxjs';
 import { InjectQueue } from '@nestjs/bull';
 import * as Bull from 'bull';
 import { redis } from 'redis-service';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 /**
  * Result returned by the SMS gateway after attempting to send a message.

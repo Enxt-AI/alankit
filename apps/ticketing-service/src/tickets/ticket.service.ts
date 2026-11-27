@@ -6,7 +6,7 @@ import {
   OnModuleInit,
 
 } from '@nestjs/common';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTicketDto } from './dto/create-ticket.dto';
 import { QueryTicketDto } from './dto/query-ticket.dto';

@@ -20,7 +20,7 @@ import { CreateCustomVoucherTypeDto, UpdateCustomVoucherTypeDto } from './dto/cr
 import { CreateAccountingPeriodDto, UpdateAccountingPeriodDto } from './dto/accounting-period.dto';
 import { LedgerType, VoucherType, EntryType, VoucherStatus, Prisma } from 'db-unlistedstock';
 import * as crypto from 'crypto';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 @Injectable()
 export class AccountingService implements OnModuleInit {

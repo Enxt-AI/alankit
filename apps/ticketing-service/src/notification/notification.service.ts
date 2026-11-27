@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 import { EmailService } from 'email-service';
 
 @Injectable()

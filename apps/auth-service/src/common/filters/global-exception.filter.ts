@@ -8,7 +8,7 @@ import {
 } from '@nestjs/common';
 import { FastifyReply, FastifyRequest } from 'fastify';
 import { OBFUSCATED_COOKIE_NAMES } from 'cookie-crypto';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 const service = 'auth-service';
 const ctx = 'GlobalExceptionFilter';

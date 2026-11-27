@@ -6,7 +6,7 @@
  * break the primary CMS mutation flow.
  */
 
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 const logger = new PinoNestLogger('stocks-service', 'RevalidationHelper');
 

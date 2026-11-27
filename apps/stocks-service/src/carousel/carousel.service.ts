@@ -2,7 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateCarouselMediaDto } from './dto/create-carousel-media.dto';
 import { UpdateCarouselMediaDto } from './dto/update-carousel-media.dto';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 /**
  * CarouselService handles all CRUD operations for carousel media items.

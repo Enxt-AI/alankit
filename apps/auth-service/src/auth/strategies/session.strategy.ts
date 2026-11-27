@@ -6,7 +6,7 @@ import { OBFUSCATED_COOKIE_NAMES, ORIGINAL_COOKIE_NAMES } from 'cookie-crypto';
 import * as crypto from 'crypto';
 import { PrismaService } from '../../prisma/prisma.service';
 import { Request } from 'express';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 @Injectable()
 export class SessionStrategy extends PassportStrategy(Strategy, 'jwt') {

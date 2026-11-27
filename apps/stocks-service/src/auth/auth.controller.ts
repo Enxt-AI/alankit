@@ -26,7 +26,7 @@ import { MarketingJwtAuthGuard } from './guards/marketing-jwt-auth.guard';
 import { AccountingJwtAuthGuard } from './guards/accounting-jwt-auth.guard';
 import { OperationJwtAuthGuard } from './guards/operation-jwt-auth.guard';
 import { Public } from './decorators/public.decorator';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 @Controller('auth')
 export class AuthController {

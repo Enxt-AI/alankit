@@ -2,7 +2,7 @@ import { Injectable, OnModuleDestroy, OnModuleInit } from '@nestjs/common';
 import { runIntegrationTasks } from 'db-unlistedstock';
 import { PrismaService } from '../prisma/prisma.service';
 import { PaymentService } from './payment.service';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 
 const service = 'payments-service';
 const ctx = 'PaymentEffectsWorker';

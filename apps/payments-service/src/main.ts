@@ -10,7 +10,7 @@ import { createPinoLogger, createFastifyLogger,
   registerRequestIdHook,
   registerHttpAccessHook,
   buildValidationLog,
-} from '@/logger';
+} from '@repo/logger';
 
 async function bootstrap() {
   const logger = createPinoLogger('payments-service');

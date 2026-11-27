@@ -1,5 +1,5 @@
 import { Injectable, UnauthorizedException} from '@nestjs/common';
-import { PinoNestLogger } from '@/logger';
+import { PinoNestLogger } from '@repo/logger';
 import { PassportStrategy } from '@nestjs/passport';
 import { Strategy } from 'passport-custom';
 import { RedisService } from '../../redis/redis.service';
