@@ -19,19 +19,32 @@ export class EmailService {
     private readonly emailProvider: EmailProvider,
   ) {}
 
-  // Sender Profiles
-  private readonly SENDERS = {
-    DEFAULT: "Unlistedstocks <no-reply@unlistedstocks.com>",
-    WELCOME: "Unlistedstocks Team <hello@unlistedstocks.com>",
-    KYC: "Unlistedstocks KYC <no-reply@unlistedstocks.com>",
-    DEMAT: "Unlistedstocks Demat <no-reply@unlistedstocks.com>",
-    BANK: "Unlistedstocks Bank <no-reply@unlistedstocks.com>",
-    ORDERS: "Unlistedstocks Orders <no-reply@unlistedstocks.com>",
-    PORTFOLIO: "Unlistedstocks Portfolio <no-reply@unlistedstocks.com>",
-    PAYMENTS: "Unlistedstocks Payments <no-reply@unlistedstocks.com>",
-  };
+  private get fromEmail(): string {
+    return (process.env.EMAIL_FROM || "").trim();
+  }
 
-  private readonly fromEmail = process.env.EMAIL_FROM || this.SENDERS.DEFAULT;
+  private get appUrl(): string {
+    return (
+      process.env.FRONTEND_URL ||
+      process.env.PUBLIC_APP_URL ||
+      process.env.WEB_APP_URL ||
+      ""
+    )
+      .trim()
+      .replace(/\/+$/, "");
+  }
+
+  private get adminUrl(): string {
+    return (process.env.ADMIN_APP_URL || this.appUrl)
+      .trim()
+      .replace(/\/+$/, "");
+  }
+
+  private get logoUrl(): string {
+    const explicit = (process.env.EMAIL_LOGO_URL || "").trim();
+    if (explicit) return explicit;
+    return this.appUrl ? `${this.appUrl}/logo.png` : "";
+  }
 
   // Brand Colors & Assets
   private readonly COLORS = {
@@ -42,8 +55,6 @@ export class EmailService {
     TEXT_MUTED: "#475569", // Slate 600
     BORDER: "#e2e8f0", // Slate 200
   };
-
-  private readonly LOGO_URL = "https://www.unlistedstocks.com/logo.png";
 
   /**
    * Wraps email content in the premium standard brand layout
@@ -79,11 +90,15 @@ export class EmailService {
         ${preheader ? `<span class="preheader">${preheader}</span>` : ""}
         <div class="container">
           <table class="content-card" align="center" cellpadding="0" cellspacing="0" border="0">
-            <tr>
+            ${
+              this.logoUrl
+                ? `<tr>
               <td class="header">
-                <img src="${this.LOGO_URL}" alt="Unlistedstocks" class="logo" onerror="this.style.display='none'">
+                <img src="${this.logoUrl}" alt="Alankit" class="logo" onerror="this.style.display='none'">
               </td>
-            </tr>
+            </tr>`
+                : ""
+            }
             <tr>
               <td class="body">
                 <h1>${title}</h1>
@@ -94,9 +109,13 @@ export class EmailService {
               <td class="footer">
                 <p>&copy; ${new Date().getFullYear()}  Unlisted stocks. All rights reserved.</p>
                 <p> House, 11/6B, Shanti Chamber, Pusa Road, New Delhi – 110005</p>
-                <div style="margin-top: 16px;">
-                  <a href="https://unlistedstocks.com/support" style="color: ${this.COLORS.TEXT_MUTED}; text-decoration: underline;">Contact Support</a>
-                </div>
+                ${
+                  this.appUrl
+                    ? `<div style="margin-top: 16px;">
+                  <a href="${this.appUrl}/support" style="color: ${this.COLORS.TEXT_MUTED}; text-decoration: underline;">Contact Support</a>
+                </div>`
+                    : ""
+                }
               </td>
             </tr>
           </table>
@@ -114,11 +133,18 @@ export class EmailService {
     idempotencyKey?: string,
   ) {
     try {
+      const sender = (this.fromEmail || from || "").trim();
+      if (!sender) {
+        const err = new Error("EMAIL_FROM is not set");
+        this.logger.error(`Failed to send email to ${to}:`, err);
+        return { success: false, error: err };
+      }
+
       this.logger.log(
         `Sending email to ${to} with subject: ${subject} via ${this.emailProvider.providerName}`,
       );
       const result: SendEmailResult = await this.emailProvider.send({
-        from: process.env.EMAIL_FROM || from || this.fromEmail,
+        from: sender,
         to: [to],
         subject,
         html,
@@ -147,9 +173,13 @@ export class EmailService {
       <p>Thank you for joining <strong> Unlisted stocks</strong>, India's premier platform for unlisted equity investments.</p>
       <p>You can now explore dozens of pre-IPO opportunities, track your portfolio, and stay ahead of the market in real-time.</p>
       
-      <div style="margin: 32px 0; text-align: center;">
-        <a href="https://unlistedstocks.com/dashboard" class="button">Go to Dashboard</a>
-      </div>
+      ${
+        this.appUrl
+          ? `<div style="margin: 32px 0; text-align: center;">
+        <a href="${this.appUrl}/dashboard" class="button">Go to Dashboard</a>
+      </div>`
+          : ""
+      }
 
       <div class="highlight-box">
         <p style="margin: 0; color: #166534; font-weight: 600;">Pro Tip: Complete your KYC today to unlock investment limits and get priority access to hot upcoming IPOs.</p>
@@ -162,7 +192,7 @@ export class EmailService {
       content,
       "Welcome to India's premier pre-IPO platform.",
     );
-    return this.sendEmail(user.email, subject, html, this.SENDERS.WELCOME);
+    return this.sendEmail(user.email, subject, html);
   }
 
   private getDisplayOrderNumber(order: any): string {
@@ -216,9 +246,13 @@ export class EmailService {
         <p style="margin: 0; color: #166534; font-weight: 600;">Next Steps: Once your payment is verified, our compliance team will initiate the share transfer to your Demat account.</p>
       </div>
 
-      <div style="text-align: center; margin-top: 32px;">
-        <a href="https://unlistedstocks.com/dashboard/orders" class="button">Track Order Progress</a>
-      </div>
+      ${
+        this.appUrl
+          ? `<div style="text-align: center; margin-top: 32px;">
+        <a href="${this.appUrl}/dashboard/orders" class="button">Track Order Progress</a>
+      </div>`
+          : ""
+      }
     `;
 
     const html = this.getStandardLayout(
@@ -230,7 +264,7 @@ export class EmailService {
       user.email,
       subject,
       html,
-      this.SENDERS.ORDERS,
+      undefined,
       `payment-confirmed-${order.id}`,
     );
   }
@@ -266,18 +300,21 @@ export class EmailService {
         </p>
       </div>
       
-      <div style="text-align: center; margin-top: 32px;">
-        <a href="https://unlistedstocks.com/dashboard/portfolio" class="button">View Portfolio</a>
-      </div>
+      ${
+        this.appUrl
+          ? `<div style="text-align: center; margin-top: 32px;">
+        <a href="${this.appUrl}/dashboard/portfolio" class="button">View Portfolio</a>
+      </div>`
+          : ""
+      }
     `;
 
-    const sender = isCompleted ? this.SENDERS.PORTFOLIO : this.SENDERS.ORDERS;
     const html = this.getStandardLayout(
       title,
       content,
       `The status of your order #${orderNum} is now ${status}.`,
     );
-    return this.sendEmail(user.email, subject, html, sender);
+    return this.sendEmail(user.email, subject, html);
   }
 
   async sendOrderReceiptEmail(order: any, user: any) {
@@ -332,7 +369,7 @@ export class EmailService {
       content,
       `Receipt for investment in ${order.stockName}`,
     );
-    return this.sendEmail(user.email, subject, html, this.SENDERS.PAYMENTS);
+    return this.sendEmail(user.email, subject, html);
   }
 
   async sendKycVerifiedEmail(user: { email: string; fullName: string }) {
@@ -346,9 +383,13 @@ export class EmailService {
         <p style="margin: 0; color: #166534; font-weight: 600;">Account Status: Fully Verified. You can now place orders for any unlisted shares or curated baskets on our platform.</p>
       </div>
 
-      <div style="text-align: center; margin: 32px 0;">
-        <a href="https://unlistedstocks.com/stocks" class="button">Browse Stocks</a>
-      </div>
+      ${
+        this.appUrl
+          ? `<div style="text-align: center; margin: 32px 0;">
+        <a href="${this.appUrl}/stocks" class="button">Browse Stocks</a>
+      </div>`
+          : ""
+      }
       
       <p>Happy Investing,<br><strong> Unlisted stocks Compliance Team</strong></p>
     `;
@@ -357,7 +398,7 @@ export class EmailService {
       content,
       "Your identity verification is successful.",
     );
-    return this.sendEmail(user.email, subject, html, this.SENDERS.KYC);
+    return this.sendEmail(user.email, subject, html);
   }
 
   async sendKycRejectedEmail(
@@ -377,9 +418,13 @@ export class EmailService {
 
       <p>To avoid further delays, please log in to your dashboard and re-submit your documents with the corrected information.</p>
 
-      <div style="text-align: center; margin: 32px 0;">
-        <a href="https://unlistedstocks.com/kyc" class="button" style="background-color: #ef4444;">Update KYC Info</a>
-      </div>
+      ${
+        this.appUrl
+          ? `<div style="text-align: center; margin: 32px 0;">
+        <a href="${this.appUrl}/kyc" class="button" style="background-color: #ef4444;">Update KYC Info</a>
+      </div>`
+          : ""
+      }
       
       <p>If you need assistance, please reply to this email or contact support.</p>
     `;
@@ -388,7 +433,7 @@ export class EmailService {
       content,
       "Important update regarding your KYC verification.",
     );
-    return this.sendEmail(user.email, subject, html, this.SENDERS.KYC);
+    return this.sendEmail(user.email, subject, html);
   }
 
   async sendKycPendingEmail(user: { email: string; fullName: string }) {
@@ -409,7 +454,7 @@ export class EmailService {
       content,
       "Your documents have been submitted for review.",
     );
-    return this.sendEmail(user.email, subject, html, this.SENDERS.KYC);
+    return this.sendEmail(user.email, subject, html);
   }
 
   async sendKycStatusUpdateEmail(
@@ -435,14 +480,22 @@ export class EmailService {
       <div class="highlight-box">
         <p style="margin: 0; color: #166534; font-weight: 600;">Account Status: Fully Verified. You now have unrestricted access to India's top pre-IPO opportunities.</p>
       </div>
-      <div style="text-align: center; margin: 32px 0;">
-        <a href="https://unlistedstocks.com/stocks" class="button">Explore All Stocks</a>
-      </div>
+      ${
+        this.appUrl
+          ? `<div style="text-align: center; margin: 32px 0;">
+        <a href="${this.appUrl}/stocks" class="button">Explore All Stocks</a>
+      </div>`
+          : ""
+      }
       `
           : `
-      <div style="text-align: center; margin: 32px 0;">
-        <a href="https://unlistedstocks.com/dashboard" class="button">Check Status Details</a>
-      </div>
+      ${
+        this.appUrl
+          ? `<div style="text-align: center; margin: 32px 0;">
+        <a href="${this.appUrl}/dashboard" class="button">Check Status Details</a>
+      </div>`
+          : ""
+      }
       `
       }
     `;
@@ -451,7 +504,7 @@ export class EmailService {
       content,
       `Important update regarding your KYC status: ${status}`,
     );
-    return this.sendEmail(user.email, subject, html, this.SENDERS.KYC);
+    return this.sendEmail(user.email, subject, html);
   }
 
   async sendBankStatusEmail(
@@ -488,16 +541,20 @@ export class EmailService {
         </p>
       </div>
       
-      <div style="text-align: center; margin-top: 32px;">
-        <a href="https://unlistedstocks.com/dashboard" class="button">${isVerified ? "Go to Dashboard" : "Update Bank Info"}</a>
-      </div>
+      ${
+        this.appUrl
+          ? `<div style="text-align: center; margin-top: 32px;">
+        <a href="${this.appUrl}/dashboard" class="button">${isVerified ? "Go to Dashboard" : "Update Bank Info"}</a>
+      </div>`
+          : ""
+      }
     `;
     const html = this.getStandardLayout(
       title,
       content,
       `Bank account verification status update: ${status}`,
     );
-    return this.sendEmail(user.email, subject, html, this.SENDERS.BANK);
+    return this.sendEmail(user.email, subject, html);
   }
 
   async sendDematLinkedEmail(user: any, dematData: any) {
@@ -518,7 +575,7 @@ export class EmailService {
       content,
       "We have initiated a review of your demat linking request.",
     );
-    return this.sendEmail(user.email, subject, html, this.SENDERS.DEMAT);
+    return this.sendEmail(user.email, subject, html);
   }
 
   async sendBankLinkedEmail(user: any, bankData: any) {
@@ -538,7 +595,7 @@ export class EmailService {
       content,
       "Your bank account details are currently being verified.",
     );
-    return this.sendEmail(user.email, subject, html, this.SENDERS.BANK);
+    return this.sendEmail(user.email, subject, html);
   }
 
   async sendDematStatusEmail(
@@ -580,7 +637,7 @@ export class EmailService {
       content,
       `Demat verification update: ${status}`,
     );
-    return this.sendEmail(user.email, subject, html, this.SENDERS.DEMAT);
+    return this.sendEmail(user.email, subject, html);
   }
 
   private getTicketDisplayId(ticket: any): string {
@@ -622,7 +679,6 @@ export class EmailService {
       user.email,
       subject,
       html,
-      this.SENDERS.DEFAULT,
     );
     return res.success
       ? { success: true, message: "Ticket creation email sent" }
@@ -648,9 +704,13 @@ export class EmailService {
         <p style="margin: 8px 0; font-size: 14px;"><strong>Priority:</strong> <span style="text-transform: uppercase; font-weight: 700;">${ticket.priority || "NORMAL"}</span></p>
       </div>
 
-      <div style="text-align: center; margin: 32px 0;">
-        <a href="https://admin.unlistedstocks.com/support" class="button">Open Support Console</a>
-      </div>
+      ${
+        this.adminUrl
+          ? `<div style="text-align: center; margin: 32px 0;">
+        <a href="${this.adminUrl}/support" class="button">Open Support Console</a>
+      </div>`
+          : ""
+      }
     `;
 
     const html = this.getStandardLayout(
@@ -662,7 +722,6 @@ export class EmailService {
       agent.email,
       subject,
       html,
-      this.SENDERS.DEFAULT,
     );
     return res.success
       ? { success: true, message: "Ticket assignment email sent" }
@@ -700,7 +759,6 @@ export class EmailService {
       user.email,
       subject,
       html,
-      this.SENDERS.DEFAULT,
     );
     return res.success
       ? { success: true, message: "Ticket resolution email sent" }
@@ -726,9 +784,13 @@ export class EmailService {
         <p style="margin: 8px 0; font-size: 14px; color: #991b1b;"><strong>Status:</strong> <span style="font-weight: 800;">ESCALATED</span></p>
       </div>
 
-      <div style="text-align: center; margin: 32px 0;">
-        <a href="https://admin.unlistedstocks.com/support" class="button" style="background-color: #ef4444;">Review Escalation Now</a>
-      </div>
+      ${
+        this.adminUrl
+          ? `<div style="text-align: center; margin: 32px 0;">
+        <a href="${this.adminUrl}/support" class="button" style="background-color: #ef4444;">Review Escalation Now</a>
+      </div>`
+          : ""
+      }
     `;
 
     const html = this.getStandardLayout(
@@ -740,7 +802,6 @@ export class EmailService {
       admin.email,
       subject,
       html,
-      this.SENDERS.DEFAULT,
     );
     return res.success
       ? { success: true, message: "Escalation email sent" }
@@ -767,9 +828,13 @@ export class EmailService {
 
       <p>You can view the full thread and reply directly through the portal.</p>
       
-      <div style="text-align: center; margin: 32px 0;">
-        <a href="https://unlistedstocks.com/support" class="button">Reply to Ticket</a>
-      </div>
+      ${
+        this.appUrl
+          ? `<div style="text-align: center; margin: 32px 0;">
+        <a href="${this.appUrl}/support" class="button">Reply to Ticket</a>
+      </div>`
+          : ""
+      }
     `;
 
     const html = this.getStandardLayout(
@@ -781,7 +846,6 @@ export class EmailService {
       recipient.email,
       subject,
       html,
-      this.SENDERS.DEFAULT,
     );
     return res.success
       ? { success: true, message: "Comment notification sent" }
@@ -820,7 +884,6 @@ export class EmailService {
       agent.email,
       subject,
       html,
-      this.SENDERS.DEFAULT,
     );
     return res.success
       ? { success: true, message: "Reopen notification sent" }
@@ -859,7 +922,6 @@ export class EmailService {
       user.email,
       subject,
       html,
-      this.SENDERS.DEFAULT,
     );
     return res.success
       ? { success: true, message: "User assignment notification sent" }
@@ -900,7 +962,6 @@ export class EmailService {
       user.email,
       subject,
       html,
-      this.SENDERS.DEFAULT,
     );
     return res.success
       ? { success: true, message: "Status update email sent" }
@@ -933,7 +994,7 @@ export class EmailService {
       content,
       `Use code ${otp} to verify your identity.`,
     );
-    const res = await this.sendEmail(to, subject, html, this.SENDERS.DEFAULT);
+    const res = await this.sendEmail(to, subject, html);
     return res.success
       ? { success: true, message: "OTP email sent" }
       : { success: false, message: "Failed to send OTP email" };
@@ -1022,7 +1083,6 @@ export class EmailService {
       details.email,
       subject,
       html,
-      this.SENDERS.DEFAULT,
     );
     return res.success
       ? { success: true, message: "New device alert email sent" }
