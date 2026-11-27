@@ -81,6 +81,16 @@ export async function refreshSession(force = true): Promise<boolean> {
   }
 }
 
+export async function logout(): Promise<void> {
+  try {
+    await authRequest("signout", {});
+  } catch {
+    // Clear local session state even if the signout request fails.
+  }
+  sessionCache = { authenticated: false, checkedAt: Date.now() };
+  window.dispatchEvent(new CustomEvent("alankit-session-change", { detail: false }));
+}
+
 export function useAuthSession() {
   const [authenticated, setAuthenticated] = useState(false);
   useEffect(() => {

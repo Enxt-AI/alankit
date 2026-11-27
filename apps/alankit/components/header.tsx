@@ -4,9 +4,9 @@ import { useState } from "react";
 import Link from "next/link";
 import Image from "next/image";
 import logo from "@/public/logo.png";
-import { useAuthSession } from "@/lib/auth";
-import { usePathname } from "next/navigation";
-import { Bell, ChevronDown, Menu, User, X } from "lucide-react";
+import { logout, useAuthSession } from "@/lib/auth";
+import { usePathname, useRouter } from "next/navigation";
+import { Bell, LogOut, Menu, User, X } from "lucide-react";
 
 type NavItem = {
   label: string;
@@ -23,8 +23,21 @@ const navItems: NavItem[] = [
 export function Header() {
   const isAuthenticated = useAuthSession();
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [openDropdown, setOpenDropdown] = useState<string | null>(null);
+  const [loggingOut, setLoggingOut] = useState(false);
+
+  async function handleLogout() {
+    if (loggingOut) return;
+    setLoggingOut(true);
+    try {
+      await logout();
+      setMobileMenuOpen(false);
+      router.push("/login");
+    } finally {
+      setLoggingOut(false);
+    }
+  }
 
   return (
     <header className="w-full bg-white border-b border-zinc-100">
@@ -76,6 +89,15 @@ export function Header() {
             <User className="size-4 text-[#2563EB]" />
             <span>Profile</span>
           </Link>
+          <button
+            type="button"
+            disabled={loggingOut}
+            onClick={() => void handleLogout()}
+            className="inline-flex h-10 items-center gap-2 rounded-lg border border-zinc-200 bg-white px-3.5 text-sm font-medium text-rose-600 transition-colors hover:bg-rose-50 disabled:opacity-50"
+          >
+            <LogOut className="size-4" />
+            <span>{loggingOut ? "Signing out…" : "Logout"}</span>
+          </button>
           </>}
 
           {!isAuthenticated && <Link href="/login" className="inline-flex h-10 items-center justify-center rounded-lg bg-[#2563EB] px-5 text-sm font-medium text-white transition-colors hover:bg-[#1D4ED8]">
@@ -144,6 +166,15 @@ export function Header() {
               <User className="size-4 text-[#2563EB]" />
               <span>Profile</span>
             </Link>
+            <button
+              type="button"
+              disabled={loggingOut}
+              onClick={() => void handleLogout()}
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-zinc-200 bg-white text-sm font-medium text-rose-600 hover:bg-rose-50 disabled:opacity-50"
+            >
+              <LogOut className="size-4" />
+              <span>{loggingOut ? "Signing out…" : "Logout"}</span>
+            </button>
             </>}
             {!isAuthenticated && <Link href="/login" onClick={() => setMobileMenuOpen(false)} className="inline-flex h-10 w-full items-center justify-center rounded-lg bg-[#2563EB] text-sm font-medium text-white transition-colors hover:bg-[#1D4ED8]">
               Sign In
