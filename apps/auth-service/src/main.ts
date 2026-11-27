@@ -32,17 +32,7 @@ async function bootstrap() {
 
   await app.register(cors, {
     origin: [
-      process.env.FRONTEND_URL || 'http://localhost:3000',
-      'https://unlistedstox.com',
-      'https://www.unlistedstox.com',
-      'https://api.unlistedstox.com',
-      'https://api.unlistedstox.com:90',
-      'http://api.unlistedstox.com:90',
-      'https://panels.unlistedstox.com',
-      'https://distributors.unlistedstox.com',
-      'http://localhost:3000',
-      'http://localhost:4000',
-      'http://localhost:8000',
+      process.env.FRONTEND_URL as string
     ],
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE', 'OPTIONS'],
